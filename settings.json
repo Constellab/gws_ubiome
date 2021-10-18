@@ -1,0 +1,31 @@
+{
+    "name": "gws_ubiome",
+    "author": "Gencovery",
+    "version": "0.1.0",
+    "variables": {
+        "gws_gena:testdata_dir": "{CURRENT_DIR}/tests/testdata"
+    },
+    "environment": {
+        "pip": [
+            {
+                "source": "https://pypi.python.org/simple",
+                "packages": []
+            },
+            {
+                "source": "https://$GWS_PIP_PACKAGE_TOKEN@gitlab.com/api/.../packages/pypi",
+                "packages": []
+            }
+        ],
+        "git": [
+            {
+                "source": "https://$GWS_GIT_LOGIN:$GWS_GIT_PWD@gitlab.com/.../",
+                "packages": []
+            }
+        ],
+        "variables": {
+            "GWS_GIT_LOGIN": "",
+            "GWS_GIT_PWD": "",
+            "GWS_PIP_PACKAGE_TOKEN": ""
+        }
+    }
+}

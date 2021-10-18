@@ -1,0 +1,6 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.pythonPath": "/Users/djomangan/Dev/app/app-py/.venv/bin/python3.8",
+    "python.envFile": "${workspaceFolder}/.venv:${workspaceFolder}/../../../pr../gws-py/"
+}
