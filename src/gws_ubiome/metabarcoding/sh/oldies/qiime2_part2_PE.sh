@@ -14,14 +14,14 @@
 #Initial steps, for running qiime2 you need metadata_file and fq files
 ## paired-end project
 
-qiime_dir = $1
-metadata = $2
-barcode_col_id = $3
+qiime_dir=$1
+metadata=$2
+barcode_col_id=$3
 
-dir_output_name = $4
+dir_output_name=$4
 
-trcF = $5
-trcR = $6
+trcF=$5
+trcR=$6
 
 
 qiime dada2 denoise-paired \
@@ -47,10 +47,13 @@ qiime metadata tabulate \
 
 # taxonomic classification https://data.qiime2.org/2021.11/common/gg-13-8-99-nb-classifier.qza
 
-wget https://data.qiime2.org/2021.11/common/gg-13-8-99-nb-classifier.qza
+#wget https://data.qiime2.org/2021.11/common/gg-13-8-99-nb-classifier.qza
+
+# to move to db disk when available
 
 qiime feature-classifier classify-sklearn \
-  --i-classifier gg-13-8-99-nb-classifier.qza \
+#  --i-classifier gg-13-8-99-nb-classifier.qza \
+  --i-classifier   /lab/user/bricks/gws_ubiome/src/gws_ubiome/build/fastq_dir_test/gg-13-8-99-nb-classifier.qza \
   --i-reads rep-seqs.qza \
   --o-classification taxonomy.qza
 

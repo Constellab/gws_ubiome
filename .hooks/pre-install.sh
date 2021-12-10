@@ -6,3 +6,7 @@
 
 # Pre-installation script executed before module installation
 
+#db_url=""
+#db_path="/data/gws_ubiome"
+#mkdir $db_path
+#curl "s" -o $db_path
