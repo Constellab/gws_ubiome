@@ -28,13 +28,13 @@ class Qiime2SampleFrequencies(Qiime2EnvTask):
    
 
     input_specs = {
-        'Qiime2_Quality-Check_Result_Folder': (Qiime2QualityCheckResultFolder,),
+        'Quality-Check_Result_Folder': (Qiime2QualityCheckResultFolder,),
     }
     output_specs = {
         'result_folder': (Qiime2SampleFrequenciesFolder,)
     }
     config_specs = {
-        "project_id": StrParam(short_description="Project ID to name outputs"),
+        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
         "truncatedForwardReadsSize": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "truncatedReverseReads": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")
     }
@@ -44,11 +44,13 @@ class Qiime2SampleFrequencies(Qiime2EnvTask):
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2SampleFrequenciesFolder()
         result_file.path = self._output_file_path
+        result_file.sample_frequency_file_path = "sample-frequency-detail.tsv"
+ 
         return {"result_folder": result_file} 
     
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
-        qiime2_folder = inputs["Qiime2_Quality-Check_Result_Folder"]
-        proj_id = params["project_id"]
+        qiime2_folder = inputs["Quality-Check_Result_Folder"]
+        thrd = params["threads"]
         trctF = params["truncatedForwardReadsSize"]
         trctR = params["truncatedReverseReadsSize"]
 
@@ -58,9 +60,9 @@ class Qiime2SampleFrequencies(Qiime2EnvTask):
             " bash ", 
             os.path.join(script_file_dir, "./sh/2_qiime2_sample_frequencies.paired-end.sh"),      
             qiime2_folder.path, 
-            proj_id,
             trctF,
-            trctR
+            trctR,
+            thrd
         ]
         
         return cmd
@@ -69,5 +71,5 @@ class Qiime2SampleFrequencies(Qiime2EnvTask):
     def _get_output_file_path(self, output_dir_name) :
         return os.path.join(
             self.working_dir, 
-            output_dir_name + ".qiime2.output.sample_freq_details"
+            "sample_freq_details"
         )

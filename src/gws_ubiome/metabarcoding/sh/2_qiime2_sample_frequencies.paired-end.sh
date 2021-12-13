@@ -1,32 +1,39 @@
 #!/usr/bin/bash
 
+# This software is the exclusive property of Gencovery SAS. 
+# The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
+# About us: https://gencovery.com
+
 #Step 2, qiime2
 ## paired-end project
 
 qiime_dir=$1
-dir_output_name=$2
-trcF=$3
-trcR=$4
+trcF=$2
+trcR=$3
+threads=$4
 
 qiime dada2 denoise-paired \
-  --i-demultiplexed-seqs $qiime_dir/*.paired-end-demux.qza \
+  --i-demultiplexed-seqs $qiime_dir/demux.qza \
   --p-trunc-len-f $trcF \
   --p-trunc-len-r $trcR \
-  --o-table $dir_output_name".table.qza" \
-  --o-representative-sequences $dir_output_name".rep-seqs.qza" \
-  --o-denoising-stats $dir_output_name".denoising-stats.qza"
+  --p-n-threads $threads \
+  --o-table table.qza \
+  --o-representative-sequences rep-seqs.qza \
+  --o-denoising-stats denoising-stats.qza
 
 qiime feature-table summarize \
-  --i-table $dir_output_name".table.qza" \
-  --o-visualization $dir_output_name".feature-table.qzv" \
-  --m-sample-metadata-file $qiime_dir/*manifest
+  --i-table table.qza \
+  --o-visualization feature-table.qzv \
+  --m-sample-metadata-file $qiime_dir/manifest.txt
 
-mkdir $dir_output_name".qiime.output.sample_freq_details" ;
+mkdir sample_freq_details ;
 
-unzip $dir_output_name".feature-table.qzv" -d $dir_output_name".tmp_dir" ;
+unzip feature-table.qzv -d tmp_dir ;
 
-mv $dir_output_name".tmp_dir"/*/data/sample-frequency-detail.csv ./$dir_output_name".qiime2.output.sample_freq_details";
-mv $dir_output_name".rep-seqs.qza" ./$dir_output_name".qiime2.output.sample_freq_details";
-mv $dir_output_name".table.qza" ./$dir_output_name".qiime2.output.sample_freq_details";
-mv $qiime_dir/*.paired-end-demux.qza ./$dir_output_name".qiime2.output.sample_freq_details";
-mv $qiime_dir/*manifest ./$dir_output_name".qiime2.output.sample_freq_details";
+
+cat tmp_dir/*/data/sample-frequency-detail.csv | tr ',' '\t' > ./sample_freq_details/sample-frequency-detail.tsv;
+
+mv rep-seqs.qza ./sample_freq_details ;
+mv table.qza ./sample_freq_details ;
+mv $qiime_dir/demux.qza ./sample_freq_details ;
+mv $qiime_dir/manifest.txt ./sample_freq_details ;

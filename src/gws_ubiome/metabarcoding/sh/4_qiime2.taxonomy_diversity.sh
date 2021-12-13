@@ -1,77 +1,82 @@
 #!/usr/bin/bash
 
+# This software is the exclusive property of Gencovery SAS. 
+# The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
+# About us: https://gencovery.com
+
 #Final steps, qiime2
 
 
 qiime_dir=$1
-dir_output_name=$2
-rarefication_plateau_depth_value=$3
-threads=$4
+rarefication_plateau_depth_value=$2
+threads=$3
 
-qiime fragment-insertion sepp \
-  --i-representative-sequences $qiime_dir/*.rep-seqs.qza \
-  --i-reference-database sepp-refs-gg-13-8.qza \
-  --o-tree $dir_output_name".sepp-refs-gg-13-8.tree.qza" \
-  --o-placements $dir_output_name".sepp-refs-gg-13-8.tree_placements.qza" \
-  --p-threads $threads  
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences $qiime_dir/rep-seqs.qza \
+  --o-alignment aligned-rep-seqs.qza \
+  --o-masked-alignment masked-aligned-rep-seqs.qza \
+  --o-tree unrooted-tree.qza \
+  --o-rooted-tree rooted-tree.qza
 
 qiime diversity core-metrics-phylogenetic \
-  --i-phylogeny $dir_output_name".sepp-refs-gg-13-8.tree.qza" \
-  --i-table $qiime_dir/*.table.qza \
+  --i-phylogeny rooted-tree.qza \
+  --i-table $qiime_dir/table.qza \
   --p-sampling-depth $rarefication_plateau_depth_value \
-  --m-metadata-file $qiime_dir/*manifest \
-  --output-dir $dir_output_name".core-metrics-results"
+  --m-metadata-file $qiime_dir/manifest.txt \
+  --output-dir core-metrics-results
+
+mv ./core-metrics-results/* ./
 
 qiime feature-classifier classify-sklearn \
   --i-classifier gg-13-8-99-nb-classifier.qza \
-  --i-reads $qiime_dir/*.rep-seqs.qza \
-  --o-classification $dir_output_name".gg-13-8-99-nb-classifier.taxonomy.qza"
+  --i-reads $qiime_dir/rep-seqs.qza \
+  --o-classification gg.taxonomy.qza
 
 qiime metadata tabulate \
-  --m-input-file $dir_output_name".gg-13-8-99-nb-classifier.taxonomy.qza" \
-  --o-visualization $dir_output_name".gg-13-8-99-nb-classifier.taxonomy.qzv"
+  --m-input-file gg.taxonomy.qza \
+  --o-visualization gg.taxonomy.qzv
+
+qiime taxa barplot \
+  --i-table $qiime_dir/table.qza \
+  --i-taxonomy gg.taxonomy.qza \
+  --m-metadata-file $qiime_dir/manifest.txt  \
+  --o-visualization gg.taxa-bar-plots.qzv
 
 qiime diversity alpha \
-  --i-table $qiime_dir/*.table.qza \
+  --i-table $qiime_dir/table.qza \
   --p-metric chao1 \
-  --o-alpha-diversity $dir_output_name".core-metrics-results"/chao1.qza
+  --o-alpha-diversity chao1.qza
 
 qiime diversity alpha \
-  --i-table $qiime_dir/*.table.qza \
+  --i-table $qiime_dir/table.qza \
   --p-metric simpson \
-  --o-alpha-diversity $dir_output_name".core-metrics-results"/simpson.qza
+  --o-alpha-diversity simpson.qza
 
 qiime diversity beta \
-  --i-table $qiime_dir/*.table.qza \
+  --i-table $qiime_dir/table.qza \
   --p-metric jaccard \
-  --o-distance-matrix $dir_output_name".core-metrics-results"/jaccard_unweighted_unifrac_distance_matrix.qza
+  --o-distance-matrix jaccard_unweighted_unifrac_distance_matrix.qza
 
-# other metrics
+mkdir diversity ;
+mkdir diversity/raw_files ;
+mkdir diversity/table_files ;
 
-qiime diversity alpha-group-significance \
-  --i-alpha-diversity $dir_output_name".core-metrics-results"/faith_pd_vector.qza \
-  --m-metadata-file $qiime_dir/*manifest \
-  --o-visualization $dir_output_name".core-metrics-results"/faith-pd-group-significance.qzv
+unzip simpson.qza -d simpson
+cat  ./simpson/*/data/*.tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tsimpson\tinvSimpson\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1/$t[1],"\n"; } } ' > diversity/table_files/invSimpson.tab.tsv ;
 
-qiime diversity alpha-group-significance \
-  --i-alpha-diversity $dir_output_name".core-metrics-results"/evenness_vector.qza \
-  --m-metadata-file $qiime_dir/*manifest \
-  --o-visualization $dir_output_name".core-metrics-results"/evenness-group-significance.qzv
+for i in *.qza ;do unzip $i -d $i".diversity_metrics" ;done
+for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
 
+find . -name "*.csv" -print0 | xargs -0 -I {} mv {} ./diversity/table_files/ ;
 
-mv $qiime_dir/*manifest ./$dir_output_name".core-metrics-results"
+for i in *.diversity_metrics ;do  for j in $(find . -name "$i*.tsv") ;do  cat $j > ./diversity/table_files/$i"."$(basename $j ;)  ;done ;done 
 
+for i in ./diversity/table_files/*.csv ;do cat $i | tr ',' '\t'  > ./diversity/table_files/$(basename $i | sed 's/\.csv//' ;)".tsv" ; rm $i ;done
 
-unzip $dir_output_name".core-metrics-results"/simpson.qza -d $dir_output_name".core-metrics-results"/simpson
-cat  $dir_output_name".core-metrics-results"/simpson/*/data/*tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tsimpson\tinvSimpson\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1/$t[1],"\n"; } } ' > ./$dir_output_name".core-metrics-results"/invSimpson.tab.tsv ;
+mv *.qza ./diversity/raw_files ;
+mv *.qzv ./diversity/raw_files ;ls
 
-for i in *.qz* ;do unzip $i -d $i".tmp_dir" ;done
-for i in *.tmp_dir ;do cp ./$i/*/data/*tsv ./$i".tab.tsv" ;done
-unzip $dir_output_name".core-metrics-results"/simpson.qza -d $dir_output_name".core-metrics-results"/simpson
-cat  $dir_output_name".core-metrics-results"/simpson/*/data/*tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tsimpson\tinvSimpson\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1/$t[1],"\n"; } } ' > ./$dir_output_name".core-metrics-results"/invSimpson.tab.tsv ;
-
-mkdir $dir_output_name".core-metrics-results"/file_to_plot ;
-
-for i in *.tab.tsv ;do mv $i ./$dir_output_name".core-metrics-results"/files_to_plot ;done
-
-for i in *.tmp_dir ;do rm -rf $i ;done
+mv $qiime_dir/table.qza ./diversity/raw_files ;
+mv $qiime_dir/manifest.txt  ./diversity/raw_files ;
+mv $qiime_dir/rep-seqs.qza ./diversity/raw_files ;
+mv $qiime_dir/demux.qza ./diversity/raw_files ;

@@ -28,15 +28,14 @@ class Qiime2Rarefaction(Qiime2EnvTask):
    
 
     input_specs = {
-        'Qiime2_Rarefaction_Result_Folder': (Qiime2RarefactionFolder,),
+        'Rarefaction_Result_Folder': (Qiime2RarefactionFolder,),
     }
     output_specs = {
         'result_folder': (Qiime2TaxonomyDiversityFolder,)
     }
     config_specs = {
-        "project_id": StrParam(short_description="Project ID to name outputs"),
         "rareficationPlateauValue": IntParam(min_value=20, short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
-        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
+        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads")
     }
        
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -45,8 +44,7 @@ class Qiime2Rarefaction(Qiime2EnvTask):
         return {"result_folder": result_file} 
     
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
-        quiime_folder = inputs["Qiime2_Rarefaction_Result_Folder"]
-        proj_id = params["project_id"]
+        qiime_folder = inputs["Rarefaction_Result_Folder"]
         plateauVal = params["rareficationPlateauValue"]
         thrds = params["threads"]
 
@@ -55,11 +53,9 @@ class Qiime2Rarefaction(Qiime2EnvTask):
         cmd = [ 
             " bash ", 
             os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),      
-            quiime_folder.path,
-            proj_id,
+            qiime_folder.path,
             plateauVal,
             thrds
-
         ]
         
         return cmd
@@ -68,5 +64,5 @@ class Qiime2Rarefaction(Qiime2EnvTask):
     def _get_output_file_path(self, output_dir_name) :
         return os.path.join(
             self.working_dir, 
-            output_dir_name + ".qiime2.output.taxo-diversity"
+            "taxo-diversity"
         )

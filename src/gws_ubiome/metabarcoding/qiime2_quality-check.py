@@ -55,8 +55,8 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2QualityCheckResultFolder()
         result_file.path = self._output_file_path
-        result_file.forward_reads_file = "forward-seven-number-summaries.tsv"
-        result_file.reverse_reads_file = "reverse-seven-number-summaries.tsv"
+        result_file.forward_reads_file_path = "forward-seven-number-summaries.tsv"
+        result_file.reverse_reads_file_path = "reverse-seven-number-summaries.tsv"
         return {"result_folder": result_file} 
     
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
@@ -96,5 +96,5 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     def _get_output_file_path(self, output_dir_name) :
         return os.path.join(
             self.working_dir, 
-            output_dir_name + ".qiime2.import.quality-check"
+            "quality-check"
         )

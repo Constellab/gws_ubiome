@@ -67,14 +67,14 @@ class Qiime2QualityCheckResultFolder(Folder):
 class Qiime2SampleFrequenciesFolder(Folder):
     ''' Qiime2SampleFrequenciesFolder Folder file class '''
 
-    reverse_reads_file_path: str = StrRField() # ''
+    sample_frequency_file_path: str = StrRField() # ''
 
     @view(view_type=TableView, 
-            human_name='ForwardQualityTable', 
-            short_description='Table view forward reads quality'
+            human_name='SampleFrequencyTable', 
+            short_description='Table view of sample frequencies (median value needed for qiime 2 pipeline next step)'
     )
-    def view_as_table_forward(self, params: ConfigParam) -> TableView:
-        table_file= TableFile(os.path.join(path=self.forward_reads_file_path))
+    def view_as_table(self, params: ConfigParam) -> TableView:
+        table_file= TableFile(os.path.join(path=self.sample_frequency_file_path))
         table: Table = table_file.read()
         return TableView(data=table.get_data())
 
@@ -87,14 +87,15 @@ class Qiime2SampleFrequenciesFolder(Folder):
 class Qiime2RarefactionFolder(Folder):
     ''' Qiime2RarefactionFolder Folder file class '''
 
-    shannon_table_file_path: str = StrRField()
-    observed_features_reads_file_path: str = StrRField()
+    shannon_index_table_path: str = StrRField()
+    observed_features_table_path: str = StrRField()
+
     @view(view_type=TableView, 
             human_name='ShannonRarefactionTable', 
             short_description='Table view of the rarefaction table (shannon index)'
     )
     def view_as_table_shannon(self, params: ConfigParam) -> TableView:
-        table_file= TableFile(os.path.join(path=self.shannon_table_file_path))
+        table_file= TableFile(os.path.join(path=self.shannon_index_table_path))
         table: Table = table_file.read()
         return TableView(data=table.get_data())
 
@@ -103,27 +104,31 @@ class Qiime2RarefactionFolder(Folder):
             short_description='Table view of the rarefaction table (observed features index)'
     )
     def view_as_table_observed_features(self, params: ConfigParam) -> TableView:
-        table_file= TableFile(os.path.join(path=self.observed_features_reads_file_path))
+        table_file= TableFile(os.path.join(path=self.observed_features_table_path))
         table: Table = table_file.read()
         return TableView(data=table.get_data())        
 
     @view(view_type=BoxPlotView,
             human_name='ShannonRarefactionBoxplot', 
             short_description='Boxplot view of the shannon rarefaction table (X-axis: depth per samples, Y-axis: shannon index value)'   
+            ConfigParams=("delimiter": "\t", "header": 1)
     )
     def view_shannon_table_as_boxplot(self) -> BoxPlotView:
-        table_file = TableFile(path=self.shannon_table_file_path)
+        table_file = TableFile(path=self.shannon_index_table_path)
         table: Table = table_file.read()
         return BoxPlotView(data=table.get_data())
 
     @view(view_type=BoxPlotView,
             human_name='ObservedFeaturesRarefactionBoxplot', 
-            short_description='Boxplot view of the observed values rarefaction table (X-axis: depth per samples, Y-axis: observed values)'   
+            short_description='Boxplot view of the observed values rarefaction table (X-axis: depth per samples, Y-axis: observed values)' ,  
+            ConfigParams=("delimiter": "\t", "header": 1)
     )
     def view_observed_features_table_as_boxplot(self) -> BoxPlotView:
-        table_file = TableFile(path=self.observed_features_reads_file_path)
+        table_file = TableFile(path=self.observed_features_table_path)
         table: Table = table_file.read()
         return BoxPlotView(data=table.get_data())
+
+
 
 ## STEP 4 : Qiime2TaxonomyDiversity -> Result Folder
 
@@ -133,7 +138,14 @@ class Qiime2RarefactionFolder(Folder):
 class Qiime2TaxonomyDiversityFolder(Folder):
     ''' Qiime2TaxonomyDiversityFolder Folder file class '''
 
-
+    @view(view_type=TableView, 
+            human_name='XXXIndexTable', 
+            short_description='Table view of the XXX index table'
+    )
+    def view_as_table_observed_features(self, params: ConfigParam) -> TableView:
+        table_file= TableFile(os.path.join(path=self.observed_features_table_path))
+        table: Table = table_file.read()
+        return TableView(data=table.get_data())  
 
 
 

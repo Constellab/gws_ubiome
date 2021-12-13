@@ -28,13 +28,12 @@ class Qiime2Rarefaction(Qiime2EnvTask):
    
 
     input_specs = {
-        'Qiime2_sample-frequencies_Result_Folder': (Qiime2SampleFrequenciesFolder,),
+        'sample-frequencies_Result_Folder': (Qiime2SampleFrequenciesFolder,),
     }
     output_specs = {
         'result_folder': (Qiime2RarefactionFolder,)
     }
     config_specs = {
-        "project_id": StrParam(short_description="Project ID to name outputs"),
         "minCoverage": IntParam(min_value=20, short_description="Minimum read number to test"),
         "maxCoverage": IntParam(min_value=20, short_description="Maximum read number value to test. Near to median value of the previous sample frequencies is advised")
     }
@@ -44,11 +43,12 @@ class Qiime2Rarefaction(Qiime2EnvTask):
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2RarefactionFolder()
         result_file.path = self._output_file_path
+        result_file.observed_features_table_path = "observed_features.for_boxplot.tsv"
+        result_file.shannon_index_table_path = "shannon.for_boxplot.tsv"
         return {"result_folder": result_file} 
     
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
-        quiime_folder = inputs["Qiime2_sample-frequencies_Result_Folder"]
-        proj_id = params["project_id"]
+        quiime_folder = inputs["sample-frequencies_Result_Folder"]
         minDepth = params["minCoverage"]
         maxDepth = params["maxCoverage"]
 
@@ -58,11 +58,9 @@ class Qiime2Rarefaction(Qiime2EnvTask):
             " bash ", 
             os.path.join(script_file_dir, "./sh/3_qiime2_alpha_rarefaction.sh"),      
             quiime_folder.path,
-            proj_id,
             minDepth,
             maxDepth,
-            os.path.join(script_file_dir, "./Perl/3_transform_table_for_boxplot.pl"),
-
+            os.path.join(script_file_dir, "./Perl/3_transform_table_for_boxplot.pl")
         ]
         
         return cmd
@@ -71,5 +69,5 @@ class Qiime2Rarefaction(Qiime2EnvTask):
     def _get_output_file_path(self, output_dir_name) :
         return os.path.join(
             self.working_dir, 
-            output_dir_name + ".qiime2.output.rarefaction"
+            "rarefaction"
         )
