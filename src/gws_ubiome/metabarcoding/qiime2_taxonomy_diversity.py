@@ -68,5 +68,5 @@ class Qiime2Rarefaction(Qiime2EnvTask):
     def _get_output_file_path(self, output_dir_name) :
         return os.path.join(
             self.working_dir, 
-            output_dir_name + ".core-metrics-results"
+            output_dir_name + ".qiime2.output.taxo-diversity"
         )

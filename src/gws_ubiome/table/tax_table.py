@@ -25,24 +25,6 @@ class TaxTable(Table):
         data = self._data[ self.tax_level_column == tax_level ]
         return data
 
-    # def _get_data_aggregated_by_level(self, tax_level) -> DataFrame:
-    #     level_data: DataFrame = self._data[ self.tax_level_column == tax_level ]
-    #     level_rank_ids: List[str] = level_data.loc[ :,self.rank_id_column ].tolist()
-    #     level_taxa: List[str] = level_data.loc[ :,self.taxon_column ].tolist()
-
-    #     data_sum = DataFrame()
-    #     for i, level_taxon in enumerate(level_taxa):
-    #         level_rank_id = level_rank_ids[i]
-    #         tf = self._data.loc[ :,self.rank_id_column ].str.startswith(level_rank_id)
-    #         lower_level_data: DataFrame = self._data.loc[tf, :]
-    #         level_data_sum = lower_level_data.sum(skipna=True)
-    #         level_data_sum.index[0] = level_taxon
-    #         level_data_sum.loc[level_taxon, self.taxon_column] = level_taxon
-
-    #         data_sum = pandas.concat([data_sum, level_data_sum])
-
-    #     return data_sum
-    
     # -- S --
 
     def select_by_row_indexes(self, indexes: List[int]) -> 'TaxTable':

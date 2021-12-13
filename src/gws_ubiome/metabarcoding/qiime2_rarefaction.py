@@ -60,7 +60,8 @@ class Qiime2Rarefaction(Qiime2EnvTask):
             quiime_folder.path,
             proj_id,
             minDepth,
-            maxDepth
+            maxDepth,
+            os.path.join(script_file_dir, "./Perl/3_transform_table_for_boxplot.pl"),
 
         ]
         

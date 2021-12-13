@@ -1,0 +1,4 @@
+sample-id	forward-absolute-filepath	reverse-absolute-filepath
+341F-785R-P01-B05-P37	$PWD/*/341F-785R-P01-B05-P37-c_R1.fastq.bz2	$PWD/*/341F-785R-P01-B05-P37-c_R2.fastq.bz2
+341F-785R-P01-C11-P31	$PWD/*/341F-785R-P01-C11-P31-c_R1.fastq.bz2	$PWD/*/341F-785R-P01-C11-P31-c_R2.fastq.bz2
+341F-785R-P01-G06-P13	$PWD/*/341F-785R-P01-G06-P13-b_R1.fastq.bz2	$PWD/*/341F-785R-P01-G06-P13-b_R2.fastq.bz2
