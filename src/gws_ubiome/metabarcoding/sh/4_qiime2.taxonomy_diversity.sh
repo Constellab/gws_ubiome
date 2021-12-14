@@ -10,6 +10,7 @@
 qiime_dir=$1
 rarefication_plateau_depth_value=$2
 threads=$3
+gg_db=$4
 
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences $qiime_dir/rep-seqs.qza \
@@ -28,7 +29,7 @@ qiime diversity core-metrics-phylogenetic \
 mv ./core-metrics-results/* ./
 
 qiime feature-classifier classify-sklearn \
-  --i-classifier gg-13-8-99-nb-classifier.qza \
+  --i-classifier $gg_db \
   --i-reads $qiime_dir/rep-seqs.qza \
   --o-classification gg.taxonomy.qza
 
@@ -76,7 +77,7 @@ for i in ./diversity/table_files/*.csv ;do cat $i | tr ',' '\t'  > ./diversity/t
 mv *.qza ./diversity/raw_files ;
 mv *.qzv ./diversity/raw_files ;ls
 
-mv $qiime_dir/table.qza ./diversity/raw_files ;
-mv $qiime_dir/manifest.txt  ./diversity/raw_files ;
-mv $qiime_dir/rep-seqs.qza ./diversity/raw_files ;
-mv $qiime_dir/demux.qza ./diversity/raw_files ;
+cp $qiime_dir/table.qza ./diversity/raw_files ;
+cp $qiime_dir/manifest.txt  ./diversity/raw_files ;
+cp $qiime_dir/rep-seqs.qza ./diversity/raw_files ;
+cp $qiime_dir/demux.qza ./diversity/raw_files ;

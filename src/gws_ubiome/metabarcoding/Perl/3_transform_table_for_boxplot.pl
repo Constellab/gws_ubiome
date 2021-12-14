@@ -62,7 +62,7 @@ while(<STDIN>){
 			if($col2==1){
 				$sampleId=$_;
 			}
-			elsif($_=~/.*\$PWD.*/){
+			elsif($_=~/.*\.gz$/){
 				next;
 			}
 			else{

@@ -10,5 +10,5 @@ class Dada2EnvTask(CondaEnvShell):
     unique_env_name = "Dada2EnvTask"
     env_file_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 
-        "dada2_env.yml"
+        "./env_files/dada2_env.yml"
     )

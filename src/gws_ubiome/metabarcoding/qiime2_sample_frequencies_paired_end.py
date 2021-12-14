@@ -7,15 +7,14 @@ import os
 import re
 import csv
 
-from gws_core import task_decorator, File, ConfigParams, StrParam, TaskInputs, TaskOutputs, Utils, Folder
+from gws_core import task_decorator, File, ConfigParams, StrParam, TaskInputs, TaskOutputs, Utils, Folder, IntParam
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..file.metadata_file import MetadataFile
-from ..file.qiime_folder import Qiime2QualityCheckResultFolder
-from ..file.qiime_folder import Qiime2SampleFrequenciesFolder
+#from ..file.metadata_file import MetadataFile
+from ..file.qiime2_folder import Qiime2QualityCheckResultFolder, Qiime2SampleFrequenciesFolder
 
 
-@task_decorator("Qiime2SampleFrequencies")
-class Qiime2SampleFrequencies(Qiime2EnvTask):
+@task_decorator("Qiime2SampleFrequenciesPE")
+class Qiime2SampleFrequenciesPE(Qiime2EnvTask):
     """
     Qiime2SampleFrequencies class. 
     
@@ -35,7 +34,8 @@ class Qiime2SampleFrequencies(Qiime2EnvTask):
     }
     config_specs = {
         "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
-        "truncatedReadsSize": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
+        "truncatedForwardReadsSize": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
+        "truncatedReverseReadsSize": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")
     }
 #        "e_value": FloatParam(default_value=0.00001, min_value=0.0, short_description="E-value : Default = 0.00001 (i.e 1e-5)"),
 #        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
@@ -50,22 +50,24 @@ class Qiime2SampleFrequencies(Qiime2EnvTask):
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
         qiime2_folder = inputs["Quality-Check_Result_Folder"]
         thrd = params["threads"]
-        trctL = params["truncatedReadsSize"]
+        trctF = params["truncatedForwardReadsSize"]
+        trctR = params["truncatedReverseReadsSize"]
 
-        self._output_file_path = self._get_output_file_path(proj_id)
+        self._output_file_path = self._get_output_file_path()
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         cmd = [ 
             " bash ", 
-            os.path.join(script_file_dir, "./sh/2_qiime2_sample_frequencies.paired-end.sh"),      
+            os.path.join(script_file_dir, "./sh/2_qiime2_sample_frequencies_paired_end.sh"),      
             qiime2_folder.path, 
-            thrd,
-            trctL
+            trctF,
+            trctR,
+            thrd
         ]
         
         return cmd
 
 
-    def _get_output_file_path(self, output_dir_name) :
+    def _get_output_file_path(self) :
         return os.path.join(
             self.working_dir, 
             "sample_freq_details"

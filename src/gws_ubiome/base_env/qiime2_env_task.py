@@ -10,5 +10,5 @@ class Qiime2EnvTask(CondaEnvShell):
     unique_env_name = "Qiime2EnvTask"
     env_file_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 
-        "qiime2-2021.11-py38-linux-conda.yml"
+        "./env_files/qiime2-2021.11-py38-linux-conda.yml"
     )

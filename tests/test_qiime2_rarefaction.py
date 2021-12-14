@@ -1,33 +1,33 @@
 
 import os
 from gws_core import Settings, TaskRunner, File, BaseTestCase, Folder, IntParam, ConfigParams, StrParam, TaskInputs, TaskOutputs, Utils, task_decorator
-from gws_ubiome import FastqFolder, Qiime2RarefactionFolder, Qiime2Rarefaction, Qiime2TaxonomyDiversityFolder, Qiime2TaxonomyDiversity
+from gws_ubiome import FastqFolder, Qiime2SampleFrequenciesFolder, Qiime2SampleFrequenciesPE, Qiime2RarefactionFolder, Qiime2Rarefaction
 import pandas
 
 
-class TestQiime2TaxonomyDiversity(BaseTestCase):
+class TestQiime2Rarefaction(BaseTestCase):
 
     async def test_importer(self):        
         settings = Settings.retrieve()
         data_dir = settings.get_variable("gws_ubiome:testdata_dir")
         large_data_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
-        #/lab/user/bricks/gws_ubiome/tests/testdata/build/rarefaction
+        #/lab/user/bricks/gws_ubiome/tests/testdata/build/sample_freq_details
         tester = TaskRunner(
             params = {
-                'rarefactionPlateauValue': 1673 ,
-                'threads': 2
+                'min_coverage': 20 ,
+                'max_coverage': 5000
                 },
             inputs = {
-                 'Rarefaction_Result_Folder':   Qiime2RarefactionFolder(path=os.path.join(data_dir,"build","rarefaction"))
+                 'sample-frequencies_Result_Folder':   Qiime2SampleFrequenciesFolder(path=os.path.join(data_dir,"build","sample_freq_details"))
                 },
-            task_type = Qiime2TaxonomyDiversity
+            task_type = Qiime2Rarefaction
         ) 
         outputs = await tester.run()
         result_dir = outputs['result_folder']
 
-#/lab/user/bricks/gws_ubiome/tests/testdata/build/diversity/table_files/level-1.tsv
+#/lab/user/bricks/gws_ubiome/tests/testdata/build/rarefaction/shannon.for_boxplot.tsv
 
-        boxplot_csv_file_path = os.path.join(result_dir.path , "table_files", "level-1.tsv")
+        boxplot_csv_file_path = os.path.join(result_dir.path , "shannon.for_boxplot.tsv")
         boxplot_csv = File(path=boxplot_csv_file_path)
         resultInFile = open(boxplot_csv_file_path, 'r')
         resultFirstLine = resultInFile.readline()
@@ -35,8 +35,8 @@ class TestQiime2TaxonomyDiversity(BaseTestCase):
 
             
         # Get the expected file output     
-#        expectedDir = os.path.join(path=os.path.join(large_data_dir,"build","table_files"))  
-        expected_file_path = os.path.join(data_dir,"build", "diversity", "table_files", "level-1.tsv")
+#        expectedDir = os.path.join(path=os.path.join(large_data_dir,"build","rarefaction"))  
+        expected_file_path = os.path.join(data_dir,"build","rarefaction", "shannon.for_boxplot.tsv")
         expectedInFile = open(expected_file_path, 'r')
         expectedFirstLine = expectedInFile.readline()
 

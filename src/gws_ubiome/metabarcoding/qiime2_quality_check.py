@@ -9,9 +9,11 @@ import csv
 
 from gws_core import task_decorator, File, ConfigParams, StrParam, TaskInputs, TaskOutputs, Utils, Folder
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..file.metadata_file import MetadataFile
+from ..table.manifest_table_file import Qiime2ManifestTableFile
+from ..table.manifest_table import Qiime2ManifestTable
+
 from ..file.fastq_folder import FastqFolder
-from ..file.qiime1_folder import Qiime2QualityCheckResultFolder
+from ..file.qiime2_folder import Qiime2QualityCheckResultFolder
 
 @task_decorator("Qiime2QualityCheck")
 class Qiime2QualityCheck(Qiime2EnvTask):
@@ -42,59 +44,58 @@ class Qiime2QualityCheck(Qiime2EnvTask):
 
     input_specs = {
         'fastq_folder': (FastqFolder,),
-        'metadata_file': (MetadataFile,)
+        'manifest_table_file': (Qiime2ManifestTableFile,)
     }
     output_specs = {
         'result_folder': (Qiime2QualityCheckResultFolder,)
     }
     config_specs = {
         "sequencing_type": StrParam(default_value="paired-end",allowed_values=["paired-end","single-end"], short_description="Type of sequencing strategy [Respectivly, options : paired-end, single-end ]. Default = paired-end"),
-        "project_id": StrParam(short_description="Project ID to name outputs")  
     }
        
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2QualityCheckResultFolder()
-        result_file.path = self._output_file_path
+        result_file.path = self._get_output_folder_path()
+        result_file.reads_file_path = "seven-number-summaries.tsv"
         result_file.forward_reads_file_path = "forward-seven-number-summaries.tsv"
         result_file.reverse_reads_file_path = "reverse-seven-number-summaries.tsv"
         return {"result_folder": result_file} 
     
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
         fastq_folder = inputs["fastq_folder"]
-        meta_data = inputs["metadata_file"]
-
         seq = params["sequencing_type"]
-        proj_id = params["project_id"]
+        manifest_table_file_path = self._write_manifest_file(inputs, params)
 
-        if  seq == "paired-end":
-            self._output_file_path = self._get_output_file_path(proj_id)
+        if seq == "paired-end":
             script_file_dir = os.path.dirname(os.path.realpath(__file__))
             cmd = [ 
-                " bash ", 
-                os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_import.paired_end.sh"),      
+                "bash", 
+                os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_paired_end.sh"),      
                 fastq_folder.path, 
-                meta_data.path,
-                proj_id
+                manifest_table_file_path
             ]
-            
             return cmd
-
         else:
-            self._output_file_path = self._get_output_file_path(proj_id)
             script_file_dir = os.path.dirname(os.path.realpath(__file__))
             cmd = [ 
-                " bash ", 
-                os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_import.single_end.sh"),      
+                "bash", 
+                os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_single_end.sh"),      
                 fastq_folder.path, 
-                meta_data.path,
-                proj_id
+                manifest_table_file_path
             ]
-            
             return cmd
 
-
-    def _get_output_file_path(self, output_dir_name) :
-        return os.path.join(
-            self.working_dir, 
-            "quality-check"
+    def _write_manifest_file(self, inputs: TaskInputs, params: ConfigParams) -> str:
+        fastq_folder = inputs["fastq_folder"]
+        manifest_table_file = inputs["manifest_table_file"]
+        table = Qiime2ManifestTable.import_from_path(
+            file=manifest_table_file ,
+            params= params
         )
+        return table._export_for_task(
+            abs_file_dir=fastq_folder.path, 
+            abs_output_dir=self.working_dir
+        )
+
+    def _get_output_folder_path(self) :
+        return os.path.join(self.working_dir, "quality-check")

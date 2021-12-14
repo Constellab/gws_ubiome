@@ -6,6 +6,7 @@ from gws_core import File, resource_decorator, Folder
 
 @resource_decorator("FastqFolder",
                     human_name="FastqFolder",
-                    short_description="FastqFolder")
+                    short_description="FastqFolder", hide=True)
 class FastqFolder(Folder):
     ''' Fastq Folder file class '''
+    pass
