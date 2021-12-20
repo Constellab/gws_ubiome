@@ -1,71 +1,66 @@
-# This software is the exclusive property of Gencovery SAS. 
+# LICENSE
+# This software is the exclusive property of Gencovery SAS.
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-import json
 import os
-import re
-import csv
 
-from gws_core import task_decorator, File, ConfigParams, StrParam, TaskInputs, TaskOutputs, Utils, Folder, IntParam
+from gws_core import (ConfigParams, IntParam, TaskInputs, TaskOutputs,
+                      task_decorator)
+
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-#from ..file.metadata_file import MetadataFile
-from ..file.qiime2_folder import Qiime2QualityCheckResultFolder, Qiime2SampleFrequenciesFolder
+from ..file.qiime2_folder import (Qiime2QualityCheckResultFolder,
+                                  Qiime2SampleFrequenciesFolder)
 
 
-@task_decorator("Qiime2SampleFrequenciesSE")
+@task_decorator("Qiime2SampleFrequenciesSE",
+                short_description="Extracts the median value of depth before rarefaction analysis (for single-end sequencing)")
 class Qiime2SampleFrequenciesSE(Qiime2EnvTask):
     """
-    Qiime2SampleFrequencies class. 
-    
-    Process that wraps QIIME2 program.
+    Qiime2SampleFrequencies class.
 
-    [Mandatory]: 
+    [Mandatory]:
         -  Qiime2QualityCheck output file (Qiime2QualityCheckResultFolder)
 
     """
-   
 
     input_specs = {
-        'Quality-Check_Result_Folder': (Qiime2QualityCheckResultFolder,),
+        'quality_check_result_folder': (Qiime2QualityCheckResultFolder,),
     }
     output_specs = {
         'result_folder': (Qiime2SampleFrequenciesFolder,)
     }
     config_specs = {
         "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
-        "truncatedReadsSize": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
+        "truncated_reads_size": IntParam(
+            min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
     }
-#        "e_value": FloatParam(default_value=0.00001, min_value=0.0, short_description="E-value : Default = 0.00001 (i.e 1e-5)"),
-#        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
-       
+
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2SampleFrequenciesFolder()
-        result_file.path = self._output_file_path
+        result_file.path = self._get_output_file_path()
         result_file.sample_frequency_file_path = "sample-frequency-detail.tsv"
- 
-        return {"result_folder": result_file} 
-    
-    def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:   
-        qiime2_folder = inputs["Quality-Check_Result_Folder"]
-        thrd = params["threads"]
-        trctL = params["truncatedReadsSize"]
 
-        self._output_file_path = self._get_output_file_path()
+        return {"result_folder": result_file}
+
+    def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
+        qiime2_folder = inputs["quality_check_result_folder"]
+        threads = params["threads"]
+        truncated_reads_size = params["truncated_reads_size"]
+
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        cmd = [ 
-            " bash ", 
-            os.path.join(script_file_dir, "./sh/2_qiime2_sample_frequencies_paired_end.sh"),      
-            qiime2_folder.path, 
-            thrd,
-            trctL
+        cmd = [
+            " bash ",
+            os.path.join(script_file_dir, "./sh/2_qiime2_sample_frequencies_paired_end.sh"),
+            qiime2_folder.path,
+            threads,
+            truncated_reads_size
         ]
-        
+
         return cmd
 
-
-    def _get_output_file_path(self) :
+    def _get_output_file_path(self):
         return os.path.join(
-            self.working_dir, 
+            self.working_dir,
             "sample_freq_details"
         )

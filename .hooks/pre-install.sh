@@ -12,15 +12,14 @@ CURRENT_FILE_DIR=$(dirname "$0")
 
 pulldata () {
     source_url=$1
-    dest_base_dir=$2
-    dest_target=$3
-    if [[ "$4" == "-d" ]] || [[ "$5" == "-d" ]]; then
+    dest_target=$2
+    if [[ "$3" == "-d" ]] || [[ "$4" == "-d" ]]; then
         is_dir="1"
     else
         is_dir="0"
     fi
 
-    if [[ "$4" == "-z" ]] || [[ "$5" == "-z" ]]; then
+    if [[ "$3" == "-z" ]] || [[ "$4" == "-z" ]]; then
         is_zipped="1"
     else
         is_zipped="0"
@@ -31,8 +30,10 @@ pulldata () {
             rm -rf "$dest_target"
         fi
     fi
+    
+    dest_base_dir=$(dirname "$dest_target")
 
-    if [ ! -d "$dest_target" ]; then
+    if [[ ! -d "$dest_target" ]] && [[ ! -f "$dest_target" ]]; then
         if [ ! -d "$dest_base_dir" ]; then
             mkdir -p $dest_base_dir
         fi
@@ -49,6 +50,7 @@ pulldata () {
 
             rm -f "${dest_target}.zip"
         else
+            echo $dest_target 
             curl "$source_url" -o "${dest_target}"
         fi
     fi
@@ -57,17 +59,14 @@ pulldata () {
 # Pull large testdata
 source_url=`jq '.variables."gws_ubiome:large_testdata_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
 dest_target=`jq '.variables."gws_ubiome:large_testdata_dir"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-dest_base_dir="${dest_target}/../"
-pulldata "$source_url" "$dest_base_dir" "$dest_target" -d -z
+pulldata "$source_url" "$dest_target" -d -z
 
-# # Pull Greengeens Ref data
-# source_url=`jq '.variables."gws_ubiome:greengenes_ref_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-# dest_target=`jq '.variables."gws_ubiome:greengenes_ref_file"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-# dest_base_dir="${dest_target}/../"
-# pulldata "$source_url" "$dest_base_dir" "$dest_target"
+# Pull Greengeens Ref data
+source_url=`jq '.variables."gws_ubiome:greengenes_ref_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
+dest_target=`jq '.variables."gws_ubiome:greengenes_ref_file"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
+pulldata "$source_url" "$dest_target"
 
-# # Pull Greengeens Classifier
-# source_url=`jq '.variables."gws_ubiome:greengenes_classifier_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-# dest_target=`jq '.variables."gws_ubiome:greengenes_classifier_file"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-# dest_base_dir="${dest_target}/../"
-# pulldata "$source_url" "$dest_base_dir" "$dest_target"
+# Pull Greengeens Classifier
+source_url=`jq '.variables."gws_ubiome:greengenes_classifier_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
+dest_target=`jq '.variables."gws_ubiome:greengenes_classifier_file"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
+pulldata "$source_url" "$dest_target"

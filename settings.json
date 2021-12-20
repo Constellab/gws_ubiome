@@ -5,9 +5,9 @@
     "variables": {
         "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
 
-        "gws_ubiome:large_testdata_url": "https://storage.sbg.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/testdata/ubiome/20211214/large_testdata.zip",
-        "gws_ubiome:large_testdata_dir": "/data/gws_ubiome/large_testdata",
-        
+        "gws_ubiome:large_testdata_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/testdata.zip",
+        "gws_ubiome:large_testdata_dir": "/data/gws_ubiome/testdata",
+
         "gws_ubiome:greengenes_ref_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/sepp-refs-gg-13-8.qza",
         "gws_ubiome:greengenes_ref_file": "/data/gws_ubiome/opendata/sepp-refs-gg-13-8.qza",
 
