@@ -18,7 +18,6 @@ class TestQiime2QualityCheck(BaseTestCase):
     async def test_importer(self):
         settings = Settings.retrieve()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
-        #large_data_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         tester = TaskRunner(
             params={
                 'sequencing_type': 'paired-end'

@@ -19,7 +19,6 @@ qiime diversity alpha-rarefaction \
   --p-min-depth $min_value \
   --p-max-depth $max_value
 
-
 mkdir rarefaction ;
 
 unzip alpha_rarefaction_curves.qzv -d tmp_dir ;

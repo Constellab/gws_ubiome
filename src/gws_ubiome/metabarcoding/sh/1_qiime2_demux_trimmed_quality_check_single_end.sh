@@ -23,10 +23,9 @@ qiime demux summarize \
   --o-visualization demux.qzv
 
 unzip demux.qzv -d tmp_dir
+mkdir quality_check ;
 
-mkdir quality-check ;
+cat ./tmp_dir/*/data/seven-number-summaries.tsv | sed -n '1p;4,8p' > ./quality_check/quality-boxplot.csv # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
 
-cat ./tmp_dir/*/data/seven-number-summaries.tsv | sed -n '1p;4,8p' > ./quality-check/quality-boxplot.csv # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
-
-mv demux.qza ./quality-check ;
-mv manifest.txt ./quality-check ;
+mv demux.qza ./quality_check ;
+mv manifest.txt ./quality_check ;

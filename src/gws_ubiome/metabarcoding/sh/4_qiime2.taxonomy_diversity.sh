@@ -75,7 +75,7 @@ for i in *.diversity_metrics ;do  for j in $(find . -name "$i*.tsv") ;do  cat $j
 for i in ./diversity/table_files/*.csv ;do cat $i | tr ',' '\t'  > ./diversity/table_files/$(basename $i | sed 's/\.csv//' ;)".tsv" ; rm $i ;done
 
 mv *.qza ./diversity/raw_files ;
-mv *.qzv ./diversity/raw_files ;ls
+mv *.qzv ./diversity/raw_files ;
 
 cp $qiime_dir/table.qza ./diversity/raw_files ;
 cp $qiime_dir/manifest.txt  ./diversity/raw_files ;

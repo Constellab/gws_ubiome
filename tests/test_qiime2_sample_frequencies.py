@@ -24,7 +24,7 @@ class TestQiime2SampleFrequencies(BaseTestCase):
             },
             inputs={
                 'quality_check_result_folder':   Qiime2QualityCheckResultFolder(
-                    path=os.path.join(large_testdata_dir, "sample_freq_details"))
+                    path=os.path.join(large_testdata_dir, "quality_check"))
             },
             task_type=Qiime2SampleFrequenciesPE
         )

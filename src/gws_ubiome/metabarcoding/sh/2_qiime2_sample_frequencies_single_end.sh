@@ -19,19 +19,17 @@ qiime dada2 denoise-single \
   --o-representative-sequences rep-seqs.qza \
   --o-denoising-stats denoising-stats.qza
 
-
 qiime feature-table summarize \
   --i-table table.qza \
   --o-visualization feature-table.qzv \
   --m-sample-metadata-file $qiime_dir/manifest.txt
 
 mkdir sample_freq_details ;
-
 unzip feature-table.qzv -d tmp_dir ;
 
 cat tmp_dir/*/data/sample-frequency-detail.csv | tr ',' '\t' > ./sample_freq_details/sample-frequency-detail.tsv;
 
 mv rep-seqs.qza ./sample_freq_details ;
 mv table.qza ./sample_freq_details ;
-mv $qiime_dir/demux.qza ./sample_freq_details ;
-mv $qiime_dir/manifest.txt ./sample_freq_details ;
+cp $qiime_dir/demux.qza ./sample_freq_details ;
+cp $qiime_dir/manifest.txt ./sample_freq_details ;

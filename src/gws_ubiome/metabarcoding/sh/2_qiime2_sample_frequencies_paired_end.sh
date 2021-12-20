@@ -27,13 +27,11 @@ qiime feature-table summarize \
   --m-sample-metadata-file $qiime_dir/manifest.txt
 
 mkdir sample_freq_details ;
-
 unzip feature-table.qzv -d tmp_dir ;
-
 
 cat tmp_dir/*/data/sample-frequency-detail.csv | tr ',' '\t' > ./sample_freq_details/sample-frequency-detail.tsv;
 
 mv rep-seqs.qza ./sample_freq_details ;
 mv table.qza ./sample_freq_details ;
-mv $qiime_dir/demux.qza ./sample_freq_details ;
-mv $qiime_dir/manifest.txt ./sample_freq_details ;
+cp $qiime_dir/demux.qza ./sample_freq_details ;
+cp $qiime_dir/manifest.txt ./sample_freq_details ;
