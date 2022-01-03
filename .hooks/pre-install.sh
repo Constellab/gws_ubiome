@@ -6,9 +6,10 @@
 
 # Pre-installation script executed before server installation
 
+apt-get -y update
 apt-get -y install jq unzip
-CURRENT_FILE_DIR=$(dirname "$0")
 
+CURRENT_FILE_DIR=$(dirname "$0")
 
 pulldata () {
     source_url=$1
