@@ -5,8 +5,8 @@
 
 import os
 
-from gws_core import (ConfigParams, File, StrParam, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import (ConfigParams, File, Logger, StrParam, TaskInputs,
+                      TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..file.fastq_folder import FastqFolder
@@ -51,7 +51,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],
-            short_description="Type of sequencing strategy [Respectivly, options : paired-end, single-end ]. Default = paired-end"), }
+            short_description="Type of sequencing strategy [Respectivly, options : paired-end, single-end ]. Default = paired-end")}
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2QualityCheckResultFolder()
@@ -64,16 +64,20 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         fastq_folder = inputs["fastq_folder"]
         seq = params["sequencing_type"]
-        manifest_table_file_path = self._write_manifest_file(inputs, params)
+
+        #fastq_folder_path = '/data/gws_ubiome/testdata/fastq_dir/'
+        fastq_folder_path = fastq_folder.path
+        manifest_table_file_path = self._write_manifest_file(fastq_folder_path, Qiime2ManifestTableFile('/data/gws_ubiome/testdata/rarefaction/manifest.txt'))
 
         if seq == "paired-end":
             script_file_dir = os.path.dirname(os.path.realpath(__file__))
             cmd = [
                 "bash",
                 os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_paired_end.sh"),
-                fastq_folder.path,
+                fastq_folder_path,
                 manifest_table_file_path
             ]
+            Logger.info(cmd)
             return cmd
         else:
             script_file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -85,12 +89,10 @@ class Qiime2QualityCheck(Qiime2EnvTask):
             ]
             return cmd
 
-    def _write_manifest_file(self, inputs: TaskInputs, params: ConfigParams) -> str:
-        fastq_folder = inputs["fastq_folder"]
-        manifest_table_file = inputs["manifest_table_file"]
-        table: Qiime2ManifestTable = Qiime2ManifestTableImporter.call(manifest_table_file, {})
+    def _write_manifest_file(self, fastq_folder_path: str, manifest_table_file: Qiime2ManifestTableFile) -> str:
+        table: Qiime2ManifestTable = Qiime2ManifestTableImporter.call(manifest_table_file)
         return table._export_for_task(
-            abs_file_dir=fastq_folder.path,
+            abs_file_dir=fastq_folder_path,
             abs_output_dir=self.working_dir
         )
 

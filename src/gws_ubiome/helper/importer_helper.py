@@ -13,6 +13,6 @@ class ImporterHelper:
         if params is None:
             params = ConfigParams({})
         return TableImporter.call(
-            file=File(path=file_path),
+            source=File(path=file_path),
             params=params
         )
