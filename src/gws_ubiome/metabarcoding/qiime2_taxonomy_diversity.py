@@ -70,7 +70,7 @@ class Qiime2TaxonomyDiversity(Qiime2EnvTask):
         qiime2_folder = inputs["rarefaction_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         thrds = params["threads"]
-        db_gg_path = "/lab/user/bricks/gws_ubiome/tests/testdata/build/gg-13-8-99-nb-classifier.qza"  # Temporary
+        db_gg_path = "/lab/user/bricks/gws_ubiome/src/gws_ubiome/build/gg-13-8-99-nb-classifier.qza"  # Temporary
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         cmd = [
             " bash ",

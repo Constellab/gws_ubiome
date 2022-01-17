@@ -32,7 +32,7 @@ mkdir quality_check ;
 cat ./tmp_dir/*/data/reverse-seven-number-summaries.tsv | sed -n '1p;4,8p' > ./quality_check/reverse_boxplot.csv ; # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
 cat ./tmp_dir/*/data/forward-seven-number-summaries.tsv  | sed -n '1p;4,8p' > ./quality_check/forward_boxplot.csv ; # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
 
-mv *even-number-summaries.tsv  ./quality_check ;
+#mv *even-number-summaries.tsv  ./quality_check ;
 
 mv demux.qza ./quality_check ;
 

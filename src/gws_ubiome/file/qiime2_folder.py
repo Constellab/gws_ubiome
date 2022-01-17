@@ -4,7 +4,8 @@
 
 from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
                       MultiViews, StrParam, StrRField, Table, TableImporter,
-                      TableView, resource_decorator, view)
+                      resource_decorator, view)
+from gws_core.extra import TableBoxPlotView, TableView
 
 from ..helper.importer_helper import ImporterHelper
 
@@ -41,7 +42,10 @@ class Qiime2QualityCheckResultFolder(Folder):
 
     @view(view_type=BoxPlotView, human_name='SequencingQualityBoxplotView',
           short_description='Boxplot view of the reads sequencing quality (PHRED score per base, from first to last base)',
-          specs={"type": StrParam(allowed_values=["forward_reads", "reverse_reads"])})
+          specs={"type": StrParam(
+              allowed_values=["forward_reads", "reverse_reads"],
+              default_value="forward_reads")},
+          default_view=True)
     def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
         type_ = params["type"]
         table: Table
@@ -49,7 +53,8 @@ class Qiime2QualityCheckResultFolder(Folder):
             file_path = self.get_sub_path("forward_boxplot.csv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
         elif type_ == "reverse_reads":
-            table = ImporterHelper.import_table(self.reverse_reads_file_path)
+            file_path = self.get_sub_path("reverse_boxplot.csv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
 
         bx_view = BoxPlotView()
         data = table.get_data()
@@ -78,7 +83,8 @@ class Qiime2SampleFrequenciesFolder(Folder):
 
     @view(view_type=TableView,
           human_name='SampleFrequencyTable',
-          short_description='Table view of sample frequencies (median value needed for qiime 2 pipeline next step)'
+          short_description='Table view of sample frequencies (median value needed for qiime 2 pipeline next step)',
+          default_view=True
           )
 #    def view_as_table(self, params: ConfigParams) -> TableView:
 #        table: Table = ImporterHelper.import_table(self.sample_frequency_file_path)
@@ -87,6 +93,13 @@ class Qiime2SampleFrequenciesFolder(Folder):
         table: Table
         file_path = self.get_sub_path("sample-frequency-detail.tsv")
         table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+        data = table.get_data()
+        median = data.median(axis=0).iat[0]
+        average = data.mean(axis=0).iat[0]
+        view.set_caption(
+            f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
         return TableView(table=table)
 
 #######  STEP 3 : Qiime2Rarefaction -> ResultFolder #######
@@ -106,52 +119,50 @@ class Qiime2RarefactionFolder(Folder):
           specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
     def view_as_table(self, params: ConfigParams) -> TableView:
         type_ = params["type"]
-        table: Table
-        if type_ == "rarefaction_shannon":
+        table: Table = self._load_table(type_=type_)
+        view = TableView(table=table)
+        # if type_ == "rarefaction_shannon":
+        #     view.set_title("Rarefaction shannon table")
+        #     data = table.get_data()
+        #     median = data.median(axis=0).iat[0]
+        #     view.set_caption(f"blalblalb {median} blalblalblalblalb")
+
+        # elif type_ == "rarefaction_observed":
+        #     view.set_title("Rarefaction observed table")
+        #     data = table.get_data()
+        #     median = data.median(axis=1).iat[0]
+        #     view.set_caption(f"blalblalb {median} blalblalblalblalb")
+
+        return view
+
+    def _load_table(self, type_: str) -> Table:
+        if type_ == "rarefaction_observed":
             file_path = self.get_sub_path("observed_features.for_boxplot.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
-        elif type_ == "rarefaction_observed":
+            return ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
+        elif type_ == "rarefaction_shannon":
             file_path = self.get_sub_path("shannon.for_boxplot.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            return ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
 
-        return TableView(table=table)
-
-    # def view_as_table(self, params: ConfigParams) -> TableView:
+    # @view(view_type=TableBoxPlotView, human_name='RarefactionBoxplotView',
+    #       short_description='Boxplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
+    #       specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
+    # def view_as_boxplot(self, params: ConfigParams) -> TableBoxPlotView:
     #     type_ = params["type"]
-    #     table: Table
-    #     if type_ == "rarefaction_shannon":  # observed_features.for_boxplot.tsv
-    #         table = ImporterHelper.import_table(self.shannon_index_table_path)
-    #     elif type_ == "rarefaction_observed":  # shannon.for_boxplot.tsv
-    #         table = ImporterHelper.import_table(self.observed_features_table_path)
+    #     table: Table = self._load_table(type_=type_)
 
-        # return TableView(table=table.get_data())
+    #     view = TableBoxPlotView(table=table)
+    #     if type_ == "rarefaction_shannon":
+    #         view.set_title("Rarefaction shannon table")
+    #         data = table.get_data()
+    #         view.set_caption("blalblalb blalblalblalblalb")
 
-    @view(view_type=BoxPlotView, human_name='RarefactionBoxplotView',
-          short_description='Boxplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
-          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
-        type_ = params["type"]
-        table: Table
-        if type_ == "rarefaction_shannon":
-            file_path = self.get_sub_path("shannon.for_boxplot.tsv")
-            table: Table = ImporterHelper.import_table(
-                file_path,
-                params=ConfigParams({
-                    "delimiter": "\t",
-                    "header": 1
-                })
-            )
-        elif type_ == "rarefaction_observed":
-            file_path = self.get_sub_path("observed_features.for_boxplot.tsv")
-            table: Table = ImporterHelper.import_table(
-                file_path,
-                params=ConfigParams({
-                    "delimiter": "\t",
-                    "header": 1
-                })
-            )
+    #     elif type_ == "rarefaction_observed":
+    #         view.set_title("Rarefaction observed table")
+    #         data = table.get_data()
+    #         view.set_caption("blalblalb  blalblalblalblalb")
 
-        return BoxPlotView(data=table.get_data())
+        return view
+
 
 ####### STEP 4 : Qiime2TaxonomyDiversity -> Result Folder #######
 
@@ -166,7 +177,6 @@ class Qiime2TaxonomyDiversityFolder(Folder):
     chao_1_table_path: str = StrRField()
     evenness_table_path: str = StrRField()
     faith_pd_table_path: str = StrRField()
-    feature_freq_detail_table_path: str = StrRField()
     inv_simpson_table_path: str = StrRField()
     jaccard_distance_table_path: str = StrRField()
     jaccard_unweighted_unifrac_distance_table_path: str = StrRField()
@@ -187,39 +197,40 @@ class Qiime2TaxonomyDiversityFolder(Folder):
           human_name='AlphaDiversityTableView',
           short_description='Table view of the alpha diversity indexes table',
           specs={
-              "type": StrParam(allowed_values=["shannon", "chao_1", "evenness", "faith_pd", "observed_community_richness", "feature_frequencies"])
+              "type": StrParam(allowed_values=["shannon", "chao_1", "evenness", "faith_pd", "observed_community_richness"])
           })
     def view_as_alpha_table(self, params: ConfigParams) -> TableView:
         type_ = params["type"]
         table: Table
         if type_ == "shannon":  # shannon_vector.qza.diversity_metrics.shannon_vector.qza.diversity_metrics.tsv
             file_path = self.get_sub_path(
-                "shannon_vector.qza.diversity_metrics.shannon_vector.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/shannon_vector.qza.diversity_metrics.alpha-diversity.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
 #            table = ImporterHelper.import_table(self.shannon_vector_table_path)
         elif type_ == "chao_1":
-            file_path = self.get_sub_path("chao1.qza.diversity_metrics.chao1.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/chao1.qza.diversity_metrics.alpha-diversity.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
 #            table = ImporterHelper.import_table(self.chao_1_table_path)
         elif type_ == "evenness":
             file_path = self.get_sub_path(
-                "evenness_vector.qza.diversity_metrics.evenness_vector.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/evenness_vector.qza.diversity_metrics.alpha-diversity.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.evenness_table_path)
         elif type_ == "faith_pd":
             file_path = self.get_sub_path(
-                "faith_pd_vector.qza.diversity_metrics.faith_pd_vector.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/faith_pd_vector.qza.diversity_metrics.alpha-diversity.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.faith_pd_table_path)
         elif type_ == "observed_community_richness":
             file_path = self.get_sub_path(
-                "observed_features_vector.qza.diversity_metrics.observed_features_vector.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/observed_features_vector.qza.diversity_metrics.alpha-diversity.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.observed_features_vector_table_path)
-        elif type_ == "feature_frequencies":
-            file_path = self.get_sub_path("feature-frequency-detail.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
-            #            table = ImporterHelper.import_table(self.feature_freq_detail_table_path)
 
         return TableView(table=table)
 
@@ -235,46 +246,53 @@ class Qiime2TaxonomyDiversityFolder(Folder):
     def view_as_beta_table(self, params: ConfigParams) -> TableView:
         type_ = params["type"]
         table: Table
-        if type_ == "bray_curtis":
+        if type_ == "bray_curtis_index":
             file_path = self.get_sub_path(
-                "bray_curtis_distance_matrix.qza.diversity_metrics.bray_curtis_distance_matrix.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/bray_curtis_distance_matrix.qza.diversity_metrics.distance-matrix.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.bray_curtis_table_path)
         elif type_ == "jaccard":
 
             file_path = self.get_sub_path(
-                "jaccard_distance_matrix.qza.diversity_metrics.jaccard_distance_matrix.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/jaccard_distance_matrix.qza.diversity_metrics.distance-matrix.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.jaccard_distance_table_path)
         elif type_ == "jaccard_unweighted":
 
             file_path = self.get_sub_path(
-                "jaccard_unweighted_unifrac_distance_matrix.qza.diversity_metrics.jaccard_unweighted_unifrac_distance_matrix.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/jaccard_unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.jaccard_unweighted_unifrac_distance_table_path)
         elif type_ == "weighted_unifrac":
 
             file_path = self.get_sub_path(
-                "weighted_unifrac_distance_matrix.qza.diversity_metrics.weighted_unifrac_distance_matrix.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/weighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.weighted_unifrac_distance_table_path)
         elif type_ == "unweighted_unifrac":
 
             file_path = self.get_sub_path(
-                "unweighted_unifrac_distance_matrix.qza.diversity_metrics.unweighted_unifrac_distance_matrix.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #           table = ImporterHelper.import_table(self.unweighted_unifrac_distance_table_path)
         elif type_ == "simpson":
 
             file_path = self.get_sub_path(
-                "simpson.qza.diversity_metrics.simpson.qza.diversity_metrics.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "table_files/simpson.qza.diversity_metrics.alpha-diversity.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #           table = ImporterHelper.import_table(self.simpson_table_path)
         elif type_ == "inverse_simpson":
 
             file_path = self.get_sub_path(
-                "invSimpson.tab.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+                "./table_files/invSimpson.tab.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
           #          table = ImporterHelper.import_table(self.inv_simpson_table_path)
 
         return TableView(table=table)
@@ -292,38 +310,45 @@ class Qiime2TaxonomyDiversityFolder(Folder):
         table: Table
         if type_ == "1_Kingdom":
 
-            file_path = self.get_sub_path("level-1.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.taxo_level_1_table_path)
         elif type_ == "2_Phylum":
 
-            file_path = self.get_sub_path("level-2.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-2.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #           table = ImporterHelper.import_table(self.taxo_level_2_table_path)
         elif type_ == "3_Class":
 
-            file_path = self.get_sub_path("level-3.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-3.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
           #          table = ImporterHelper.import_table(self.taxo_level_3_table_path)
         elif type_ == "4_Order":
 
-            file_path = self.get_sub_path("level-4.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-4.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
            #         table = ImporterHelper.import_table(self.taxo_level_4_table_path)
         elif type_ == "5_Family":
 
-            file_path = self.get_sub_path("level-5.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-5.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #        table = ImporterHelper.import_table(self.taxo_level_5_table_path)
         elif type_ == "6_Genus":
 
-            file_path = self.get_sub_path("level-6.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-6.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #       table = ImporterHelper.import_table(self.taxo_level_6_table_path)
         elif type_ == "7_Species":
 
-            file_path = self.get_sub_path("level-7.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-7.csv.tsv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+#            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
           #      table = ImporterHelper.import_table(self.taxo_level_7_table_path)
 
         return TableView(table=table)
