@@ -7,7 +7,7 @@
 import os
 
 from gws_core import (ConfigParams, File, Folder, IntParam, StrParam,
-                      TaskInputs, TaskOutputs, Utils, task_decorator)
+                      TaskInputs, TaskOutputs, Utils, task_decorator, Settings)
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 #from ..file.metadata_file import MetadataFile
@@ -70,7 +70,10 @@ class Qiime2TaxonomyDiversity(Qiime2EnvTask):
         qiime2_folder = inputs["rarefaction_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         thrds = params["threads"]
-        db_gg_path = "/lab/user/bricks/gws_ubiome/src/gws_ubiome/build/gg-13-8-99-nb-classifier.qza"  # Temporary
+        settings = Settings.retrieve()
+#        db_gg_path = "/lab/user/bricks/gws_ubiome/src/gws_ubiome/build/gg-13-8-99-nb-classifier.qza"  # Temporary
+#        db_gg_path = settings.get_variable("gws_ubiome:greengenes_ref_file")
+        db_gg_path = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         cmd = [
             " bash ",

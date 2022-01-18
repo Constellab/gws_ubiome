@@ -22,13 +22,14 @@ class Qiime2QualityCheckResultFolder(Folder):
     Qiime2QualityCheckResultFolder Folder file class
     """
 
-    forward_reads_file_path: str = StrRField()
-    reverse_reads_file_path: str = StrRField()
+    # forward_reads_file_path: str = StrRField()
+    # reverse_reads_file_path: str = StrRField()
 
     @view(view_type=TableView, human_name='SequencingQualityTableView',
           short_description='Table view of the reads sequencing quality (PHRED score per base, from first to last base)',
           specs={"type": StrParam(allowed_values=["forward_reads", "reverse_reads"])})
     def view_as_table(self, params: ConfigParams) -> TableView:
+        from ..metabarcoding.qiime2_quality_check import Qiime2QualityCheck
         type_ = params["type"]
         table: Table
         if type_ == "forward_reads":

@@ -24,21 +24,25 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     [Mandatory]:
         - fastq_folder must contains all fastq files (paired or not).
 
-        - metadata file must follow specific nomenclature (columns are tab separated), including $PWD/*/ before file names :
+        - metadata file must follow specific nomenclature (columns are tab separated):
 
             For paired-end files :
                 sample-id   forward-absolute-filepath   reverse-absolute-filepath
-                sample-1    $PWD/*/sample0_R1.fastq.gz  $PWD/*/sample1_R2.fastq.gz
-                sample-2    $PWD/*/sample2_R1.fastq.gz  $PWD/*/sample2_R2.fastq.gz
-                sample-3    $PWD/*/sample3_R1.fastq.gz  $PWD/*/sample3_R2.fastq.gz
+                sample-1    sample0_R1.fastq.gz  sample1_R2.fastq.gz
+                sample-2    sample2_R1.fastq.gz  sample2_R2.fastq.gz
+                sample-3    sample3_R1.fastq.gz  sample3_R2.fastq.gz
 
             For single-end files :
                 sample-id   absolute-filepath
-                sample-1    $PWD/*/sample0.fastq.gz
-                sample-2    $PWD/*/sample2.fastq.gz
-                sample-3    $PWD/*/sample3.fastq.gz
+                sample-1    sample0.fastq.gz
+                sample-2    sample2.fastq.gz
+                sample-3    sample3.fastq.gz
 
     """
+
+    READS_FILE_PATH = "seven-number-summaries.tsv"
+    FORWARD_READ_FILE_PATH = "forward-seven-number-summaries.tsv"
+    REVERSE_READ_FILE_PATH = "reverse-seven-number-summaries.tsv"
 
     input_specs = {
         'fastq_folder': FastqFolder,
@@ -51,23 +55,26 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],
-            short_description="Type of sequencing strategy [Respectivly, options : paired-end, single-end ]. Default = paired-end")}
+            short_description="Type of sequencing strategy [Respectively, options : paired-end, single-end]. Default = paired-end")}
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2QualityCheckResultFolder()
         result_file.path = self._get_output_folder_path()
-        result_file.reads_file_path = "seven-number-summaries.tsv"
-        result_file.forward_reads_file_path = "forward-seven-number-summaries.tsv"
-        result_file.reverse_reads_file_path = "reverse-seven-number-summaries.tsv"
+        result_file.reads_file_path = self.READS_FILE_PATH
+        result_file.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
+        result_file.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
         return {"result_folder": result_file}
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         fastq_folder = inputs["fastq_folder"]
+        manifest_table_file = inputs["manifest_table_file"]
         seq = params["sequencing_type"]
 
-        #fastq_folder_path = '/data/gws_ubiome/testdata/fastq_dir/'
         fastq_folder_path = fastq_folder.path
-        manifest_table_file_path = self._write_manifest_file(fastq_folder_path, Qiime2ManifestTableFile('/data/gws_ubiome/testdata/rarefaction/manifest.txt'))
+        manifest_table_file_path = self._write_manifest_file(
+            fastq_folder_path, 
+            manifest_table_file
+        )
 
         if seq == "paired-end":
             script_file_dir = os.path.dirname(os.path.realpath(__file__))
