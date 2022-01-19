@@ -4,7 +4,7 @@
 
 from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
                       MultiViews, StrParam, StrRField, Table, TableImporter,
-                      resource_decorator, view)
+                      resource_decorator, view, StackedBarPlotView)
 from gws_core.extra import TableBoxPlotView, TableView
 
 from ..helper.importer_helper import ImporterHelper
@@ -103,6 +103,20 @@ class Qiime2SampleFrequenciesFolder(Folder):
             f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
         return TableView(table=table)
 
+    @view(view_type=BoxPlotView, human_name='SampleFrequencyBoxplotView',
+          short_description='Boxplot view of of sample frequencies')
+    def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
+        table: Table
+        file_path = self.get_sub_path("sample-frequency-detail.tsv")
+        table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+ 
+        bx_view = BoxPlotView()
+        data = table.get_data()
+        bx_view.add_data(data=data)
+        return bx_view
+
 #######  STEP 3 : Qiime2Rarefaction -> ResultFolder #######
 
 
@@ -144,25 +158,17 @@ class Qiime2RarefactionFolder(Folder):
             file_path = self.get_sub_path("shannon.for_boxplot.tsv")
             return ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
 
-    # @view(view_type=TableBoxPlotView, human_name='RarefactionBoxplotView',
-    #       short_description='Boxplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
-    #       specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    # def view_as_boxplot(self, params: ConfigParams) -> TableBoxPlotView:
-    #     type_ = params["type"]
-    #     table: Table = self._load_table(type_=type_)
-
-    #     view = TableBoxPlotView(table=table)
-    #     if type_ == "rarefaction_shannon":
-    #         view.set_title("Rarefaction shannon table")
-    #         data = table.get_data()
-    #         view.set_caption("blalblalb blalblalblalblalb")
-
-    #     elif type_ == "rarefaction_observed":
-    #         view.set_title("Rarefaction observed table")
-    #         data = table.get_data()
-    #         view.set_caption("blalblalb  blalblalblalblalb")
-
-        return view
+    @view(view_type=BoxPlotView, human_name='RarefactionBoxplotView',
+          short_description='Boxplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
+          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
+    def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
+        type_ = params["type"]
+        table: Table = self._load_table(type_=type_)
+ 
+        bx_view = BoxPlotView()
+        data = table.get_data()
+        bx_view.add_data(data=data)
+        return bx_view
 
 
 ####### STEP 4 : Qiime2TaxonomyDiversity -> Result Folder #######
@@ -195,7 +201,7 @@ class Qiime2TaxonomyDiversityFolder(Folder):
     weighted_unifrac_distance_table_path: str = StrRField()
 
     @view(view_type=TableView,
-          human_name='AlphaDiversityTableView',
+          human_name='AlphaDiversityTable',
           short_description='Table view of the alpha diversity indexes table',
           specs={
               "type": StrParam(allowed_values=["shannon", "chao_1", "evenness", "faith_pd", "observed_community_richness"])
@@ -237,7 +243,7 @@ class Qiime2TaxonomyDiversityFolder(Folder):
 
 #        return TableView(table=table.get_data())
 
-    @view(view_type=TableView, human_name='BetaDiversityTableView',
+    @view(view_type=TableView, human_name='BetaDiversityTable',
           short_description='Table view of the beta diversity indexes table',
           specs={
               "type":
@@ -299,7 +305,7 @@ class Qiime2TaxonomyDiversityFolder(Folder):
         return TableView(table=table)
    #     return TableView(table=table.get_data())
 
-    @view(view_type=TableView, human_name='TaxonomicTablesView',
+    @view(view_type=TableView, human_name='TaxonomicTables',
           short_description='Table view of the Taxonomic composition table (7 levels)',
           specs={
               "type":
@@ -309,8 +315,34 @@ class Qiime2TaxonomyDiversityFolder(Folder):
     def view_as_taxo_table(self, params: ConfigParams) -> TableView:
         type_ = params["type"]
         table: Table
-        if type_ == "1_Kingdom":
+        table = self._read_table(type_)
+        return TableView(table=table)
+     #   return TableView(table=table.get_data())
 
+    @view(view_type=StackedBarPlotView, human_name='TaxonomyStackedBarPlot',
+          short_description='Table view of the Taxonomic composition table (7 levels)',
+          specs={
+              "type":
+              StrParam(
+                  allowed_values=["1_Kingdom", "2_Phylum", "3_Class", "4_Order",
+                                  "5_Family", "6_Genus", "7_Species"])})
+    def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
+        type_ = params["type"]
+        table: Table
+        table = self._read_table(type_)
+        data = table.get_data()
+        s_view = StackedBarPlotView()
+        s_view.normalize = True
+        for i in range(1, data.shape[1]):
+            if isinstance(data.iat[0,i], str):
+                continue
+            y = data.iloc[:, i].values.tolist()
+            s_view.add_series(y=y, name=data.columns[i])
+        s_view.x_tick_labels = data.iloc[:, 0].values.tolist()
+        return s_view
+
+    def _read_table(self, type_)->Table:
+        if type_ == "1_Kingdom":
             file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
@@ -352,10 +384,7 @@ class Qiime2TaxonomyDiversityFolder(Folder):
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
           #      table = ImporterHelper.import_table(self.taxo_level_7_table_path)
 
-        return TableView(table=table)
-     #   return TableView(table=table.get_data())
-
-
+        return table
 ####
 
     # @view(view_type=TableView, human_name='ForwardQualityTable', short_description='Table view forward reads quality')

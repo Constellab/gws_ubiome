@@ -10,7 +10,7 @@
 fastq_dir=$1
 manifest=$2
 
-jhgfd
+
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \
   --input-path $manifest \
@@ -21,12 +21,8 @@ qiime demux summarize \
   --i-data demux.qza \
   --o-visualization demux.qzv
 
-ls -lt
-
 unzip demux.qzv -d tmp_dir
 
-ls -lt 
-ls -lt tmp_dir
 mkdir quality_check ;
 
 cat ./tmp_dir/*/data/reverse-seven-number-summaries.tsv | sed -n '1p;4,8p' > ./quality_check/reverse_boxplot.csv ; # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
