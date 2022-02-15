@@ -1,7 +1,9 @@
 {
-    "name": "gws_ubiome",
-    "author": "Gencovery",
-    "version": "0.1.0",
+    "name"          : "gws_ubiome",
+    "author"        : "Gencovery",
+    "author_email"  : "admin@gencovery.com",
+    "version"       : "0.1.0",
+    "description"   : "Gencovery brick for microbiome analysis",
     "variables": {
         "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
 
