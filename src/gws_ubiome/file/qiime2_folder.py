@@ -385,6 +385,53 @@ class Qiime2TaxonomyDiversityFolder(Folder):
           #      table = ImporterHelper.import_table(self.taxo_level_7_table_path)
 
         return table
+
+
+
+
+@resource_decorator("Qiime2DifferentialAnalysisFolder",
+                    human_name="Qiime2DifferentialAnalysisFolder",
+                    short_description="Qiime2DifferentialAnalysisFolder", hide=True)
+class Qiime2DifferentialAnalysisFolder(Folder):
+    ''' Qiime2DifferentialAnalysisFolder Folder file class '''
+
+    sample_frequency_file_path: str = StrRField()  # ''
+
+    @view(view_type=TableView,
+          human_name='DifferentialAnalysisTable',
+          short_description='Table view of deffernetial analysis',
+          default_view=True
+          )
+
+    def view_as_table(self, params: ConfigParams) -> TableView:
+        table: Table
+        file_path = self.get_sub_path("sample-frequency-detail.tsv")
+        table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+        data = table.get_data()
+        median = data.median(axis=0).iat[0]
+        average = data.mean(axis=0).iat[0]
+        view.set_caption(
+            f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
+        return TableView(table=table)
+
+    @view(view_type=BoxPlotView, human_name='SampleFrequencyBoxplotView',
+          short_description='Boxplot view of of sample frequencies')
+    def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
+        table: Table
+        file_path = self.get_sub_path("sample-frequency-detail.tsv")
+        table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+ 
+        bx_view = BoxPlotView()
+        data = table.get_data()
+        bx_view.add_data(data=data)
+        return bx_view
+
+
+
 ####
 
     # @view(view_type=TableView, human_name='ForwardQualityTable', short_description='Table view forward reads quality')
