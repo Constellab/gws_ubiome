@@ -13,7 +13,7 @@ rvs=$3
 manifest_file_name=$4
 
 
-for i in ./$fastq_dir/*$fwd*.gz ;do echo -e $(basename $i )"\t"$(basename $i)"\t"$(basename $i | sed "s/$fwd/$rvs/") ;done | awk 'BEGIN{print "sample-id\tforward-absolute-filepath\treverse-absolute-filepath"}{ print $0}' > test.$manifest_file_name.txt
+for i in $fastq_dir/*$fwd*.gz ;do echo -e $(basename $i )"\t"$(basename $i)"\t"$(basename $i | sed "s/$fwd/$rvs/") ;done | awk 'BEGIN{print "sample-id\tforward-absolute-filepath\treverse-absolute-filepath"}{ print $0}' > $manifest_file_name ;
 
 #for i in ./$fastq_dir/*$fwd*.gz ;do echo -e $(basename $i  | sed "s/\(.*\)$fwd.*/\1/" )"\t"$(basename $i)"\t"$(basename $i | sed "s/$fwd/$rvs/") ;done | awk 'BEGIN{print "sample-id\tforward-absolute-filepath\treverse-absolute-filepath"}{ print $0}' > test.$manifest_file_name.txt
 

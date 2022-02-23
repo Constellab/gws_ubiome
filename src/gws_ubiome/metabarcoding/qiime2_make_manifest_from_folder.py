@@ -39,7 +39,6 @@ class Qiime2MakeManifest(Qiime2EnvTask):
 
     """
 
-    MANIFEST_FILE_PATH = "qiime2_manifest.csv"
 
     input_specs = {
         'fastq_folder': FastqFolder
@@ -69,15 +68,16 @@ class Qiime2MakeManifest(Qiime2EnvTask):
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2ManifestTableFile()
-        result_folder.path = self._get_output_file_path()
-        return {"result_folder": result_folder}
+        manifest_table_file_name = params["manifest_name"]
+        result_file.path = self._get_output_file_path(manifest_table_file_name)
+        return {"manifest_file": result_file}
 
-        result_file = Qiime2ManifestTableFile()
-        result_file.path = self._get_output_folder_path()
-        result_file.reads_file_path = self.READS_FILE_PATH
-        result_file.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
-        result_file.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
-        return {"result_folder": result_file}
+        # result_file = Qiime2ManifestTableFile()
+        # result_file.path = self._get_output_folder_path()
+        # result_file.reads_file_path = self.READS_FILE_PATH
+        # result_file.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
+        # result_file.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
+        # return {"result_file": result_file}
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         fastq_folder = inputs["fastq_folder"]
@@ -109,5 +109,5 @@ class Qiime2MakeManifest(Qiime2EnvTask):
             ]
             return cmd
 
-    def _get_output_file_path(self):
-        return os.path.join(self.working_dir, self.MANIFEST_FILE_PATH )
+    def _get_output_file_path(self, f_name):
+        return os.path.join(self.working_dir, f_name )

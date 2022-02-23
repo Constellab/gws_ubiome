@@ -11,15 +11,15 @@
 
 qiime_dir=$1
 tax_level=$2
-sample_type=$3
+sample_type_column=$3
 metadata_column=$4
 threads=$5
 metadata_file=$6
-sample_type_column=$7
+sample_type=$7
 
 
    qiime feature-table filter-samples \
-     --i-table ./$qiime_dir/raw_files/table.qza \
+     --i-table $qiime_dir/raw_files/table.qza \
      --m-metadata-file $metadata_file \
      --p-where "[$sample_type_column]='$sample_type'" \
      --o-filtered-table sub-table.qza
@@ -36,7 +36,7 @@ sample_type_column=$7
 
   qiime taxa collapse \
      --i-table sub-table.qza \
-     --i-taxonomy ./$qiime_dir/raw_files/gg.taxonomy.qza \
+     --i-taxonomy $qiime_dir/raw_files/gg.taxonomy.qza \
      --p-level $tax_level \
      --o-collapsed-table sub-table-taxa.qza
 
@@ -53,11 +53,14 @@ sample_type_column=$7
 
 mkdir differential_analysis ;
 
+
 unzip taxa-ancom-subject.qzv -d taxa-ancom
 
-cat  ./taxa-ancom/*/data/data.tsv ./differential_analysis
-cat  ./taxa-ancom/*/data/ancom.tsv ./differential_analysis
-cat  ./taxa-ancom/*/data/percent-abundances.tsv ./differential_analysis
+ls -al
+
+mv  ./taxa-ancom/*/data/data.tsv ./differential_analysis
+mv   ./taxa-ancom/*/data/ancom.tsv ./differential_analysis
+mv   ./taxa-ancom/*/data/percent-abundances.tsv ./differential_analysis
 
 mv *.qza ./differential_analysis ;
 mv *.qzv ./differential_analysis ;

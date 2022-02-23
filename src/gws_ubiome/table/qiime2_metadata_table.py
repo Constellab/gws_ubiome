@@ -17,27 +17,27 @@ from .qiime2_metadata_table_file import Qiime2MetadataTableFile
 class Qiime2MetadataTable(Table):
 
     SAMPLE_COLUMN_ID = "sample-id"
-    SECOND_LINE_COLUMN_TYPE = "#metadata-type" # #q2:types qiime2 param
+    SECOND_LINE_COLUMN_TYPE = "#q2:types" # #q2:types qiime2 param
     ALLOWED_COLUMN_TYPE_CATEGORICAL = "categorical"
     ALLOWED_COLUMN_TYPE_NUMERIC = "numeric"
 
-    def select_by_row_indexes(self, indexes: List[int]) -> 'Qiime2ManifestTable':
+    def select_by_row_indexes(self, indexes: List[int]) -> 'Qiime2MetadataTable':
         table: Table = super().select_by_row_indexes(indexes)
-        table = Qiime2ManifestTable(data=table.get_data())
+        table = Qiime2MetadataTable(data=table.get_data())
         return table
 
-    def select_by_column_indexes(self, indexes: List[int]) -> 'Qiime2ManifestTable':
+    def select_by_column_indexes(self, indexes: List[int]) -> 'Qiime2MetadataTable':
         raise BadRequestException(
-            "It is not allowed to selecte columns of a Qiime2ManifestTable. Please consider using a classical Table.")
+            "It is not allowed to selecte columns of a Qiime2MetadataTable. Please consider using a classical Table.")
 
-    def select_by_row_name(self, name_regex: str) -> 'Qiime2ManifestTable':
+    def select_by_row_name(self, name_regex: str) -> 'Qiime2MetadataTable':
         table: Table = super().select_by_row_name(name_regex)
-        table = Qiime2ManifestTable(data=table.get_data())
+        table = Qiime2MetadataTable(data=table.get_data())
         return table
 
-    def select_by_column_name(self, name_regex: str) -> 'Qiime2ManifestTable':
+    def select_by_column_name(self, name_regex: str) -> 'Qiime2MetadataTable':
         raise BadRequestException(
-            "It is not allowed to selecte columns of a Qiime2ManifestTable. Please consider using a classical Table.")
+            "It is not allowed to selecte columns of a Qiime2MetadataTable. Please consider using a classical Table.")
 
 # ####################################################################
 #

@@ -18,7 +18,7 @@ metadata_file=$5
 
   qiime taxa collapse \
      --i-table table.qza \
-     --i-taxonomy ./$qiime_dir/raw_files/gg.taxonomy.qza \
+     --i-taxonomy $qiime_dir/raw_files/gg.taxonomy.qza \
      --p-level $tax_level \
      --o-collapsed-table sub-table-taxa.qza
 
@@ -37,9 +37,9 @@ mkdir differential_analysis ;
 
 unzip taxa-ancom-subject.qzv -d taxa-ancom
 
-cat  ./taxa-ancom/*/data/data.tsv ./differential_analysis
-cat  ./taxa-ancom/*/data/ancom.tsv ./differential_analysis
-cat  ./taxa-ancom/*/data/percent-abundances.tsv ./differential_analysis
+mv ./taxa-ancom/*/data/data.tsv  ./differential_analysis
+mv  ./taxa-ancom/*/data/ancom.tsv ./differential_analysis
+mv  ./taxa-ancom/*/data/percent-abundances.tsv ./differential_analysis
 
 mv *.qza ./differential_analysis ;
 mv *.qzv ./differential_analysis ;

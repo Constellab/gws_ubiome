@@ -11,8 +11,7 @@ from gws_core import (ConfigParams, File, Folder, IntParam, StrParam,
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..table.qiime2_metadata_table import (Qiime2MetadataTable, Qiime2MetadataTableImporter)
-from ..file.qiime2_folder import (Qiime2DifferentialAnalysisFolder,
-                                  Qiime2TaxonomyDiversityFolder)
+from ..file.qiime2_folder import (Qiime2DifferentialAnalysisFolder, Qiime2TaxonomyDiversityFolder)
 from ..table.qiime2_metadata_table_file import Qiime2MetadataTableFile
 
 @task_decorator("Qiime2DifferentialAnalysis",
@@ -43,10 +42,14 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
             short_description="Select the column on which the differential analysis will be performed"),
         "metadata_subset_column_name":
         StrParam(
+            optional=True,
+            visibility=StrParam.PROTECTED_VISIBILITY,
             default_value=None,
             short_description="Allow to subset the sample metadata file to a specific categorical parameter, ex: body-type "),
         "metadata_subset_choosed_value":
         StrParam(
+            optional=True,
+            visibility=StrParam.PROTECTED_VISIBILITY,
             default_value=None,
             short_description="Specific categorical value to use for the subset, ex: if you want body-type=gut --> type: gut "),
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")}
@@ -65,7 +68,8 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         settings = Settings.retrieve()      
 
         qiime2_folder = inputs["taxonomy_result_folder"]
-        metadata_file = params["qiime2_metadata_file"]
+        metadata_file = inputs["qiime2_metadata_file"]
+
         tax_level = params["taxonomic_level"]
         metadata_col = params["metadata_column"]
         metadata_subset = params["metadata_subset_column_name"]
@@ -74,7 +78,7 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        if metadata_subset == None :
+        if not metadata_subset :
             cmd = [
                 " bash ",
                 os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.sh"),
@@ -82,7 +86,7 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
                 tax_level,
                 metadata_col,
                 thrds,
-                metadata_file
+                metadata_file.path
             ]
         else :
             cmd = [
@@ -93,7 +97,7 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
                 metadata_subset,
                 metadata_col,
                 thrds,
-                metadata_file,
+                metadata_file.path,
                 metadata_subset_val
             ]            
         return cmd

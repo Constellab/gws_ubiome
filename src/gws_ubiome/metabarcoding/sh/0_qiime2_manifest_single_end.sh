@@ -11,4 +11,4 @@ fastq_dir=$1
 manifest_file_name=$2
 
 
-for i in ./$fastq_dir/*.gz ;do echo -e $(basename $i)"\t"$(basename $i) ;done | awk 'BEGIN{print "sample-id\tabsolute-filepath\t"}{ print $0}' > test.$manifest_file_name.txt
+for i in $fastq_dir/*.gz ;do echo -e $(basename $i)"\t"$(basename $i) ;done | awk 'BEGIN{print "sample-id\tabsolute-filepath\t"}{ print $0}' > $manifest_file_name ;
