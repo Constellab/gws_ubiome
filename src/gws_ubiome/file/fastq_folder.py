@@ -9,6 +9,7 @@ from gws_core import File, Folder, resource_decorator, ShellProxy, Shell
 
 @resource_decorator("FastqFolder",
                     human_name="FastqFolder",
+#                    short_description="FastqFolder", hide=True)
                     short_description="FastqFolder")
 class FastqFolder(Folder):
     ''' Fastq Folder file class '''

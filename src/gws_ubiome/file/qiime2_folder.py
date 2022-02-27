@@ -385,6 +385,95 @@ class Qiime2TaxonomyDiversityFolder(Folder):
           #      table = ImporterHelper.import_table(self.taxo_level_7_table_path)
 
         return table
+
+
+
+
+@resource_decorator("Qiime2DifferentialAnalysisFolder",
+                    human_name="Qiime2DifferentialAnalysisFolder",
+                    short_description="Qiime2DifferentialAnalysisFolder", hide=True)
+class Qiime2DifferentialAnalysisFolder(Folder):
+    ''' Qiime2DifferentialAnalysisFolder Folder file class '''
+
+    data_table_path: str = StrRField()  # ''
+    ancom_stat_table_path: str = StrRField()  # ''
+    volcano_plot_path: str = StrRField()  # ''
+
+
+
+    @view(view_type=TableView,
+          human_name='DifferentialAnalysisTable_1',
+          short_description='Table view of deffernetial analysis',
+          default_view=False
+          )
+
+    def view_as_table_1(self, params: ConfigParams) -> TableView:
+        table: Table
+        file_path = self.get_sub_path("data.tsv")
+        table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+        # data = table.get_data()
+        # median = data.median(axis=0).iat[0]
+        # average = data.mean(axis=0).iat[0]
+        # view.set_caption(
+        #     f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
+        return view
+
+
+    @view(view_type=TableView,
+          human_name='DifferentialAnalysisTable_2',
+          short_description='Table view of deffernetial analysis',
+          default_view=False
+          )
+    def view_as_table_2(self, params: ConfigParams) -> TableView:
+        table: Table
+        file_path = self.get_sub_path("ancom.tsv")
+        table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+        # data = table.get_data()
+        # median = data.median(axis=0).iat[0]
+        # average = data.mean(axis=0).iat[0]
+        # view.set_caption(
+        #     f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
+        return view
+
+    @view(view_type=TableView,
+          human_name='DifferentialAnalysisTable_3',
+          short_description='Table view of deffernetial analysis',
+          default_view=False
+          )
+    def view_as_table_3(self, params: ConfigParams) -> TableView:
+        table: Table
+        file_path = self.get_sub_path("percent-abundances.tsv")
+        table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        view = TableView(table=table)
+        view.set_title("Sample frequency values")
+#        data = table.get_data()
+#        median = data.median(axis=0).iat[0]
+#        average = data.mean(axis=0).iat[0]
+#        view.set_caption(
+#            f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
+        return view
+
+
+    # @view(view_type=BoxPlotView, human_name='SampleFrequencyBoxplotView',
+    #       short_description='Boxplot view of of sample frequencies')
+    # def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
+    #     table: Table
+    #     file_path = self.get_sub_path("sample-frequency-detail.tsv")
+    #     table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+    #     view = TableView(table=table)
+    #     view.set_title("Sample frequency values")
+ 
+    #     bx_view = BoxPlotView()
+    #     data = table.get_data()
+    #     bx_view.add_data(data=data)
+    #     return bx_view
+
+
+
 ####
 
     # @view(view_type=TableView, human_name='ForwardQualityTable', short_description='Table view forward reads quality')

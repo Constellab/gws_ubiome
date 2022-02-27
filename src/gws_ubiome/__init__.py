@@ -17,5 +17,10 @@ from .table.manifest_table import (Qiime2ManifestTable,
                                    Qiime2ManifestTableExporter,
                                    Qiime2ManifestTableImporter)
 from .table.manifest_table_file import Qiime2ManifestTableFile
+# Metadata (qiime2)
+from .table.qiime2_metadata_table import (Qiime2MetadataTable,
+                                   Qiime2MetadataTableExporter,
+                                   Qiime2MetadataTableImporter)
+from .table.qiime2_metadata_table_file import Qiime2MetadataTableFile
 # TaxTable
 from .table.tax_table import TaxTable
