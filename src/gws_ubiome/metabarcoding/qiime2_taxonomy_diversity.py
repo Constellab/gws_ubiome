@@ -81,7 +81,8 @@ class Qiime2TaxonomyDiversity(Qiime2EnvTask):
             qiime2_folder.path,
             plateau_val,
             thrds,
-            db_gg_path
+            db_gg_path,
+            os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
         ]
 
         return cmd

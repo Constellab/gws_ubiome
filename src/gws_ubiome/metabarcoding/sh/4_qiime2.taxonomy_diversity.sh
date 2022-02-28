@@ -11,6 +11,7 @@ qiime_dir=$1
 rarefication_plateau_depth_value=$2
 threads=$3
 gg_db=$4
+perl_script_transform_table=$5
 
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences $qiime_dir/rep-seqs.qza \
@@ -68,19 +69,11 @@ cat  ./simpson/*/data/*.tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  
 for i in *.qza ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
 
-#find . -name "*.csv" -print0 | xargs -0 -I {} mv {} ./diversity/table_files/ ;
-
-#for i in *.diversity_metrics ;do  for j in $(find . -name "$i*.*sv") ;do  cat $j > ./diversity/table_files/$i"."$(basename $j ;)  ;done ;done 
-
-#for i in ./diversity/table_files/*.csv ;do cat $i | tr ',' '\t'  > ./diversity/table_files/$(basename $i | sed 's/\.csv//' ;)".tsv" ; rm $i ;done
 
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./diversity/table_files/$i"."$(basename $j) ;done ;done
-#cp ./*.diversity_metrics/*/data/*.tsv  ./diversity/table_files/ ;
-#cp *.tsv  ./diversity/table_files/ ;
-#cp *.csv  ./diversity/table_files/ ;
 
-
+for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' > $i.parsed.tsv ;done
 
 mv *.qza ./diversity/raw_files ;
 mv *.qzv ./diversity/raw_files ;

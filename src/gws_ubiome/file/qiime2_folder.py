@@ -2,8 +2,9 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
-                      MultiViews, StrParam, StrRField, Table, TableImporter,
+import numpy
+from gws_core import (BarPlotView, BoxPlotView, LinePlot2DView, ConfigParams, File, Folder,
+                      MultiViews, StrParam, IntParam, StrRField, Table, TableImporter,
                       resource_decorator, view, StackedBarPlotView)
 from gws_core.extra import TableBoxPlotView, TableView
 
@@ -61,7 +62,7 @@ class Qiime2QualityCheckResultFolder(Folder):
         data = table.get_data()
         bx_view.add_series(
             x=data.columns.values.tolist(),
-            median=data.iloc[2, :].values.tolist(),
+            median=data.iloc[2, :].values.tolist(), #quality median
             q1=data.iloc[1, :].values.tolist(),
             q3=data.iloc[3, :].values.tolist(),
             min=data.iloc[0, :].values.tolist(),
@@ -70,6 +71,53 @@ class Qiime2QualityCheckResultFolder(Folder):
             upper_whisker=data.iloc[4, :].values.tolist()
         )
         return bx_view
+
+    # vue moyenne mobile avec median du boxplot (taille fenetre et le pas)
+
+    @view(view_type=LinePlot2DView, human_name='Quality line plot',
+          short_description='Boxplot view of the reads sequencing quality (PHRED score per base, from first to last base)',
+          specs={"type": StrParam(
+              allowed_values=["forward_reads", "reverse_reads"],
+              default_value="forward_reads"),
+              "window_size": IntParam(default_value=15)},default_view=False)
+    def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
+        type_ = params["type"]
+        table: Table
+        if type_ == "forward_reads":
+            file_path = self.get_sub_path("forward_boxplot.csv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+        elif type_ == "reverse_reads":
+            file_path = self.get_sub_path("reverse_boxplot.csv")
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
+
+        lp_view = LinePlot2DView()
+        data = table.get_data()
+
+        # sliding windows df.rolling(window=5).mean()
+#        y=data.iloc[2, :].values.tolist()
+        y=data.iloc[2, :]
+        q1=data.iloc[1, :]
+        q3=data.iloc[3, :]
+
+        mean_median=y.rolling(window=params["window_size"], min_periods=1).mean()
+        mean_q1=q1.rolling(window=params["window_size"], min_periods=1).mean()
+        mean_q3=q3.rolling(window=params["window_size"], min_periods=1).mean()
+        lp_view.add_series(
+            x=data.columns.values.tolist(),
+            y=mean_median.values.tolist() #quality median
+        )
+
+        lp_view.add_series(
+            x=data.columns.values.tolist(),
+            y=mean_q1.values.tolist() #quality median
+        )
+
+        lp_view.add_series(
+            x=data.columns.values.tolist(),
+            y=mean_q3.values.tolist() #quality median
+        )
+        return lp_view
+
 
 
 ####### STEP 2 : Qiime2SampleFrequencies -> Result Folder #######
@@ -170,6 +218,31 @@ class Qiime2RarefactionFolder(Folder):
         bx_view.add_data(data=data)
         return bx_view
 
+    @view(view_type=LinePlot2DView, human_name='RarefactionLineplotView',
+          short_description='Lineplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
+          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
+    def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
+        type_ = params["type"]
+        table: Table = self._load_table(type_=type_)
+ 
+        lp_view = LinePlot2DView()
+
+        data = table.get_data()
+        quantile = numpy.nanquantile(data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
+        median = quantile[1, :].tolist()
+        q1 = quantile[0, :]
+        q3 = quantile[2, :]
+
+        # tags = []
+        # for tag in data.columns:
+        #     #x_val = re.
+        #     tags.append({
+        #         "x": x_val,
+        #         "sample": sample_val
+        #     }) 
+
+        lp_view.add_series(x=x, y=y)
+        return lp_view
 
 ####### STEP 4 : Qiime2TaxonomyDiversity -> Result Folder #######
 
@@ -343,43 +416,43 @@ class Qiime2TaxonomyDiversityFolder(Folder):
 
     def _read_table(self, type_)->Table:
         if type_ == "1_Kingdom":
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #            table = ImporterHelper.import_table(self.taxo_level_1_table_path)
         elif type_ == "2_Phylum":
 
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-2.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-2.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #           table = ImporterHelper.import_table(self.taxo_level_2_table_path)
         elif type_ == "3_Class":
 
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-3.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-3.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
           #          table = ImporterHelper.import_table(self.taxo_level_3_table_path)
         elif type_ == "4_Order":
 
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-4.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-4.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
            #         table = ImporterHelper.import_table(self.taxo_level_4_table_path)
         elif type_ == "5_Family":
 
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-5.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-5.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
             #        table = ImporterHelper.import_table(self.taxo_level_5_table_path)
         elif type_ == "6_Genus":
 
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-6.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-6.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #       table = ImporterHelper.import_table(self.taxo_level_6_table_path)
         elif type_ == "7_Species":
 
-            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-7.csv.tsv")
+            file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-7.csv.tsv.parsed.tsv")
             table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
           #      table = ImporterHelper.import_table(self.taxo_level_7_table_path)
