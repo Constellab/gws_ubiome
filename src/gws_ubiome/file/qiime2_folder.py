@@ -218,20 +218,20 @@ class Qiime2RarefactionFolder(Folder):
         bx_view.add_data(data=data)
         return bx_view
 
-    @view(view_type=LinePlot2DView, human_name='RarefactionLineplotView',
-          short_description='Lineplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
-          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
-        type_ = params["type"]
-        table: Table = self._load_table(type_=type_)
+    # @view(view_type=LinePlot2DView, human_name='RarefactionLineplotView',
+    #       short_description='Lineplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
+    #       specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
+    # def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
+    #     type_ = params["type"]
+    #     table: Table = self._load_table(type_=type_)
  
-        lp_view = LinePlot2DView()
+    #     lp_view = LinePlot2DView()
 
-        data = table.get_data()
-        quantile = numpy.nanquantile(data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
-        median = quantile[1, :].tolist()
-        q1 = quantile[0, :]
-        q3 = quantile[2, :]
+    #     data = table.get_data()
+    #     quantile = numpy.nanquantile(data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
+    #     median = quantile[1, :].tolist()
+    #     q1 = quantile[0, :]
+    #     q3 = quantile[2, :]
 
         # tags = []
         # for tag in data.columns:
