@@ -241,8 +241,8 @@ class Qiime2RarefactionFolder(Folder):
         #         "sample": sample_val
         #     }) 
 
-        lp_view.add_series(x=x, y=y)
-        return lp_view
+#        lp_view.add_series(x=x, y=y)
+#        return lp_view
 
 ####### STEP 4 : Qiime2TaxonomyDiversity -> Result Folder #######
 
