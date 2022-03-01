@@ -8,6 +8,7 @@
 
 apt-get -y update
 apt-get -y install jq unzip
+apt-get -y install pigz
 
 CURRENT_FILE_DIR=$(dirname "$0")
 
