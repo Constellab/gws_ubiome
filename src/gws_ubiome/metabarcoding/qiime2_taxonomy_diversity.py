@@ -15,7 +15,7 @@ from ..file.qiime2_folder import (Qiime2RarefactionFolder,
                                   Qiime2TaxonomyDiversityFolder)
 
 
-@task_decorator("Qiime2TaxonomyDiversity",
+@task_decorator("Step_4-Taxa_Diversity",
                 short_description="Compute various diversity index and taxonomy assessement using OTU/ASV")
 class Qiime2TaxonomyDiversity(Qiime2EnvTask):
     """

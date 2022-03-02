@@ -15,7 +15,7 @@ from ..table.manifest_table import (Qiime2ManifestTable,
 from ..table.manifest_table_file import Qiime2ManifestTableFile
 
 
-@task_decorator("Qiime2MakeManifest", short_description="Qiime2 quality check")
+@task_decorator("Step-0_MakeManifest", short_description="Step 0 - Making Manifest")
 class Qiime2MakeManifest(Qiime2EnvTask):
     """
     Qiime2MakeManifest class.
