@@ -14,7 +14,7 @@ from ..table.qiime2_metadata_table import (Qiime2MetadataTable, Qiime2MetadataTa
 from ..file.qiime2_folder import (Qiime2DifferentialAnalysisFolder, Qiime2TaxonomyDiversityFolder)
 from ..table.qiime2_metadata_table_file import Qiime2MetadataTableFile
 
-@task_decorator("Step_5-DifferentialAnalysis",
+@task_decorator("Qiime2DifferentialAnalysis", human_name="Step 5 - Differential Analysis" ,
                 short_description="This task allows you to perform a differential analysis using the metadata informations")
 class Qiime2DifferentialAnalysis(Qiime2EnvTask):
     """

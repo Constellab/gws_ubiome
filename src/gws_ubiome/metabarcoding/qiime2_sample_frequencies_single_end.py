@@ -13,7 +13,7 @@ from ..file.qiime2_folder import (Qiime2QualityCheckResultFolder,
                                   Qiime2SampleFrequenciesFolder)
 
 
-@task_decorator("Step_2-SampleFrequenciesSingleEnd",
+@task_decorator("Qiime2SampleFrequenciesSE", human_name="Step 2 - Sample Frequencies for Single-End",
                 short_description="Extracts the median value of depth before rarefaction analysis (for single-end sequencing)")
 class Qiime2SampleFrequenciesSE(Qiime2EnvTask):
     """

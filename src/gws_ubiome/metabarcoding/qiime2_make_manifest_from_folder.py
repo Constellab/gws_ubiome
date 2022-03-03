@@ -15,7 +15,7 @@ from ..table.manifest_table import (Qiime2ManifestTable,
 from ..table.manifest_table_file import Qiime2ManifestTableFile
 
 
-@task_decorator("Step-0_MakeManifest", short_description="Step 0 - Making Manifest")
+@task_decorator("Qiime2MakeManifest",  human_name="Step 0 - Make Manifest", short_description="Step 0 - Making Manifest")
 class Qiime2MakeManifest(Qiime2EnvTask):
     """
     Qiime2MakeManifest class.

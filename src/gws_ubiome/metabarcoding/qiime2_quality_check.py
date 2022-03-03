@@ -16,7 +16,7 @@ from ..table.manifest_table import (Qiime2ManifestTable,
 from ..table.manifest_table_file import Qiime2ManifestTableFile
 
 
-@task_decorator("Step_1-QualityCheck", short_description="Step 1 - Sequencing quality check")
+@task_decorator("Qiime2QualityCheck",  human_name="Step 1 - Quality Check", short_description="Step 1 - Sequencing quality check")
 class Qiime2QualityCheck(Qiime2EnvTask):
     """
     Qiime2QualityCheck class.

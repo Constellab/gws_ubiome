@@ -13,7 +13,7 @@ from ..file.qiime2_folder import (Qiime2RarefactionFolder,
                                   Qiime2SampleFrequenciesFolder)
 
 
-@task_decorator("Step_3-Rarefaction", short_description="Step 3 - Qiime2 rarefaction analysis")
+@task_decorator("Qiime2Rarefaction", human_name="Step 3 - Rarefaction", short_description="Step 3 - Qiime2 rarefaction analysis")
 class Qiime2Rarefaction(Qiime2EnvTask):
     """
     Qiime2Rarefaction class.
