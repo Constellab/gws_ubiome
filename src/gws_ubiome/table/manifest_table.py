@@ -65,9 +65,7 @@ class Qiime2ManifestTable(Table):
 # ####################################################################
 
 
-@importer_decorator(unique_name="Qiime2ManifestTableImporter",
-                    source_type=Qiime2ManifestTableFile,
-                    target_type=Qiime2ManifestTable)
+@importer_decorator(unique_name="Qiime2ManifestTableImporter", source_type=Qiime2ManifestTableFile, target_type=Qiime2ManifestTable, supported_extensions=Table.ALLOWED_FILE_FORMATS)
 class Qiime2ManifestTableImporter(TableImporter):
 
     async def import_from_path(self, file: File, params: ConfigParams, target_type: Type[Qiime2ManifestTable]) -> Qiime2ManifestTable:
@@ -101,7 +99,6 @@ class Qiime2ManifestTableImporter(TableImporter):
 #
 # ####################################################################
 
-@exporter_decorator(unique_name="Qiime2ManifestTableExporter", source_type=Qiime2ManifestTable,
-                    target_type=Qiime2ManifestTableFile)
+@exporter_decorator(unique_name="Qiime2ManifestTableExporter", source_type=Qiime2ManifestTable, target_type=Qiime2ManifestTableFile)
 class Qiime2ManifestTableExporter(TableExporter):
     pass

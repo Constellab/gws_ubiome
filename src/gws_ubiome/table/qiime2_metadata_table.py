@@ -48,7 +48,7 @@ class Qiime2MetadataTable(Table):
 
 @importer_decorator(unique_name="Qiime2MetadataTableImporter",
                     source_type=Qiime2MetadataTableFile,
-                    target_type=Qiime2MetadataTable)
+                    target_type=Qiime2MetadataTable, supported_extensions=Table.ALLOWED_FILE_FORMATS)
 class Qiime2MetadataTableImporter(TableImporter):
 
     async def import_from_path(self, file: File, params: ConfigParams, target_type: Type[Qiime2MetadataTable]) -> Qiime2MetadataTable:

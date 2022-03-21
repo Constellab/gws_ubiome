@@ -80,7 +80,7 @@ while(<STDIN>){
 foreach my$depId ( sort {$a <=> $b} keys %hSampleOrder ){
 	foreach my$sampId ( sort keys %{ $hSampleOrder{$depId} } ){
 #		print "\t",$depId,'##',$sampId;
-		print "\t{\'x-axis\': " , $depId , " , \'sample-id\': \'" , $sampId , "\'}";
+		print "\t{\"x-axis\": " , $depId , " , \"sample-id\": \"" , $sampId , "\"}";
 	}
 }
 print "\n";

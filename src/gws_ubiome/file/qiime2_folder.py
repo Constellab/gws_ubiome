@@ -2,6 +2,7 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
+import json
 import numpy
 from gws_core import (BarPlotView, BoxPlotView, LinePlot2DView, ConfigParams, File, Folder,
                       MultiViews, StrParam, IntParam, StrRField, Table, TableImporter,
@@ -26,8 +27,8 @@ class Qiime2QualityCheckResultFolder(Folder):
     # forward_reads_file_path: str = StrRField()
     # reverse_reads_file_path: str = StrRField()
 
-    @view(view_type=TableView, human_name='SequencingQualityTableView',
-          short_description='Table view of the reads sequencing quality (PHRED score per base, from first to last base)',
+    @view(view_type=TableView, human_name='Sequencing quality table',
+          short_description='Table of the reads sequencing quality (PHRED score per base)',
           specs={"type": StrParam(allowed_values=["forward_reads", "reverse_reads"])})
     def view_as_table(self, params: ConfigParams) -> TableView:
         from ..metabarcoding.qiime2_quality_check import Qiime2QualityCheck
@@ -42,8 +43,8 @@ class Qiime2QualityCheckResultFolder(Folder):
 
         return TableView(table=table)
 
-    @view(view_type=BoxPlotView, human_name='SequencingQualityBoxplotView',
-          short_description='Boxplot view of the reads sequencing quality (PHRED score per base, from first to last base)',
+    @view(view_type=BoxPlotView, human_name='Sequencing quality boxplot',
+          short_description='Boxplot of the reads sequencing quality',
           specs={"type": StrParam(
               allowed_values=["forward_reads", "reverse_reads"],
               default_value="forward_reads")},
@@ -70,12 +71,14 @@ class Qiime2QualityCheckResultFolder(Folder):
             lower_whisker=data.iloc[0, :].values.tolist(),
             upper_whisker=data.iloc[4, :].values.tolist()
         )
+        bx_view.x_label = "Base position"
+        bx_view.y_label = "PHRED score"
         return bx_view
 
     # vue moyenne mobile avec median du boxplot (taille fenetre et le pas)
 
     @view(view_type=LinePlot2DView, human_name='Quality line plot',
-          short_description='Boxplot view of the reads sequencing quality (PHRED score per base, from first to last base)',
+          short_description='Boxplot of the reads sequencing quality',
           specs={"type": StrParam(
               allowed_values=["forward_reads", "reverse_reads"],
               default_value="forward_reads"),
@@ -116,6 +119,8 @@ class Qiime2QualityCheckResultFolder(Folder):
             x=data.columns.values.tolist(),
             y=mean_q3.values.tolist() #quality median
         )
+        lp_view.x_label = "Base position"
+        lp_view.y_label = "PHRED score"
         return lp_view
 
 
@@ -131,8 +136,8 @@ class Qiime2SampleFrequenciesFolder(Folder):
     sample_frequency_file_path: str = StrRField()  # ''
 
     @view(view_type=TableView,
-          human_name='SampleFrequencyTable',
-          short_description='Table view of sample frequencies (median value needed for qiime 2 pipeline next step)',
+          human_name='Frequency table',
+          short_description='Table of sample frequencies',
           default_view=True
           )
 #    def view_as_table(self, params: ConfigParams) -> TableView:
@@ -148,10 +153,10 @@ class Qiime2SampleFrequenciesFolder(Folder):
         median = data.median(axis=0).iat[0]
         average = data.mean(axis=0).iat[0]
         view.set_caption(
-            f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
+            f"For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
         return TableView(table=table)
 
-    @view(view_type=BoxPlotView, human_name='SampleFrequencyBoxplotView',
+    @view(view_type=BoxPlotView, human_name='Frequency boxplot',
           short_description='Boxplot view of of sample frequencies')
     def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
         table: Table
@@ -170,15 +175,15 @@ class Qiime2SampleFrequenciesFolder(Folder):
 
 @resource_decorator("Qiime2RarefactionFolder",
                     human_name="Qiime2RarefactionFolder",
-                    short_description="Qiime2RarefactionFolder", hide=True)
+                    short_description="Qiime2RarefactionFolder")
 class Qiime2RarefactionFolder(Folder):
     ''' Qiime2RarefactionFolder Folder file class '''
 
     shannon_index_table_path: str = StrRField()
     observed_features_table_path: str = StrRField()
 
-    @view(view_type=TableView, human_name='RarefactionTableView',
-          short_description='Table view of the rarefaction table (observed features or shannon index)',
+    @view(view_type=TableView, human_name='Rarefaction table',
+          short_description='Rarefaction table',
           specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
     def view_as_table(self, params: ConfigParams) -> TableView:
         type_ = params["type"]
@@ -201,13 +206,33 @@ class Qiime2RarefactionFolder(Folder):
     def _load_table(self, type_: str) -> Table:
         if type_ == "rarefaction_observed":
             file_path = self.get_sub_path("observed_features.for_boxplot.tsv")
-            return ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
         elif type_ == "rarefaction_shannon":
             file_path = self.get_sub_path("shannon.for_boxplot.tsv")
-            return ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0, "header": 0})
 
-    @view(view_type=BoxPlotView, human_name='RarefactionBoxplotView',
-          short_description='Boxplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
+        colnames = table.column_names
+        column_tags = []
+        column_names = []
+        for name in colnames:
+            name = name.replace("'", '"')
+            tag: dict = json.loads(name)
+            if "x-axis" in tag:
+                tag["depth"] = tag["x-axis"]
+                del tag["x-axis"]
+            column_tags.append(tag)
+            column_names.append(str(tag["depth"]) + "#" + tag["sample-id"])
+
+        data = table.get_data()
+        data.columns = column_names
+
+        table = Table(data=data)
+        table.set_column_tags(column_tags)
+
+        return table
+
+    @view(view_type=BoxPlotView, human_name='Rarefaction boxplot',
+          short_description='Boxplot of the rarefaction table',
           specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
     def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
         type_ = params["type"]
@@ -216,40 +241,45 @@ class Qiime2RarefactionFolder(Folder):
         bx_view = BoxPlotView()
         data = table.get_data()
         bx_view.add_data(data=data)
+        bx_view.x_label = "depth"
+        bx_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
         return bx_view
 
-    # @view(view_type=LinePlot2DView, human_name='RarefactionLineplotView',
-    #       short_description='Lineplot view of the rarefaction table (X-axis: depth per samples, Y-axis: shannon index or observed features value)',
-    #       specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    # def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
-    #     type_ = params["type"]
-    #     table: Table = self._load_table(type_=type_)
- 
-    #     lp_view = LinePlot2DView()
+    @view(view_type=LinePlot2DView, human_name='Rarefaction lineplot',
+          short_description='Lineplot of the rarefaction table',
+          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
+    def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
+        type_ = params["type"]
+        table: Table = self._load_table(type_=type_)
+        tabe = table.select_numeric_columns(drop_na='all')
 
-    #     data = table.get_data()
-    #     quantile = numpy.nanquantile(data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
-    #     median = quantile[1, :].tolist()
-    #     q1 = quantile[0, :]
-    #     q3 = quantile[2, :]
+        lp_view = LinePlot2DView()
+        data = table.get_data()
+        column_tags = table.get_column_tags()
+        all_sample_ids = list(set([tag["sample-id"] for tag in column_tags]))
 
-        # tags = []
-        # for tag in data.columns:
-        #     #x_val = re.
-        #     tags.append({
-        #         "x": x_val,
-        #         "sample": sample_val
-        #     }) 
+        for sample_id in all_sample_ids:
+            sample_table = table.select_by_column_tags([{"sample-id": sample_id}])
+            sample_column_tags = sample_table.get_column_tags()
+            positions = [ float(tag["depth"]) for tag in sample_column_tags ]
 
-#        lp_view.add_series(x=x, y=y)
-#        return lp_view
+            sample_data = sample_table.get_data()
+            quantile = numpy.nanquantile(sample_data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
+            median = quantile[1, :].tolist()
+            #q1 = quantile[0, :]
+            #q3 = quantile[2, :]
+            lp_view.add_series(x=positions, y=median, tags=sample_column_tags)
+
+        lp_view.x_label = "depth"
+        lp_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
+        return lp_view
 
 ####### STEP 4 : Qiime2TaxonomyDiversity -> Result Folder #######
 
 
 @resource_decorator("Qiime2TaxonomyDiversityFolder",
-                    human_name="Qiime2TaxonomyDiversityFolder",
-                    short_description="Qiime2TaxonomyDiversityFolder", hide=True)
+                    human_name="Qiime2 taxonomy diversity folder",
+                    short_description="Qiime2 taxonomy diversity folder", hide=True)
 class Qiime2TaxonomyDiversityFolder(Folder):
     ''' Qiime2TaxonomyDiversityFolder Folder file class '''
 
@@ -274,8 +304,8 @@ class Qiime2TaxonomyDiversityFolder(Folder):
     weighted_unifrac_distance_table_path: str = StrRField()
 
     @view(view_type=TableView,
-          human_name='AlphaDiversityTable',
-          short_description='Table view of the alpha diversity indexes table',
+          human_name='Alpha diversity tables',
+          short_description='Tables of the alpha diversity indexes',
           specs={
               "type": StrParam(allowed_values=["shannon", "chao_1", "evenness", "faith_pd", "observed_community_richness"])
           })
@@ -316,8 +346,8 @@ class Qiime2TaxonomyDiversityFolder(Folder):
 
 #        return TableView(table=table.get_data())
 
-    @view(view_type=TableView, human_name='BetaDiversityTable',
-          short_description='Table view of the beta diversity indexes table',
+    @view(view_type=TableView, human_name='Beta diversity tables',
+          short_description='Tables of the beta diversity indexes',
           specs={
               "type":
               StrParam(
@@ -378,8 +408,8 @@ class Qiime2TaxonomyDiversityFolder(Folder):
         return TableView(table=table)
    #     return TableView(table=table.get_data())
 
-    @view(view_type=TableView, human_name='TaxonomicTables',
-          short_description='Table view of the Taxonomic composition table (7 levels)',
+    @view(view_type=TableView, human_name='Taxonomy tables',
+          short_description='Tables of the taxonomic composition (7 levels)',
           specs={
               "type":
               StrParam(
@@ -392,8 +422,8 @@ class Qiime2TaxonomyDiversityFolder(Folder):
         return TableView(table=table)
      #   return TableView(table=table.get_data())
 
-    @view(view_type=StackedBarPlotView, human_name='TaxonomyStackedBarPlot',
-          short_description='Table view of the Taxonomic composition table (7 levels)',
+    @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot',
+          short_description='Stacked barplots of the taxonomic composition (7 levels)',
           specs={
               "type":
               StrParam(
@@ -423,7 +453,7 @@ class Qiime2TaxonomyDiversityFolder(Folder):
         elif type_ == "2_Phylum":
 
             file_path = self.get_sub_path("table_files/gg.taxa-bar-plots.qzv.diversity_metrics.level-2.csv.tsv.parsed.tsv")
-            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab'})
+            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
 #            table = ImporterHelper.import_table(file_path, {'delimiter': 'tab', "index_column": 0})
          #           table = ImporterHelper.import_table(self.taxo_level_2_table_path)
         elif type_ == "3_Class":
@@ -475,8 +505,8 @@ class Qiime2DifferentialAnalysisFolder(Folder):
 
 
     @view(view_type=TableView,
-          human_name='DifferentialAnalysisTable_1',
-          short_description='Table view of deffernetial analysis',
+          human_name='Diff analysis table 1',
+          short_description='Table of differential analysis',
           default_view=False
           )
 
@@ -495,8 +525,8 @@ class Qiime2DifferentialAnalysisFolder(Folder):
 
 
     @view(view_type=TableView,
-          human_name='DifferentialAnalysisTable_2',
-          short_description='Table view of deffernetial analysis',
+          human_name='Diff analysis table 2',
+          short_description='Table of differential analysis',
           default_view=False
           )
     def view_as_table_2(self, params: ConfigParams) -> TableView:
@@ -513,8 +543,8 @@ class Qiime2DifferentialAnalysisFolder(Folder):
         return view
 
     @view(view_type=TableView,
-          human_name='DifferentialAnalysisTable_3',
-          short_description='Table view of deffernetial analysis',
+          human_name='Diff analysis table 3',
+          short_description='Table of differential analysis',
           default_view=False
           )
     def view_as_table_3(self, params: ConfigParams) -> TableView:
