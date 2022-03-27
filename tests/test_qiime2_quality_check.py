@@ -3,28 +3,30 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-import json
 import os
 
 import pandas
-from gws_core import (BaseTestCase, File, Folder, GTest, Settings, TaskRunner,
-                      ViewTester)
-from gws_ubiome import (FastqFolder, Qiime2ManifestTableFile,
-                        Qiime2QualityCheck, Qiime2QualityCheckResultFolder)
+from gws_core import (BaseTestCase, File, MetadataTable, MetadataTableImporter,
+                      Settings, TaskRunner)
+from gws_ubiome import FastqFolder, Qiime2QualityCheck
 
 
 class TestQiime2QualityCheck(BaseTestCase):
 
-    async def test_importer(self):
+    async def test_quality_check(self):
         settings = Settings.retrieve()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
+        testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
+
+        metadata_table: MetadataTable = MetadataTableImporter.call(
+            File(path=os.path.join(testdata_dir, "metadata_test.csv"))
+        )
+
         tester = TaskRunner(
-            params={
-                'sequencing_type': 'paired-end'
-            },
+            params={'sequencing_type': 'paired-end'},
             inputs={
-                'fastq_folder':   FastqFolder(path=os.path.join(large_testdata_dir,  "fastq_dir")),
-                'manifest_table_file':   Qiime2ManifestTableFile(path=os.path.join(large_testdata_dir, "rarefaction", "manifest.txt"))
+                'fastq_folder': FastqFolder(path=os.path.join(large_testdata_dir,  "fastq_dir")),
+                'metadata_table': metadata_table
             },
             task_type=Qiime2QualityCheck
         )

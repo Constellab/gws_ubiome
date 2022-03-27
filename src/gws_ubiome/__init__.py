@@ -1,26 +1,36 @@
-# Folder
-from .file.fastq_folder import FastqFolder
-from .file.qiime2_folder import (Qiime2QualityCheckResultFolder,
-                                 Qiime2RarefactionFolder,
-                                 Qiime2SampleFrequenciesFolder,
-                                 Qiime2TaxonomyDiversityFolder)
-# Metabarcoding
-from .metabarcoding.qiime2_quality_check import Qiime2QualityCheck
-from .metabarcoding.qiime2_rarefaction import Qiime2Rarefaction
-from .metabarcoding.qiime2_sample_frequencies_paired_end import \
-    Qiime2SampleFrequenciesPE
-from .metabarcoding.qiime2_sample_frequencies_single_end import \
-    Qiime2SampleFrequenciesSE
-from .metabarcoding.qiime2_taxonomy_diversity import Qiime2TaxonomyDiversity
-# Manifest
-from .table.manifest_table import (Qiime2ManifestTable,
-                                   Qiime2ManifestTableExporter,
-                                   Qiime2ManifestTableImporter)
-from .table.manifest_table_file import Qiime2ManifestTableFile
-# Metadata (qiime2)
-from .table.qiime2_metadata_table import (Qiime2MetadataTable,
-                                   Qiime2MetadataTableExporter,
-                                   Qiime2MetadataTableImporter)
-from .table.qiime2_metadata_table_file import Qiime2MetadataTableFile
-# TaxTable
+# > base_env
+from .base_env.qiime2_env_task import Qiime2EnvTask
+# > differential analysis
+from .differential_analysis.qiime2_differential_analysis_result_folder import \
+    Qiime2DifferentialAnalysisResultFolder
+# > fastq
+from .fastq.fastq_folder import FastqFolder
+# > feature_frequency_table
+from .feature_frequency_table.qiime2_feature_frequency_extraction_paired_end import \
+    Qiime2FeatureTableExtractorPE
+from .feature_frequency_table.qiime2_feature_frequency_extraction_single_end import \
+    Qiime2FeatureTableExtractorSE
+from .feature_frequency_table.qiime2_feature_frequency_folder import \
+    Qiime2FeatureFrequencyFolder
+# > metadata
+from .metadata.qiime2_make_metadata import Qiime2MetadataTableMaker
+# from .metadata.qiime2_manifest_table import (Qiime2ManifestTable,
+#                                              Qiime2ManifestTableExporter,
+#                                              Qiime2ManifestTableImporter)
+# from .metadata.qiime2_manifest_table_file import Qiime2ManifestTableFile
+# from .metadata.qiime2_metadata_table import (Qiime2MetadataTable,
+#                                              Qiime2MetadataTableExporter,
+#                                              Qiime2MetadataTableImporter)
+# from .metadata.qiime2_metadata_table_file import Qiime2MetadataTableFile
+# > quality_check
+from .quality_check.qiime2_quality_check import Qiime2QualityCheck
+from .quality_check.qiime2_quality_check_result_folder import \
+    Qiime2QualityCheckResultFolder
+# > rarefaction
+from .rarefaction_analysis.qiime2_rarefaction_analysis import \
+    Qiime2RarefactionAnalysis
+from .rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
+    Qiime2RarefactionAnalysisResultFolder
 from .table.tax_table import TaxTable
+from .taxonomy_diversity.qiime2_taxonomy_diversity_extraction import \
+    Qiime2TaxonomyDiversityExtractor

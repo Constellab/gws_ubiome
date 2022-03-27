@@ -2,37 +2,40 @@
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import Qiime2RarefactionFolder, Qiime2TaxonomyDiversityExtractor
+from gws_core import BaseTestCase, File, TaskRunner
+from gws_ubiome import (Qiime2FeatureTableExtractorPE,
+                        Qiime2QualityCheckResultFolder)
 
 
-class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
+class TestQiime2SampleFrequencies(BaseTestCase):
 
     async def test_importer(self):
         settings = Settings.retrieve()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         tester = TaskRunner(
             params={
-                'rarefaction_plateau_value': 1673,
-                'threads': 2
+                'threads': 2,
+                'truncated_forward_reads_size': 270,
+                'truncated_reverse_reads_size': 270
             },
             inputs={
-                'rarefaction_analysis_result_folder':
-                    Qiime2RarefactionFolder(path=os.path.join(large_testdata_dir, "rarefaction"))
+                'quality_check_result_folder':   Qiime2QualityCheckResultFolder(
+                    path=os.path.join(large_testdata_dir, "quality_check"))
             },
-            task_type=Qiime2TaxonomyDiversityExtractor
+            task_type=Qiime2FeatureTableExtractorPE
         )
         outputs = await tester.run()
         result_dir = outputs['result_folder']
 
-        boxplot_csv_file_path = os.path.join(result_dir.path, "table_files", "level-1.tsv")
+        boxplot_csv_file_path = os.path.join(result_dir.path, "sample-frequency-detail.tsv")
         boxplot_csv = File(path=boxplot_csv_file_path)
         result_in_file = open(boxplot_csv_file_path, 'r', encoding="utf-8")
         result_first_line = result_in_file.readline()
         result_content = boxplot_csv.read()
 
         # Get the expected file output
-        expected_file_path = os.path.join(large_testdata_dir, "diversity", "table_files", "level-1.tsv")
+        expected_file_path = os.path.join(large_testdata_dir,
+                                          "sample_freq_details", "sample-frequency-detail.tsv")
         expected_in_file = open(expected_file_path, 'r', encoding="utf-8")
         expected_first_line = expected_in_file.readline()
 
