@@ -4,6 +4,7 @@
 # About us: https://gencovery.com
 
 import os
+import shutil
 
 import pandas
 from gws_core import (BaseTestCase, File, MetadataTable, MetadataTableImporter,
@@ -19,7 +20,7 @@ class TestQiime2QualityCheck(BaseTestCase):
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
 
         metadata_table: MetadataTable = MetadataTableImporter.call(
-            File(path=os.path.join(testdata_dir, "metadata_test.csv"))
+            File(path=os.path.join(testdata_dir, "gws_metadata.csv"))
         )
 
         tester = TaskRunner(
@@ -58,3 +59,9 @@ class TestQiime2QualityCheck(BaseTestCase):
         t2 = pandas.read_csv(expected_file_path, delimiter="\t")
 
         self.assertEqual(t1.shape, t2.shape)
+
+        # # create test_datadir
+        # shutil.copytree(
+        #     result_dir.path,
+        #     "/data/gws_ubiome/testdata/quality_check/"
+        # )

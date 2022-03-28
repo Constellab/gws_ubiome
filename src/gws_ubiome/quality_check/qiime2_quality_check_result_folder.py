@@ -18,14 +18,10 @@ class Qiime2QualityCheckResultFolder(Folder):
     Qiime2QualityCheckResultFolder Folder file class
     """
 
-    # forward_reads_file_path: str = StrRField()
-    # reverse_reads_file_path: str = StrRField()
-
     @view(view_type=TableView, human_name='Sequencing quality table',
           short_description='Table of the reads sequencing quality (PHRED score per base)',
           specs={"type": StrParam(allowed_values=["forward_reads", "reverse_reads"])})
     def view_as_table(self, params: ConfigParams) -> TableView:
-        from ..quality_check.qiime2_quality_check import Qiime2QualityCheck
         type_ = params["type"]
         table: Table
         if type_ == "forward_reads":
@@ -85,8 +81,7 @@ class Qiime2QualityCheckResultFolder(Folder):
         lp_view = LinePlot2DView()
         data = table.get_data()
 
-        # sliding windows df.rolling(window=5).mean()
-#        y=data.iloc[2, :].values.tolist()
+        # sliding windows
         y = data.iloc[2, :]
         q1 = data.iloc[1, :]
         q3 = data.iloc[3, :]

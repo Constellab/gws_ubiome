@@ -16,32 +16,31 @@ from gws_core.extra import TableBoxPlotView, TableView
 class Qiime2FeatureFrequencyFolder(Folder):
     """ Qiime2FeatureFrequencyFolder Folder file class """
 
-    sample_frequency_file_path: str = StrRField()
+    # sample_frequency_file_path: str = StrRField()
+    # @view(view_type=TableView,
+    #       human_name='Feature frequency table',
+    #       short_description='Table of feature frequencies per sample', default_view=True)
+    # def view_as_table(self, params: ConfigParams) -> TableView:
+    #     table: Table
+    #     file_path = self.get_sub_path("sample-frequency-detail.tsv")
+    #     table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
+    #     table_view = TableView(table=table)
+    #     table_view.set_title("Feature frequency table")
+    #     # data = table.get_data()
+    #     # median = data.median(axis=0).iat[0]
+    #     # average = data.mean(axis=0).iat[0]
+    #     # table_view.set_caption(f"For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
+    #     return TableView(table=table)
 
-    @view(view_type=TableView,
-          human_name='Feature frequency table',
-          short_description='Table of feature frequencies per sample', default_view=True)
-    def view_as_table(self, params: ConfigParams) -> TableView:
-        table: Table
-        file_path = self.get_sub_path("sample-frequency-detail.tsv")
-        table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
-        table_view = TableView(table=table)
-        table_view.set_title("Feature frequency table")
-        # data = table.get_data()
-        # median = data.median(axis=0).iat[0]
-        # average = data.mean(axis=0).iat[0]
-        # table_view.set_caption(f"For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
-        return TableView(table=table)
-
-    @view(view_type=BoxPlotView, human_name='Feature frequency boxplot',
-          short_description='Boxplot of feature frequencies per sample')
-    def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
-        table: Table
-        file_path = self.get_sub_path("sample-frequency-detail.tsv")
-        table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
-        table_view = TableView(table=table)
-        table_view.set_title("Feature frequency box plots")
-        bx_view = BoxPlotView()
-        data = table.get_data()
-        bx_view.add_data(data=data)
-        return bx_view
+    # @view(view_type=BoxPlotView, human_name='Feature frequency boxplot',
+    #       short_description='Boxplot of feature frequencies per sample')
+    # def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
+    #     table: Table
+    #     file_path = self.get_sub_path("sample-frequency-detail.tsv")
+    #     table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
+    #     table_view = TableView(table=table)
+    #     table_view.set_title("Feature frequency box plots")
+    #     bx_view = BoxPlotView()
+    #     data = table.get_data()
+    #     bx_view.add_data(data=data)
+    #     return bx_view

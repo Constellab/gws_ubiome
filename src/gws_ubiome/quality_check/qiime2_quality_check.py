@@ -58,7 +58,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         'metadata_table': MetadataTable  # MetadataTableFile
     }
     output_specs = {
-        'result_folder': Qiime2QualityCheckResultFolder
+        'result_folder': Qiime2QualityCheckResultFolder,
     }
     config_specs = {
         "sequencing_type":
@@ -79,7 +79,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         metadata_table = inputs["metadata_table"]
         seq = params["sequencing_type"]
         fastq_folder_path = fastq_folder.path
-        metadata_table_file = MetadataTableExporter.call(source=metadata_table)
+        metadata_table_file = MetadataTableExporter.call(source=metadata_table, params={"delimiter": "tab"})
         manifest_table_file_path = metadata_table_file.path
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))

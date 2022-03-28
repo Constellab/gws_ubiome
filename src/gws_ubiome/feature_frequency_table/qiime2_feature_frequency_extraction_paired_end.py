@@ -5,8 +5,9 @@
 
 import os
 
-from gws_core import (ConfigParams, IntParam, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
+                      Table, TableImporter, TableRowAnnotatorHelper,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -23,7 +24,10 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     """
 
     input_specs = {'quality_check_folder': Qiime2QualityCheckResultFolder}
-    output_specs = {'result_folder': Qiime2FeatureFrequencyFolder}
+    output_specs = {
+        'feature_table': Table,
+        'result_folder': Qiime2FeatureFrequencyFolder
+    }
     config_specs = {
         "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
@@ -33,12 +37,22 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2FeatureFrequencyFolder()
         result_file.path = self._get_output_file_path()
-        result_file.sample_frequency_file_path = "sample-frequency-detail.tsv"
 
-        return {"result_folder": result_file}
+        # create annotated feature table
+        path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
+        feature_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+
+        path = os.path.join(result_file.path, "gws_metadata.csv")
+        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        feature_table = TableRowAnnotatorHelper.annotate(feature_table, metadata_table)
+
+        return {
+            "result_folder": result_file,
+            "feature_table": feature_table
+        }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
-        qiime2_folder = inputs["quality_check_result_folder"]
+        qiime2_folder = inputs["quality_check_folder"]
         thrd = params["threads"]
         trct_forward = params["truncated_forward_reads_size"]
         trct_reverse = params["truncated_reverse_reads_size"]

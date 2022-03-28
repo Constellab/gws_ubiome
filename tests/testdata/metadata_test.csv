@@ -1,8 +1,0 @@
-#author:
-#data:
-#project:
-#types_allowed:categorical or numeric
-#column-type	categorical	categorical
-sample-id	forward-absolute-filepath	reverse-absolute-filepath
-341F-785R-P01-A01-P49-a_R1.fastq.gz	341F-785R-P01-A01-P49-a_R1.fastq.gz	341F-785R-P01-A01-P49-a_R2.fastq.gz
-341F-785R-P01-A11-P37-b_R1_clipped.fastq.gz	341F-785R-P01-A11-P37-b_R1_clipped.fastq.gz	341F-785R-P01-A11-P37-b_R2_clipped.fastq.gz

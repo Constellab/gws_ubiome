@@ -1,6 +1,8 @@
 # > base_env
 from .base_env.qiime2_env_task import Qiime2EnvTask
 # > differential analysis
+from .differential_analysis.qiime2_differential_analysis import \
+    Qiime2DifferentialAnalysis
 from .differential_analysis.qiime2_differential_analysis_result_folder import \
     Qiime2DifferentialAnalysisResultFolder
 # > fastq
@@ -32,5 +34,8 @@ from .rarefaction_analysis.qiime2_rarefaction_analysis import \
 from .rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
     Qiime2RarefactionAnalysisResultFolder
 from .table.tax_table import TaxTable
+# > taxonomy/diversity
 from .taxonomy_diversity.qiime2_taxonomy_diversity_extraction import \
     Qiime2TaxonomyDiversityExtractor
+from .taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
+    Qiime2TaxonomyDiversityFolder

@@ -1,0 +1,9 @@
+#author:
+#data:
+#project:
+#types_allowed:categorical or numeric
+#column-type	categorical	categorical
+sample-id	forward-absolute-filepath	reverse-absolute-filepath
+341F-785R-P01-A09-P17	341F-785R-P01-A09-P17-a_R1_clipped.fastq.bz2.gz	341F-785R-P01-A09-P17-a_R2_clipped.fastq.bz2.gz
+341F-785R-P01-E04-P26	341F-785R-P01-E04-P26-b_R1_clipped.fastq.bz2.gz	341F-785R-P01-E04-P26-b_R2_clipped.fastq.bz2.gz
+341F-785R-P01-G07-P20	341F-785R-P01-G07-P20-a_R1_clipped.fastq.bz2.gz	341F-785R-P01-G07-P20-a_R2_clipped.fastq.bz2.gz

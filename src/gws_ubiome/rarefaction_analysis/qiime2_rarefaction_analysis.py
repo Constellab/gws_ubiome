@@ -11,7 +11,8 @@ from gws_core import (ConfigParams, IntParam, TaskInputs, TaskOutputs,
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
-from .qiime2_rarefaction_analysis_result_folder import Qiime2RarefactionAnalysisResultFolder
+from .qiime2_rarefaction_analysis_result_folder import \
+    Qiime2RarefactionAnalysisResultFolder
 
 
 @task_decorator("Qiime2RarefactionAnalysis", human_name="Qiime2 rarefaction analysis",
@@ -32,7 +33,7 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        result_folder = Qiime2RarefactionFolder()
+        result_folder = Qiime2RarefactionAnalysisResultFolder()
         result_folder.path = self._get_output_file_path()
         result_folder.observed_features_table_path = "observed_features.for_boxplot.tsv"
         result_folder.shannon_index_table_path = "shannon.for_boxplot.tsv"

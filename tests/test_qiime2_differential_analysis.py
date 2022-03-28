@@ -1,10 +1,11 @@
 
 import os
+import shutil
 
 import pandas
 from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import (Qiime2RarefactionAnalysisResultFolder,
-                        Qiime2TaxonomyDiversityExtractor)
+from gws_ubiome import (Qiime2DifferentialAnalysis,
+                        Qiime2TaxonomyDiversityFolder)
 
 
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
@@ -12,29 +13,28 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
     async def test_importer(self):
         settings = Settings.retrieve()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
+        taxonomy_result_folder = Qiime2TaxonomyDiversityFolder(path=os.path.join(large_testdata_dir, "diversity"))
         tester = TaskRunner(
             params={
-                'rarefaction_plateau_value': 1673,
-                'threads': 2
+                'taxonomic_level': 6,
+                'metadata_column': "subject"
             },
             inputs={
-                'rarefaction_analysis_result_folder':
-                    Qiime2RarefactionAnalysisResultFolder(path=os.path.join(large_testdata_dir, "rarefaction"))
+                'taxonomy_result_folder': taxonomy_result_folder
             },
-            task_type=Qiime2TaxonomyDiversityExtractor
+            task_type=Qiime2DifferentialAnalysis
         )
         outputs = await tester.run()
         result_dir = outputs['result_folder']
 
-        boxplot_csv_file_path = os.path.join(result_dir.path, "table_files",
-                                             "gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv")
+        boxplot_csv_file_path = os.path.join(result_dir.path, "percent-abundances.tsv")
         boxplot_csv = File(path=boxplot_csv_file_path)
         result_in_file = open(boxplot_csv_file_path, 'r', encoding="utf-8")
         result_first_line = result_in_file.readline()
         result_content = boxplot_csv.read()
 
         # Get the expected file output
-        expected_file_path = os.path.join(large_testdata_dir, "diversity", "table_files", "level-1.tsv")
+        expected_file_path = os.path.join(large_testdata_dir, "diff-analysis", "percent-abundances.tsv")
         expected_in_file = open(expected_file_path, 'r', encoding="utf-8")
         expected_first_line = expected_in_file.readline()
 

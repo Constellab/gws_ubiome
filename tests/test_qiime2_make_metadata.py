@@ -14,10 +14,11 @@ class TestQiime2MetadataMaker(BaseTestCase):
 
     async def test_importer(self):
         settings = Settings.retrieve()
+        large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
         tester = TaskRunner(
             inputs={
-                'fastq_folder': FastqFolder(path=os.path.join(testdata_dir, "test_fastq_folder")),
+                'fastq_folder': FastqFolder(path=os.path.join(large_testdata_dir,  "fastq_dir")),
             },
             task_type=Qiime2MetadataTableMaker
         )
@@ -29,7 +30,7 @@ class TestQiime2MetadataMaker(BaseTestCase):
         result_first_line = result_file.readline()
         result_content = result_file.read()
 
-        expected_file_path = os.path.join(testdata_dir, "metadata_test.csv")
+        expected_file_path = os.path.join(testdata_dir, "gws_metadata.csv")
         expected_in_file = open(expected_file_path, 'r', encoding="utf-8")
         expected_first_line = expected_in_file.readline()
         expected_result_file = File(path=expected_file_path)
