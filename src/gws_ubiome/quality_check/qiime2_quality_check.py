@@ -6,12 +6,14 @@
 import os
 
 from gws_core import (ConfigParams, File, Logger, MetadataTable,
-                      MetadataTableExporter, StrParam, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      MetadataTableExporter, MetadataTableImporter, StrParam,
+                      Table, TableImporter, TableRowAnnotatorHelper,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..fastq.fastq_folder import FastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
+from .quality_check_table import QualityCheckTable
 
 
 @task_decorator("Qiime2QualityCheck", human_name="Qiime2 quality check analysis",
@@ -59,6 +61,8 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     }
     output_specs = {
         'result_folder': Qiime2QualityCheckResultFolder,
+        'quality_tables': Qiime2QualityCheckResultFolder,
+        'quality_boxplots': QualityCheckTable
     }
     config_specs = {
         "sequencing_type":
@@ -69,10 +73,28 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_file = Qiime2QualityCheckResultFolder()
         result_file.path = self._get_output_folder_path()
-        result_file.reads_file_path = self.READS_FILE_PATH
-        result_file.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
-        result_file.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
-        return {"result_folder": result_file}
+        # result_file.reads_file_path = self.READS_FILE_PATH
+        # result_file.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
+        # result_file.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
+
+        # create annotated feature table
+        quality_table = QualityCheckTable()
+        quality_table.reads_file_path = self.READS_FILE_PATH
+        quality_table.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
+        quality_table.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
+
+        quality_table = quality_table.TableImporter.call(
+            File(path=result_file.forward_reads_file_path),
+            {'delimiter': 'tab', "index_column": 0})
+
+        path = os.path.join(result_file.path, "gws_metadata.csv")
+        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        quality_table = TableRowAnnotatorHelper.annotate(quality_table, metadata_table)
+
+        return {
+            "result_folder": result_file,
+            "quality_table": quality_table
+        }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         fastq_folder = inputs["fastq_folder"]
