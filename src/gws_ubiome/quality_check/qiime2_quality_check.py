@@ -9,11 +9,12 @@ from gws_core import (ConfigParams, File, Logger, MetadataTable,
                       MetadataTableExporter, MetadataTableImporter, StrParam,
                       Table, TableImporter, TableRowAnnotatorHelper,
                       TaskInputs, TaskOutputs, task_decorator)
+from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..fastq.fastq_folder import FastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
-from .quality_check_table import QualityCheckTable
+from .quality_check_table import QualityCheckTable, QualityTableImporter
 
 
 @task_decorator("Qiime2QualityCheck", human_name="Qiime2 quality check analysis",
@@ -51,18 +52,17 @@ class Qiime2QualityCheck(Qiime2EnvTask):
 
     """
 
-    READS_FILE_PATH = "seven-number-summaries.tsv"
-    FORWARD_READ_FILE_PATH = "forward-seven-number-summaries.tsv"
-    REVERSE_READ_FILE_PATH = "reverse-seven-number-summaries.tsv"
+    READS_FILE_PATH = "quality-boxplot.csv"
+    FORWARD_READ_FILE_PATH = "forward_boxplot.csv"
+    REVERSE_READ_FILE_PATH = "reverse_boxplot.csv"
 
     input_specs = {
         'fastq_folder': FastqFolder,
-        'metadata_table': MetadataTable  # MetadataTableFile
+        'metadata_table': File
     }
     output_specs = {
         'result_folder': Qiime2QualityCheckResultFolder,
-        'quality_tables': Qiime2QualityCheckResultFolder,
-        'quality_boxplots': QualityCheckTable
+        'quality_table': (ResourceSet, QualityCheckTable, )
     }
     config_specs = {
         "sequencing_type":
@@ -71,38 +71,74 @@ class Qiime2QualityCheck(Qiime2EnvTask):
             short_description="Type of sequencing. Defaults to paired-end")}
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        result_file = Qiime2QualityCheckResultFolder()
-        result_file.path = self._get_output_folder_path()
-        # result_file.reads_file_path = self.READS_FILE_PATH
-        # result_file.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
-        # result_file.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
+        result_folder = Qiime2QualityCheckResultFolder()
+        result_folder.path = self._get_output_folder_path()
+        result_folder.reads_file_path = self.READS_FILE_PATH
+        result_folder.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
+        result_folder.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
 
         # create annotated feature table
-        quality_table = QualityCheckTable()
-        quality_table.reads_file_path = self.READS_FILE_PATH
-        quality_table.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
-        quality_table.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
 
-        quality_table = quality_table.TableImporter.call(
-            File(path=result_file.forward_reads_file_path),
-            {'delimiter': 'tab', "index_column": 0})
+        ##### CREATE A TABLE FORMAT FOR CUSTOM VIEW (IN quality_check_table.py) #####
 
-        path = os.path.join(result_file.path, "gws_metadata.csv")
+        #quality_boxplots = QualityCheckTable()
+        #
+        #quality_boxplots.reads_file_path = self.READS_FILE_PATH
+        #quality_boxplots.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
+        #quality_boxplots.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
+
+        path = os.path.join(result_folder.path, "gws_metadata.csv")
         metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
-        quality_table = TableRowAnnotatorHelper.annotate(quality_table, metadata_table)
 
-        return {
-            "result_folder": result_file,
-            "quality_table": quality_table
-        }
+        seq_type = params["sequencing_type"]
+
+        if seq_type == "paired-end":
+            frwd_path = os.path.join(self.working_dir, "quality_check", self.FORWARD_READ_FILE_PATH)
+            rvrs_path = os.path.join(self.working_dir, "quality_check", self.REVERSE_READ_FILE_PATH)
+
+            # Quality table fwd
+            quality_table_forward = QualityTableImporter.call(
+                File(path=frwd_path),
+                {'delimiter': 'tab', "index_column": 0})
+            quality_table_fwd_annotated = TableRowAnnotatorHelper.annotate(quality_table_forward, metadata_table)
+            quality_table_fwd_annotated.name = "Quality check table - Forward"
+
+            # Quality table rvs
+            quality_table_reverse = QualityTableImporter.call(
+                File(path=rvrs_path),
+                {'delimiter': 'tab', "index_column": 0})
+            quality_table_rvs_annotated = TableRowAnnotatorHelper.annotate(quality_table_reverse, metadata_table)
+            quality_table_fwd_annotated.name = "Quality check table - Reverse"
+
+            # Resource set
+            resource_table: ResourceSet = ResourceSet()
+            resource_table.name = "Quality check tables"
+            resource_table.add_resource(quality_table_fwd_annotated)
+            resource_table.add_resource(quality_table_rvs_annotated)
+            return {
+                "result_folder": result_folder,
+                "quality_table": resource_table
+            }
+
+        else:
+            qual_path = os.path.join(self.working_dir, "quality_check", self.READS_FILE_PATH)
+            quality_table_single_end = TableImporter.call(
+                File(path=qual_path),
+                {'delimiter': 'tab', "index_column": 0})
+            quality_table = TableRowAnnotatorHelper.annotate(quality_table_single_end, metadata_table)
+            resource_table = quality_table
+            resource_table.name = "Quality table"
+            return {
+                "result_folder": result_folder,
+                "quality_table": resource_table
+            }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         fastq_folder = inputs["fastq_folder"]
         metadata_table = inputs["metadata_table"]
         seq = params["sequencing_type"]
         fastq_folder_path = fastq_folder.path
-        metadata_table_file = MetadataTableExporter.call(source=metadata_table, params={"delimiter": "tab"})
-        manifest_table_file_path = metadata_table_file.path
+        manifest_table_file_path = metadata_table.path
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         if seq == "paired-end":

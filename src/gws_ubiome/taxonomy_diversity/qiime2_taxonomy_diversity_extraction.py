@@ -3,16 +3,19 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-
 import os
 
-from gws_core import (ConfigParams, IntParam, Settings, TaskInputs,
-                      TaskOutputs, task_decorator)
+from gws_core import (ConfigParams, File, IntParam, MetadataTable,
+                      MetadataTableImporter, Settings, Table, TableImporter,
+                      TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
+                      task_decorator)
+from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
     Qiime2RarefactionAnalysisResultFolder
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
+from .taxonomy_stacked_table import TaxonomyTableImporter
 
 
 @task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Taxonomy diversity extractor",
@@ -21,9 +24,43 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     """
     Qiime2TaxonomyDiversityExtractor class.
     """
+    # Alpha div
 
-    input_specs = {'rarefaction_analysis_result_folder': Qiime2RarefactionAnalysisResultFolder}
-    output_specs = {'result_folder': Qiime2TaxonomyDiversityFolder}
+    DIVERSITY_PATHS = {
+        "Alpha Diversity - Shannon": "shannon_vector.qza.diversity_metrics.alpha-diversity.tsv",
+        "Alpha Diversity - Chao1": "chao1.qza.diversity_metrics.alpha-diversity.tsv",
+        "Alpha Diversity - Evenness": "evenness_vector.qza.diversity_metrics.alpha-diversity.tsv",
+        "Alpha Diversity - Faith pd": "faith_pd_vector.qza.diversity_metrics.alpha-diversity.tsv",
+        "Alpha Diversity - Observed features": "observed_features_vector.qza.diversity_metrics.alpha-diversity.tsv",
+        "Beta Diversity - Bray Curtis": "bray_curtis_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
+        "Beta Diversity - Jaccard distance": "jaccard_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
+        "Beta Diversity - Jaccard unweighted unifrac": "jaccard_unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
+        "Beta Diversity - Weighted unifrac": "weighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
+        "Beta Diversity - Unweighted unifrac": "unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
+        "Beta Diversity - Simpson": "simpson.qza.diversity_metrics.alpha-diversity.tsv",
+        "Beta Diversity - Inv Simpson": "invSimpson.tab.tsv"
+    }
+    # Taxo stacked barplot
+
+    TAXO_PATHS = {
+        "1_Kingdom": "gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv.parsed.tsv",
+        "2_Phylum": "gg.taxa-bar-plots.qzv.diversity_metrics.level-2.csv.tsv.parsed.tsv",
+        "3_Class": "gg.taxa-bar-plots.qzv.diversity_metrics.level-3.csv.tsv.parsed.tsv",
+        "4_Order": "gg.taxa-bar-plots.qzv.diversity_metrics.level-4.csv.tsv.parsed.tsv",
+        "5_Family": "gg.taxa-bar-plots.qzv.diversity_metrics.level-5.csv.tsv.parsed.tsv",
+        "6_Genus": "gg.taxa-bar-plots.qzv.diversity_metrics.level-6.csv.tsv.parsed.tsv",
+        "7_Species": "gg.taxa-bar-plots.qzv.diversity_metrics.level-7.csv.tsv.parsed.tsv"
+    }
+
+    input_specs = {
+        'rarefaction_analysis_result_folder': Qiime2RarefactionAnalysisResultFolder
+    }
+
+    output_specs = {
+        'result_folder': Qiime2TaxonomyDiversityFolder,
+        'diversity_tables': ResourceSet,
+        'taxonomy_tables': ResourceSet
+    }
     config_specs = {
         "rarefaction_plateau_value":
         IntParam(
@@ -33,31 +70,39 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        result_file = Qiime2TaxonomyDiversityFolder()
-        result_file.path = self._get_output_file_path()
+        result_folder = Qiime2TaxonomyDiversityFolder()
+        result_folder.path = self._get_output_file_path()
 
-        result_file.bray_curtis_table_path = "/table_files/bray_curtis_distance_matrix.qza.diversity_metrics.bray_curtis_distance_matrix.qza.diversity_metrics.tsv"
-        result_file.chao_1_table_path = "/table_files/chao1.qza.diversity_metrics.chao1.qza.diversity_metrics.tsv"
-        result_file.evenness_table_path = "/table_files/evenness_vector.qza.diversity_metrics.evenness_vector.qza.diversity_metrics.tsv"
-        result_file.faith_pd_table_path = "/table_files/faith_pd_vector.qza.diversity_metrics.faith_pd_vector.qza.diversity_metrics.tsv"
-        result_file.feature_freq_detail_table_path = "/table_files/feature-frequency-detail.tsv"
-        result_file.inv_simpson_table_path = "/table_files/invSimpson.tab.tsv"
-        result_file.jaccard_distance_table_path = "/table_files/"
-        result_file.jaccard_unweighted_unifrac_distance_table_path = "/table_files/jaccard_distance_matrix.qza.diversity_metrics.jaccard_distance_matrix.qza.diversity_metrics.tsv"
-        result_file.taxo_level_1_table_path = "/table_files/level-1.tsv"
-        result_file.taxo_level_2_table_path = "/table_files/level-2.tsv"
-        result_file.taxo_level_3_table_path = "/table_files/level-3.tsv"
-        result_file.taxo_level_4_table_path = "/table_files/level-4.tsv"
-        result_file.taxo_level_5_table_path = "/table_files/level-5.tsv"
-        result_file.taxo_level_6_table_path = "/table_files/level-6.tsv"
-        result_file.taxo_level_7_table_path = "/table_files/level-7.tsv"
-        result_file.observed_features_vector_table_path = "/table_files/observed_features_vector.qza.diversity_metrics.observed_features_vector.qza.diversity_metrics.tsv"
-        result_file.shannon_vector_table_path = "/table_files/shannon_vector.qza.diversity_metrics.shannon_vector.qza.diversity_metrics.tsv"
-        result_file.simpson_table_path = "/table_files/simpson.qza.diversity_metrics.simpson.qza.diversity_metrics.tsv"
-        result_file.unweighted_unifrac_distance_table_path = "/table_files/unweighted_unifrac_distance_matrix.qza.diversity_metrics.unweighted_unifrac_distance_matrix.qza.diversity_metrics.tsv"
-        result_file.weighted_unifrac_distance_table_path = "/table_files/weighted_unifrac_distance_matrix.qza.diversity_metrics.weighted_unifrac_distance_matrix.qza.diversity_metrics.tsv"
+        # Metadata table
+        path = os.path.join(result_folder.path, "gws_metadata.csv")
+        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
 
-        return {"result_folder": result_file}
+        # diversity table
+        diversity_resource_table_set: ResourceSet = ResourceSet()
+        diversity_resource_table_set.name = "Set of diversity tables"
+        for key, value in self.DIVERSITY_PATHS.items():
+            path = os.path.join(self.working_dir, "diversity", "table_files", value)
+            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table_annotated.name = key
+            diversity_resource_table_set.add_resource(table_annotated)
+
+        # Taxonomy
+
+        taxo_resource_table_set: ResourceSet = ResourceSet()
+        taxo_resource_table_set.name = "Set of stacked barplot views for taxonomic tables (7 levels)"
+        for key, value in self.TAXO_PATHS.items():
+            path = os.path.join(self.working_dir, "diversity", "table_files", value)
+            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table_annotated.name = key
+            taxo_resource_table_set.add_resource(table_annotated)
+
+        return {
+            'result_folder': result_folder,
+            'diversity_tables': diversity_resource_table_set,
+            'taxonomy_tables': taxo_resource_table_set
+        }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
