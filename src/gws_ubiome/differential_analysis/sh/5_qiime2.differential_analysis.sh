@@ -43,6 +43,6 @@ mv  ./taxa-ancom/*/data/percent-abundances.tsv ./differential_analysis
 mv *.qza ./differential_analysis ;
 mv *.qzv ./differential_analysis ;
 
-cp $qiime_dir/qiime2_manifest.csv ./differential_analysis ;
-cp $qiime_dir/gws_metadata.csv  ./differential_analysis ;
-cp $qiime_dir/qiime2_metadata.csv ./differential_analysis ;
+cp $qiime_dir/raw_files/qiime2_manifest.csv ./differential_analysis ;
+cp $qiime_dir/raw_files/gws_metadata.csv  ./differential_analysis ;
+cp $qiime_dir/raw_files/qiime2_metadata.csv ./differential_analysis ;

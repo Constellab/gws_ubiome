@@ -13,7 +13,7 @@ from ..fastq.fastq_folder import FastqFolder
 
 
 @task_decorator("Qiime2MetadataTableMaker", human_name="Qiime2 metadata table maker",
-                short_description="Create a metadata table from a fastq folder")
+                short_description="Create a metadata table (tab separator) from a fastq folder")
 class Qiime2MetadataTableMaker(Qiime2EnvTask):
     """
     Qiime2MetadataTableMaker class.
@@ -47,10 +47,10 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
 
     """
 
-    DEFAULT_METADATA_FILE_NAME = "metadata.csv"
+    # DEFAULT_METADATA_FILE_NAME = "metadata.csv"
 
     input_specs = {'fastq_folder': FastqFolder}
-    output_specs = {'metadata_table': MetadataTable}
+    output_specs = {'metadata_table': File}  # 'metadata_table': MetadataTable
     config_specs = {
         "sequencing_type":
         StrParam(
@@ -63,17 +63,25 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
         "reverse_file_differentiator":
         StrParam(
             default_value="_R2",
-            short_description="Paired-end sequencing forward file name differanciator, e.g: sample-A_R2.fastq.gz")}
+            short_description="Paired-end sequencing forward file name differanciator, e.g: sample-A_R2.fastq.gz"),
+        "metadata_file_name":  # temporary
+        StrParam(
+            default_value="metadata.txt",
+            short_description="Choose an output metadata file name")
+
+    }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        path = os.path.join(self.working_dir, self.DEFAULT_METADATA_FILE_NAME)
+        output_file = params["metadata_file_name"]
+        path = os.path.join(self.working_dir, output_file)
         result_file = File(path=path)
-        metadata_table = MetadataTableImporter.call(result_file)
-        return {"metadata_table": metadata_table}
+        #metadata_table = MetadataTableImporter.call(result_file)
+        return {"metadata_table": result_file}  # "metadata_table": metadata_table
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         fastq_folder = inputs["fastq_folder"]
         seq = params["sequencing_type"]
+        output_name = params["metadata_file_name"]
         fastq_folder_path = fastq_folder.path
 
         if seq == "paired-end":
@@ -86,7 +94,8 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
                 fastq_folder_path,
                 fwd,
                 rvs,
-                self.DEFAULT_METADATA_FILE_NAME
+                output_name
+                # self.DEFAULT_METADATA_FILE_NAME
             ]
             return cmd
         else:
@@ -95,6 +104,7 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
                 "bash",
                 os.path.join(script_file_dir, "./sh/0_qiime2_manifest_single_end.sh"),
                 fastq_folder.path,
-                self.DEFAULT_METADATA_FILE_NAME
+                output_name
+                # self.DEFAULT_METADATA_FILE_NAME
             ]
             return cmd

@@ -6,8 +6,12 @@
 
 import os
 
-from gws_core import (ConfigParams, File, Folder, IntParam, ParamSet, Settings,
-                      StrParam, TaskInputs, TaskOutputs, Utils, task_decorator)
+from gws_core import (ConfigParams, File, Folder, IntParam, Logger,
+                      MetadataTable, MetadataTableExporter,
+                      MetadataTableImporter, ParamSet, Settings, StrParam,
+                      Table, TableImporter, TableRowAnnotatorHelper,
+                      TaskInputs, TaskOutputs, Utils, task_decorator)
+from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..differential_analysis.qiime2_differential_analysis_result_folder import \
@@ -22,12 +26,18 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
     """
     Qiime2DifferentialAnalysis class.
     """
+    OUTPUT_FILES = {
+        "Percentile abundances": "percent-abundances.tsv",
+        "ANCOM Stat: W stat": "ancom.tsv",
+        "Volcano plot: y=F-score, x=W stat": "data.tsv"
+    }
 
     input_specs = {
         'taxonomy_result_folder': Qiime2TaxonomyDiversityFolder
     }
     output_specs = {
-        'result_folder': Qiime2DifferentialAnalysisResultFolder
+        'result_folder': Qiime2DifferentialAnalysisResultFolder,
+        'result_tables': ResourceSet
     }
     config_specs = {
         "taxonomic_level":
@@ -53,14 +63,27 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")}
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        result_file = Qiime2DifferentialAnalysisResultFolder()
-        result_file.path = self._get_output_file_path()
+        result_folder = Qiime2DifferentialAnalysisResultFolder()
+        result_folder.path = self._get_output_file_path()
 
-        result_file.data_table_path = "data.tsv"
-        result_file.ancom_stat_table_path = "ancom.tsv"
-        result_file.volcano_plot_path = "percent-abundances.tsv"
+        # Metadata table
+        path = os.path.join(result_folder.path, "gws_metadata.csv")
+        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
 
-        return {"result_folder": result_file}
+        # Ressource set containing ANCOM output tables
+        resource_table_set: ResourceSet = ResourceSet()
+        resource_table_set.name = "Set of differential analysis tables"
+        for key, value in self.OUTPUT_FILES.items():
+            path = os.path.join(self.working_dir, "differential_analysis", value)
+            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table_annotated.name = key
+            resource_table_set.add_resource(table_annotated)
+
+        return {
+            "result_folder": result_folder,
+            "result_tables": resource_table_set
+        }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         qiime2_folder = inputs["taxonomy_result_folder"]
@@ -71,8 +94,9 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        # metadata_subset = params["metadata_subset"]
-        # if not metadata_subset:
+        #metadata_subset = params["metadata_subset"]
+
+        # if not metadata_subset:  # OPTIONAL: subseting metadata table with 1 column before testing
         cmd = [
             " bash ", os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.sh"),
             qiime2_folder.path,
@@ -80,30 +104,21 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
             metadata_col,
             thrds
         ]
-        # else:
+        # #else:
         #     metadata_subset_col = metadata_subset[0]["column"]
         #     metadata_subset_val = metadata_subset[0]["value"]
 
-        #     # cmd = [
-        #     #     " bash ",
-        #     #     os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.subset.sh"),
-        #     #     qiime2_folder.path,
-        #     #     tax_level,
-        #     #     metadata_subset_col,
-        #     #     metadata_col,
-        #     #     thrds,
-        #     #     metadata_subset_val
-        #     # ]
-
         #     cmd = [
-        #         " bash ", os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.subset.sh"),
+        #         " bash ",
+        #         os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.subset.sh"),
         #         qiime2_folder.path,
         #         tax_level,
-        #         metadata_col,
         #         metadata_subset_col,
-        #         metadata_subset_val,
-        #         thrds
+        #         metadata_col,
+        #         thrds,
+        #         metadata_subset_val
         #     ]
+
         return cmd
 
     def _get_output_file_path(self):

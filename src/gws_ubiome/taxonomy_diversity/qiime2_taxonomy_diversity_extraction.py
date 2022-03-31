@@ -24,8 +24,11 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     """
     Qiime2TaxonomyDiversityExtractor class.
     """
-    # Alpha div
 
+    # Greengenes db
+    DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
+
+    # Diversity output files
     DIVERSITY_PATHS = {
         "Alpha Diversity - Shannon": "shannon_vector.qza.diversity_metrics.alpha-diversity.tsv",
         "Alpha Diversity - Chao1": "chao1.qza.diversity_metrics.alpha-diversity.tsv",
@@ -40,8 +43,8 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         "Beta Diversity - Simpson": "simpson.qza.diversity_metrics.alpha-diversity.tsv",
         "Beta Diversity - Inv Simpson": "invSimpson.tab.tsv"
     }
-    # Taxo stacked barplot
 
+    # Taxo stacked barplot
     TAXO_PATHS = {
         "1_Kingdom": "gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv.parsed.tsv",
         "2_Phylum": "gg.taxa-bar-plots.qzv.diversity_metrics.level-2.csv.tsv.parsed.tsv",
@@ -66,18 +69,18 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         IntParam(
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
-        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads")
+        "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_folder = Qiime2TaxonomyDiversityFolder()
         result_folder.path = self._get_output_file_path()
 
-        # Metadata table
-        path = os.path.join(result_folder.path, "gws_metadata.csv")
+        #  Importing Metadata table
+        path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
         metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
 
-        # diversity table
+        # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
         diversity_resource_table_set.name = "Set of diversity tables"
         for key, value in self.DIVERSITY_PATHS.items():
@@ -87,13 +90,13 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             table_annotated.name = key
             diversity_resource_table_set.add_resource(table_annotated)
 
-        # Taxonomy
+        # Create ressource set containing Taxonomy table with a forced customed view (TaxonomyTable; stacked barplot view)
 
         taxo_resource_table_set: ResourceSet = ResourceSet()
         taxo_resource_table_set.name = "Set of stacked barplot views for taxonomic tables (7 levels)"
         for key, value in self.TAXO_PATHS.items():
             path = os.path.join(self.working_dir, "diversity", "table_files", value)
-            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0}) 
             table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
@@ -108,10 +111,6 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         thrds = params["threads"]
-        # settings = Settings.retrieve()
-        # db_gg_path = "/lab/user/bricks/gws_ubiome/src/gws_ubiome/build/gg-13-8-99-nb-classifier.qza"  # Temporary
-        # db_gg_path = settings.get_variable("gws_ubiome:greengenes_ref_file")
-        db_gg_path = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         cmd = [
             " bash ",
@@ -119,7 +118,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             qiime2_folder.path,
             plateau_val,
             thrds,
-            db_gg_path,
+            self.DB_GREENGENES,
             os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
         ]
         return cmd

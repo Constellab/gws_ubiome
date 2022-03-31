@@ -24,12 +24,12 @@ class TaxonomyTable(Table):
         data = self.get_data()
 
         s_view.normalize = True
-        for i in range(1, data.shape[1]):
+        for i in range(0, data.shape[1]):
             if isinstance(data.iat[0, i], str):
                 continue
             y = data.iloc[:, i].values.tolist()
             s_view.add_series(y=y, name=data.columns[i])
-        s_view.x_tick_labels = data.iloc[:, 0].values.tolist()
+        s_view.x_tick_labels = data.iloc[:, -1].values.tolist()
         return s_view
 
 

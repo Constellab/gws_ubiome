@@ -68,7 +68,12 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],
-            short_description="Type of sequencing. Defaults to paired-end")}
+            short_description="Type of sequencing. Defaults to paired-end")  # ,
+        # "interleaved_files":
+        # StrParam(
+        #     default_value="No", allowed_values=["Yes", "No"],
+        #     short_description="Type of sequencing. Choose Yes if your PAIRED-END fastq files are interleaved (i.e. 1 file containing both forward and reverse reads)")
+    }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         result_folder = Qiime2QualityCheckResultFolder()
@@ -78,14 +83,6 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         result_folder.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
 
         # create annotated feature table
-
-        ##### CREATE A TABLE FORMAT FOR CUSTOM VIEW (IN quality_check_table.py) #####
-
-        #quality_boxplots = QualityCheckTable()
-        #
-        #quality_boxplots.reads_file_path = self.READS_FILE_PATH
-        #quality_boxplots.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
-        #quality_boxplots.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
 
         path = os.path.join(result_folder.path, "gws_metadata.csv")
         metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
@@ -108,7 +105,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
                 File(path=rvrs_path),
                 {'delimiter': 'tab', "index_column": 0})
             quality_table_rvs_annotated = TableRowAnnotatorHelper.annotate(quality_table_reverse, metadata_table)
-            quality_table_fwd_annotated.name = "Quality check table - Reverse"
+            quality_table_rvs_annotated.name = "Quality check table - Reverse"
 
             # Resource set
             resource_table: ResourceSet = ResourceSet()
@@ -137,11 +134,21 @@ class Qiime2QualityCheck(Qiime2EnvTask):
         fastq_folder = inputs["fastq_folder"]
         metadata_table = inputs["metadata_table"]
         seq = params["sequencing_type"]
+        #interleaved = params["interleaved_files"]
         fastq_folder_path = fastq_folder.path
         manifest_table_file_path = metadata_table.path
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         if seq == "paired-end":
+            # if interleaved == "Yes":
+            # cmd = [
+            #     "bash",
+            #     os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_paired_end_interleaved.sh"),
+            #     fastq_folder_path,
+            #     manifest_table_file_path
+            #    ./sh/0_qiime2_manifest_paired_end.sh
+            # ]
+            # else:
             cmd = [
                 "bash",
                 os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_paired_end.sh"),

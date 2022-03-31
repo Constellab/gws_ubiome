@@ -29,7 +29,7 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
         'result_folder': Qiime2FeatureFrequencyFolder
     }
     config_specs = {
-        "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
+        "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")
     }
