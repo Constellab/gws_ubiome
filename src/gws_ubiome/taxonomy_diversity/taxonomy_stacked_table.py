@@ -29,7 +29,7 @@ class TaxonomyTable(Table):
                 continue
             y = data.iloc[:, i].values.tolist()
             s_view.add_series(y=y, name=data.columns[i])
-        s_view.x_tick_labels = data.iloc[:, -1].values.tolist()
+        s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
         return s_view
 
 
