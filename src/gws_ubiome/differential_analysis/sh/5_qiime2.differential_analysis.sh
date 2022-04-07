@@ -46,3 +46,42 @@ mv *.qzv ./differential_analysis ;
 cp $qiime_dir/raw_files/qiime2_manifest.csv ./differential_analysis ;
 cp $qiime_dir/raw_files/gws_metadata.csv  ./differential_analysis ;
 cp $qiime_dir/raw_files/qiime2_metadata.csv ./differential_analysis ;
+
+
+# #mkdir biplot
+
+# # Make the relative frequency table from the rarefied table
+# qiime feature-table relative-frequency \
+# --i-table $qiime_dir/raw_files/table.qza \
+# --o-relative-frequency-table rarefied_table_relative.qza
+
+# # Make the PCoA from the unweighted unifrac matrix
+
+# unifrac_unweighted_distance_matrix = $qiime_dir/raw_files/unweighted*unifrac*distance*qza
+# qiime diversity pcoa
+# --i-distance-matrix $unifrac_unweighted_distance_matrix
+# --o-pcoa unweighted_unifrac_pcoa_results.qza
+
+# # Make the biplot for unweighted UniFrac
+# qiime diversity pcoa-biplot \
+# --i-pcoa unweighted_unifrac_pcoa_results.qza \
+# # --i-features biplot/rarefied_table_relative.qza \
+# # --o-biplot biplot/biplot_matrix_unweighted_unifrac.qza
+# --i-features rarefied_table_relative.qza \
+# --o-biplot biplot_matrix_unweighted_unifrac.qza
+
+# #cd biplot
+
+# # Turn this matrix into an emperor plot
+# qiime emperor biplot \
+# --i-biplot biplot_matrix_unweighted_unifrac.qza \
+# --m-sample-metadata-file $qiime_dir/raw_files/qiime2_metadata.csv \
+# --m-feature-metadata-file $qiime_dir/raw_files/gg.taxonomy.qza \
+# --o-visualization unweighted_unifrac_emperor_biplot.qzv
+
+
+# unzip unweighted_unifrac_emperor_biplot.qzv -d emperor_plot
+
+# mv ./emperor_plot/*/data/data.tsv  ./differential_analysis
+
+

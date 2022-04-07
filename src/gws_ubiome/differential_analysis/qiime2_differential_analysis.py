@@ -27,10 +27,10 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
     Qiime2DifferentialAnalysis class.
     """
     OUTPUT_FILES = {
-        "Percentile abundances": "percent-abundances.tsv",
         "ANCOM Stat: W stat": "ancom.tsv",
         "Volcano plot: y=F-score, x=W stat": "data.tsv"
     }
+    PERCENTILE_TABLE = {"Percentile abundances": "percent-abundances.tsv"}
 
     input_specs = {
         'taxonomy_result_folder': Qiime2TaxonomyDiversityFolder
@@ -67,8 +67,8 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         result_folder.path = self._get_output_file_path()
 
         # Metadata table
-        path = os.path.join(result_folder.path, "gws_metadata.csv")
-        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        # path = os.path.join(result_folder.path, "gws_metadata.csv")
+        # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
 
         # Ressource set containing ANCOM output tables
         resource_table_set: ResourceSet = ResourceSet()
@@ -76,9 +76,35 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         for key, value in self.OUTPUT_FILES.items():
             path = os.path.join(self.working_dir, "differential_analysis", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
-            table_annotated.name = key
-            resource_table_set.add_resource(table_annotated)
+            # table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table.name = key
+            resource_table_set.add_resource(table)
+
+        for key, value in self.PERCENTILE_TABLE.items():
+            path = os.path.join(self.working_dir, "differential_analysis", value)
+            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            data = table.get_data()
+            column_tags = []
+
+            column_names = table.column_names
+            first_row = [val if val else "unknown" for _, val in enumerate(data.iloc[0, :])]
+            group_key = params["metadata_column"]
+            final_col_names = []
+            for i, col_name in enumerate(column_names):
+                column_tags.append({
+                    group_key: first_row[i],
+                    "quantile": col_name,
+                })
+                final_col_names.append(str(first_row[i])+"_"+str(col_name))
+                # table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+
+            data = data.iloc[1:, :]
+            data.columns = final_col_names
+            table = Table(data=data)
+            table.set_column_tags(column_tags)
+
+            table.name = key
+            resource_table_set.add_resource(table)
 
         return {
             "result_folder": result_folder,

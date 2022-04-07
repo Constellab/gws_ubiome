@@ -52,16 +52,18 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
         observed_feature_table = RarefactionTableImporter.call(
             File(path=observed_path),
             {'delimiter': 'tab', "index_column": 0})
-
+        observed_feature_table.name = "Observed features"
         # observed_feature_table_file_annotated = TableRowAnnotatorHelper.annotate(
         # observed_feature_table_file, metadata_table)
 
         shannon_index_table = RarefactionTableImporter.call(
             File(path=shannon_path),
             {'delimiter': 'tab', "index_column": 0})
+        shannon_index_table.name = "Shannon index"
         # shannon_index_table_file_annotated = TableRowAnnotatorHelper.annotate(shannon_index_table_file, metadata_table)
 
         resource_table: ResourceSet = ResourceSet()
+        resource_table.name = "Rarefaction tables"
         resource_table.add_resource(observed_feature_table)
         resource_table.add_resource(shannon_index_table)
 
