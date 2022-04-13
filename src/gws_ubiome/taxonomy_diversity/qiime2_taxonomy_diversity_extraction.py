@@ -17,7 +17,6 @@ from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
-
 @task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Taxonomy diversity extractor",
                 short_description="Compute various diversity index and taxonomy assessement using OTU/ASV")
 class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
@@ -96,7 +95,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         taxo_resource_table_set.name = "Set of stacked barplot views for taxonomic tables (7 levels)"
         for key, value in self.TAXO_PATHS.items():
             path = os.path.join(self.working_dir, "diversity", "table_files", value)
-            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0}) 
+            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)

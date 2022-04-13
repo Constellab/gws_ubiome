@@ -4,9 +4,7 @@
 
 from typing import List
 
-from gws_core import (BadRequestException, StrRField, Table,
-                      TableAggregatorHelper, TableFilterHelper,
-                      resource_decorator)
+from gws_core import BadRequestException, StrRField, Table, resource_decorator
 from pandas import DataFrame
 
 
@@ -27,26 +25,16 @@ class TaxTable(Table):
 
     # -- S --
 
-    def select_by_row_indexes(self, indexes: List[int]) -> 'TaxTable':
-        table = super().select_by_row_indexes(indexes)
-        table = TaxTable(data=table.get_data())
-        table.tax_level_column = self.tax_level_column
-        return table
-
     def select_by_column_indexes(self, indexes: List[int]) -> 'TaxTable':
+        """ Select by column index """
         table = super().select_by_column_indexes(indexes)
-        table = TaxTable(data=table.get_data())
-        table.tax_level_column = self.tax_level_column
-        return table
-
-    def select_by_row_name(self, name_regex: str) -> 'TaxTable':
-        table = super().select_by_row_name(name_regex)
-        table = TaxTable(data=table.get_data())
-        table.tax_level_column = self.tax_level_column
+        if not self.tax_level_column in table.column_names:
+            raise BadRequestException("The tax_level_column is required and must be selected")
         return table
 
     def select_by_column_name(self, name_regex: str) -> 'TaxTable':
+        """ Select by column name """
         table = super().select_by_column_name(name_regex)
-        table = TaxTable(data=table.get_data())
-        table.tax_level_column = self.tax_level_column
+        if not self.tax_level_column in table.column_names:
+            raise BadRequestException("The tax_level_column is required and must be selected")
         return table
