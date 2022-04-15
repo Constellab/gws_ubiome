@@ -1,0 +1,7 @@
+name: .qiime1_env
+channels:
+  - bioconda
+  - conda-forge
+
+dependencies:
+  - qiime

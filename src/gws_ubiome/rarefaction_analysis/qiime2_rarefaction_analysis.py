@@ -32,7 +32,7 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     output_specs = {'result_folder': Qiime2RarefactionAnalysisResultFolder,
                     "rarefaction_table": ResourceSet}
     config_specs = {
-        "min_coverage": IntParam(min_value=20, short_description="Minimum number of reads to test"),
+        "min_coverage": IntParam(default_value=20, min_value=20, short_description="Minimum number of reads to test"),
         "max_coverage":
         IntParam(
             min_value=20,

@@ -6,6 +6,7 @@
 
 import os
 
+import pandas as pd
 from gws_core import (ConfigParams, File, Folder, IntParam, Logger,
                       MetadataTable, MetadataTableExporter,
                       MetadataTableImporter, ParamSet, Settings, StrParam,
@@ -100,6 +101,8 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
 
             data = data.iloc[1:, :]
             data.columns = final_col_names
+            data = data.apply(pd.to_numeric, errors='coerce')
+
             table = Table(data=data)
             table.set_column_tags(column_tags)
 
