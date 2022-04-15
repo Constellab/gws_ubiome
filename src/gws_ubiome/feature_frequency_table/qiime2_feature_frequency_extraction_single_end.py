@@ -26,6 +26,7 @@ class Qiime2FeatureTableExtractorSE(Qiime2EnvTask):
     input_specs = {'quality_check_folder': Qiime2QualityCheckResultFolder}
     output_specs = {
         'feature_table': Table,
+        'stats': Table,
         'result_folder': Qiime2FeatureFrequencyFolder
     }
     config_specs = {
@@ -41,12 +42,17 @@ class Qiime2FeatureTableExtractorSE(Qiime2EnvTask):
         path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
         feature_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
+        path = os.path.join(result_file.path, "denoising-stats.tsv")
+        stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+
         path = os.path.join(result_file.path, "gws_metadata.tsv")
         metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
         feature_table = TableRowAnnotatorHelper.annotate(feature_table, metadata_table)
+        stats_table = TableRowAnnotatorHelper.annotate(stats_table, metadata_table)
 
         return {
             "result_folder": result_file,
+            "stats": stats_table,
             "feature_table": feature_table
         }
 

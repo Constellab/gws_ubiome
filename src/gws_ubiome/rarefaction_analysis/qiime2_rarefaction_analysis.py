@@ -36,7 +36,9 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
         "max_coverage":
         IntParam(
             min_value=20,
-            short_description="Maximum number of reads to test. Near to median value of the previous sample frequencies is advised")
+            short_description="Maximum number of reads to test. Near to median value of the previous sample frequencies is advised"),
+        "iteration": IntParam(default_value=10, min_value=10, short_description="Number of iteration for the rarefaction step")
+
     }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -74,6 +76,7 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
         feature_frequency_folder = inputs["feature_frequency_folder"]
         min_depth = params["min_coverage"]
         max_depth = params["max_coverage"]
+        iteration_number = params["iteration"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         cmd = [
             " bash ",
@@ -81,6 +84,7 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
             feature_frequency_folder.path,
             min_depth,
             max_depth,
+            iteration_number,
             os.path.join(script_file_dir, "./perl/3_transform_table_for_boxplot.pl")
         ]
 

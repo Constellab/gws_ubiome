@@ -10,13 +10,15 @@
 qiime_dir=$1
 min_value=$2
 max_value=$3
-perl_script_transform_table_for_boxplot=$4
+iterations=$4
+perl_script_transform_table_for_boxplot=$5
 
 qiime diversity alpha-rarefaction \
   --i-table $qiime_dir/table.qza \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv \
   --o-visualization alpha_rarefaction_curves.qzv \
   --p-min-depth $min_value \
+  --p-iterations $iterations \
   --p-max-depth $max_value
 
 mkdir rarefaction ;
