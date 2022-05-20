@@ -12,7 +12,7 @@ from gws_core import (ConfigParams, File, Logger, MetadataTable,
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..fastq.fastq_folder import FastqFolder
+from gws_omix import FastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 

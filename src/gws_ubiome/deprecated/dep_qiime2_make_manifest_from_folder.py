@@ -10,7 +10,7 @@ from gws_core import (ConfigParams, File, Logger, MetadataTable,
                       TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..fastq.fastq_folder import FastqFolder
+from gws_omix import FastqFolder
 
 
 @task_decorator("Qiime2MakeManifest", human_name="Make metadata manifest",

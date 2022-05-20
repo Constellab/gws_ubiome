@@ -6,7 +6,7 @@ from .differential_analysis.qiime2_differential_analysis import \
 from .differential_analysis.qiime2_differential_analysis_result_folder import \
     Qiime2DifferentialAnalysisResultFolder
 # > fastq
-from .fastq.fastq_folder import FastqFolder
+from gws_omix import FastqFolder
 # > feature_frequency_table
 from .feature_frequency_table.qiime2_feature_frequency_extraction_paired_end import \
     Qiime2FeatureTableExtractorPE

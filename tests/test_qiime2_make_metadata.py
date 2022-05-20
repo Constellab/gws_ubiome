@@ -7,7 +7,8 @@ import os
 
 import pandas
 from gws_core import BaseTestCase, File, Settings, TableExporter, TaskRunner
-from gws_ubiome import FastqFolder, Qiime2MetadataTableMaker
+from gws_omix import FastqFolder
+from gws_ubiome import Qiime2MetadataTableMaker
 
 
 class TestQiime2MetadataMaker(BaseTestCase):

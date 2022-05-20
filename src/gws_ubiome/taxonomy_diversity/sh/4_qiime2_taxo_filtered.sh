@@ -27,7 +27,7 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 
 qiime diversity core-metrics-phylogenetic \
   --i-phylogeny rooted-tree.qza \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-sampling-depth $rarefication_plateau_depth_value \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv \
   --output-dir core-metrics-results
@@ -44,23 +44,23 @@ qiime metadata tabulate \
   --o-visualization gg.taxonomy.qzv
 
 qiime taxa barplot \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --i-taxonomy gg.taxonomy.qza \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv  \
   --o-visualization gg.taxa-bar-plots.qzv
 
 qiime diversity alpha \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-metric chao1 \
   --o-alpha-diversity chao1.qza
 
 qiime diversity alpha \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-metric simpson \
   --o-alpha-diversity simpson.qza
 
 qiime diversity beta \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-metric jaccard \
   --o-distance-matrix jaccard_unweighted_unifrac_distance_matrix.qza
 
@@ -83,7 +83,7 @@ for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_tran
 mv *.qza ./diversity/raw_files ;
 mv *.qzv ./diversity/raw_files ;
 
-cp $qiime_dir/table.qza ./diversity/raw_files ;
+cp filtered-table.qza ./diversity/raw_files ;
 cp $qiime_dir/rep-seqs.qza ./diversity/raw_files ;
 cp $qiime_dir/demux.qza ./diversity/raw_files ;
 

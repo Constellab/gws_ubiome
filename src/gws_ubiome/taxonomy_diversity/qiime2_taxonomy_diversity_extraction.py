@@ -17,6 +17,7 @@ from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
+
 @task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Taxonomy diversity extractor",
                 short_description="Compute various diversity index and taxonomy assessement using OTU/ASV")
 class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
@@ -113,7 +114,8 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         cmd = [
             " bash ",
-            os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+            # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+            os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.sh"),
             qiime2_folder.path,
             plateau_val,
             thrds,

@@ -9,7 +9,8 @@ from gws_core import File, Folder, Shell, ShellProxy, resource_decorator
 
 @resource_decorator("FastqFolder",
                     human_name="Fastq folder",
-                    short_description="Folder containing fastq files")
+                    short_description="Folder containing fastq files", hide=True, deprecated_since='0.2.5',
+                    deprecated_message='Please use Omix fastq folder')
 class FastqFolder(Folder):
     ''' Fastq Folder file class '''
 

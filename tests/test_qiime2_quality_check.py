@@ -9,8 +9,8 @@ import shutil
 import pandas
 from gws_core import (BaseTestCase, File, MetadataTable, MetadataTableImporter,
                       Settings, TaskRunner)
-from gws_ubiome import FastqFolder, Qiime2QualityCheck
-
+from gws_ubiome import Qiime2QualityCheck
+from gws_omix import FastqFolder
 
 class TestQiime2QualityCheck(BaseTestCase):
 

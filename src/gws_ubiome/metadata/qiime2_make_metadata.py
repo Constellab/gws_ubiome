@@ -8,8 +8,8 @@ import os
 from gws_core import (ConfigParams, File, MetadataTable, MetadataTableImporter,
                       StrParam, TaskInputs, TaskOutputs, task_decorator)
 
+from gws_omix import FastqFolder
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..fastq.fastq_folder import FastqFolder
 
 
 @task_decorator("Qiime2MetadataTableMaker", human_name="Qiime2 metadata table maker",
