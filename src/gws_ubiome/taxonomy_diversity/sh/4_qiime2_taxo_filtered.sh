@@ -20,10 +20,10 @@ qiime phylogeny align-to-tree-mafft-fasttree \
   --o-tree unrooted-tree.qza \
   --o-rooted-tree rooted-tree.qza
 
-#qiime feature-table filter-samples \
-#  --i-table $qiime_dir/table.qza \
-#  --p-min-frequency 1500 \
-#  --o-filtered-table filtered-table.qza
+qiime feature-table filter-samples \
+  --i-table $qiime_dir/table.qza \
+  --p-min-frequency $rarefication_plateau_depth_value \
+  --o-filtered-table filtered-table.qza
 
 qiime diversity core-metrics-phylogenetic \
   --i-phylogeny rooted-tree.qza \
@@ -78,7 +78,7 @@ for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./diversity/table_files/$i"."$(basename $j) ;done ;done
 
-for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' > $i.parsed.tsv ;done
+for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done
 
 mv *.qza ./diversity/raw_files ;
 mv *.qzv ./diversity/raw_files ;

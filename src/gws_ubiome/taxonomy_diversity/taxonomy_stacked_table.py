@@ -17,7 +17,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot',
           short_description='Stacked barplots of the taxonomic composition',
-          specs={})
+          specs={}, default_view=True)
     def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView()
@@ -30,6 +30,23 @@ class TaxonomyTable(Table):
             y = data.iloc[:, i].values.tolist()
             s_view.add_series(y=y, name=data.columns[i])
         s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
+        return s_view
+
+    @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot normalised (TSS)',
+          short_description='Normalised stacked barplots of the taxonomic composition',
+          specs={})
+    def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
+
+        s_view = StackedBarPlotView(normalize=True)
+        data = self.get_data()
+
+        for i in range(0, data.shape[1]):
+            if isinstance(data.iat[0, i], str):
+                continue
+            y = data.iloc[:, i].values.tolist()
+            s_view.add_series(y=y, name=data.columns[i])
+        s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
+
         return s_view
 
 

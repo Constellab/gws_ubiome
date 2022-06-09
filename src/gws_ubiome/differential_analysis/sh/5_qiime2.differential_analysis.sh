@@ -13,10 +13,16 @@ qiime_dir=$1
 tax_level=$2
 metadata_column=$3
 threads=$4
+metadatacsv=$5
 
+# create metadata files and manifest file compatible with qiime2 env and gencovery env
+
+cat $metadatacsv > gws_metadata.csv
+
+cat <(grep -v "^#" gws_metadata.csv | head -1 ) <( egrep "^#column-type\t" gws_metadata.csv | sed 's/#column-type/#q2:types/' ) <( grep -v "^#" gws_metadata.csv | sed '1d' ) > qiime2_metadata.filtered.csv
 
   qiime taxa collapse \
-     --i-table $qiime_dir/raw_files/table.qza \
+     --i-table $qiime_dir/raw_files/filtered-table.qza \
      --i-taxonomy $qiime_dir/raw_files/gg.taxonomy.qza \
      --p-level $tax_level \
      --o-collapsed-table sub-table-taxa.qza
@@ -27,7 +33,7 @@ threads=$4
 
    qiime composition ancom \
      --i-table comp-sub-table-taxa.qza \
-     --m-metadata-file $qiime_dir/raw_files/qiime2_metadata.csv \
+     --m-metadata-file qiime2_metadata.filtered.csv \
      --m-metadata-column $metadata_column \
      --o-visualization taxa-ancom-subject.qzv
 
@@ -45,14 +51,14 @@ mv *.qzv ./differential_analysis ;
 
 cp $qiime_dir/raw_files/qiime2_manifest.csv ./differential_analysis ;
 cp $qiime_dir/raw_files/gws_metadata.csv  ./differential_analysis ;
-cp $qiime_dir/raw_files/qiime2_metadata.csv ./differential_analysis ;
+cp qiime2_metadata.filtered.csv ./differential_analysis ;
 
 
 # #mkdir biplot
 
  # Make the relative frequency table from the rarefied table
  qiime feature-table relative-frequency \
- --i-table $qiime_dir/raw_files/table.qza \
+ --i-table $qiime_dir/raw_files/filtered-table.qza \
  --o-relative-frequency-table rarefied_table_relative.qza
 
 # # Make the PCoA from the unweighted unifrac matrix
@@ -66,7 +72,7 @@ cp $qiime_dir/raw_files/qiime2_metadata.csv ./differential_analysis ;
 # #cd biplot
 
  # Turn this matrix into an emperor plot
- qiime emperor biplot --i-biplot biplot_matrix_jaccard_unweighted_unifrac.qza --m-sample-metadata-file $qiime_dir/raw_files/qiime2_metadata.csv --m-feature-metadata-file $qiime_dir/raw_files/gg.taxonomy.qza --o-visualization jaccard_unweighted_unifrac_emperor_biplot.qzv
+ qiime emperor biplot --i-biplot biplot_matrix_jaccard_unweighted_unifrac.qza --m-sample-metadata-file qiime2_metadata.filtered.csv --m-feature-metadata-file $qiime_dir/raw_files/gg.taxonomy.qza --o-visualization jaccard_unweighted_unifrac_emperor_biplot.qzv
 
 
  unzip jaccard_unweighted_unifrac_emperor_biplot.qzv -d emperor_plot
@@ -75,7 +81,7 @@ cp $qiime_dir/raw_files/qiime2_metadata.csv ./differential_analysis ;
  #mv ./emperor_plot/*/*/*.csv  ./differential_analysis
 
 #qiime tools export --output-dir exported $qiime_dir/raw_files/jaccard_unweighted_unifrac_distance_matrix.qza
-#make_2d_plots.py -i exported/ordination.txt -m $qiime_dir/raw_files/qiime2_metadata.csv -o 2D-plots
+#make_2d_plots.py -i exported/ordination.txt -m qiime2_metadata.filtered.csv -o 2D-plots
 
 
 mv rarefied_table_relative.qza ./differential_analysis ;

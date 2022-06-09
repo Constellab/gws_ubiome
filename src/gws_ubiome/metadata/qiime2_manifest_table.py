@@ -67,7 +67,7 @@ class Qiime2ManifestTable(Table):
 
 
 @importer_decorator(unique_name="Qiime2ManifestTableImporter", human_name="Qiime2 manifest table importer",
-                    source_type=Qiime2ManifestTableFile, target_type=Qiime2ManifestTable,
+                    source_type=Qiime2ManifestTableFile, target_type=Qiime2ManifestTable, hide=True,
                     supported_extensions=Table.ALLOWED_FILE_FORMATS)
 class Qiime2ManifestTableImporter(TableImporter):
 
