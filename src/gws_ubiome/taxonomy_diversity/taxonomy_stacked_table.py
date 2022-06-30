@@ -52,6 +52,35 @@ class TaxonomyTable(Table):
 
         return s_view
 
+    # @view(view_type=StackedBarPlotView, human_name='Stackedbarplot column tags',
+    #       short_description='Grouping Stacked bar plot view with column tags',
+    #       specs={"Metadata_tag": StrParam()
+    #              },
+    #       default_view=False)
+    # def view_as_grouped_stackedbarplot(self, params: ConfigParams) -> StackedBarPlotView:
+
+    #     s_view = StackedBarPlotView(normalize=True)
+    #     dataframe = self.get_data()
+    #     normalize_dataframe = dataframe.div(dataframe.sum(axis=1), axis=0)
+    #     table_to_unfold = self._create_sub_table(normalize_dataframe, copy.deepcopy(self._meta))
+
+    #     # unfolding using "metadata_tag"
+    #     unfold_table = TableUnfolderHelper.unfold_column_by_tags(
+    #         table_to_unfold, keys=[params.get("Metadata_tag")],
+    #         tag_key_row_name="row_name")
+
+    #     # then matrix transposition
+    #     all_tags = table_to_unfold.get_available_columns_tags()
+
+    #     for i in range(0, data.shape[1]):
+    #         if isinstance(data.iat[0, i], str):
+    #             continue
+    #         y = data.iloc[:, i].values.tolist()
+    #         s_view.add_series(y=y, name=data.columns[i])
+    #     s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
+
+    #     return s_view
+
     @view(view_type=BoxPlotView, human_name='Boxplot view for tag',
           short_description='Grouping boxplot according to a tag',
           specs={"Metadata_tag": StrParam(),
