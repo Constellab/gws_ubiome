@@ -15,8 +15,8 @@ from gws_core.resource.resource_set import ResourceSet
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import (
-    Qiime2TaxonomyDiversityFolder)
+from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
+    Qiime2TaxonomyDiversityFolder
 from ..taxonomy_diversity.taxonomy_stacked_table import (TaxonomyTable,
                                                          TaxonomyTableImporter)
 
@@ -59,7 +59,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         'annotation_table': File
     }
     output_specs = {
-        'result_folder': ResourceSet
+        'output_table': TaxonomyTable
     }
     config_specs = {
         "taxonomic_level":
@@ -70,6 +70,11 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
 
+        #  Importing Metadata table
+        diversity_input_folder = inputs["diversity_folder"]
+        path = os.path.join(diversity_input_folder.path, "raw_files", "gws_metadata.csv")
+        sample_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+
         #  Dictionary table containing corresponding taxa in both files
         annotated_tables_set: ResourceSet = ResourceSet()
         annotated_tables_set.name = "Set of tables"
@@ -79,7 +84,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
 
         taxa_dict_path = os.path.join(self.working_dir, "taxa_found.tsv")
         taxa_dict_table = TaxonomyTableImporter.call(File(path=taxa_dict_path), {'delimiter': 'tab', "index_column": 0})
-        annotated_tables_set.add_resource(taxa_dict_table)
+        # annotated_tables_set.add_resource(taxa_dict_table)
 
         # tagged_taxa_file_path = os.path.join(self.working_dir, "taxa_found.header_with_tag.tsv")
         # tagged_taxa_table = TableImporter.call(
@@ -91,12 +96,13 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
 
         # file to use to add tag
 
-        table_annotated = TableColumnAnnotatorHelper.annotate(taxa_dict_table, metadata_table)
+        table_annotated_col = TableColumnAnnotatorHelper.annotate(taxa_dict_table, metadata_table)
+        table_annotated = TableRowAnnotatorHelper.annotate(table_annotated_col, sample_metadata_table)
         table_annotated.name = "Annotated taxa composition table"
-        annotated_tables_set.add_resource(table_annotated)
+        # annotated_tables_set.add_resource(table_annotated)
 
         return {
-            'result_folder': annotated_tables_set
+            'output_table': table_annotated  # annotated_tables_set
         }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
