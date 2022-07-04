@@ -8,11 +8,11 @@ from gws_core import (BadRequestException, ConfigParams, File, Table,
                       TableExporter, TableImporter, exporter_decorator,
                       importer_decorator, resource_decorator)
 
-from .qiime2_metadata_table_file import Qiime2MetadataTableFile
+from .dep_qiime2_metadata_table_file import Qiime2MetadataTableFile
 
 
 @resource_decorator("Qiime2MetadataTable", human_name="Qiime2 metadata table",
-                    short_description="Qiime2 metadata table")
+                    short_description="Qiime2 metadata table", hide=True)
 class Qiime2MetadataTable(Table):
 
     SAMPLE_COLUMN_ID = "sample-id"
@@ -47,7 +47,8 @@ class Qiime2MetadataTable(Table):
 
 @importer_decorator(unique_name="Qiime2MetadataTableImporter", human_name="Qiime2 metadata table importer",
                     source_type=Qiime2MetadataTableFile,
-                    target_type=Qiime2MetadataTable, supported_extensions=Table.ALLOWED_FILE_FORMATS)
+                    target_type=Qiime2MetadataTable, supported_extensions=Table.ALLOWED_FILE_FORMATS,
+                    hide=True)
 class Qiime2MetadataTableImporter(TableImporter):
 
     async def import_from_path(self, file: File, params: ConfigParams, target_type: Type[Qiime2MetadataTable]) -> Qiime2MetadataTable:
@@ -81,6 +82,6 @@ class Qiime2MetadataTableImporter(TableImporter):
 # ####################################################################
 
 @exporter_decorator(unique_name="Qiime2MetadataTableExporter", human_name="Qiime2 metadata table exporter",
-                    source_type=Qiime2MetadataTable, target_type=Qiime2MetadataTableFile)
+                    source_type=Qiime2MetadataTable, target_type=Qiime2MetadataTableFile, hide=True)
 class Qiime2MetadataTableExporter(TableExporter):
     pass
