@@ -8,6 +8,9 @@ import os
 from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
                       Table, TableImporter, TableRowAnnotatorHelper,
                       TaskInputs, TaskOutputs, task_decorator)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -22,14 +25,15 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     """
     Qiime2FeatureTableExtractorPE class.
     """
-
-    input_specs = {'quality_check_folder': Qiime2QualityCheckResultFolder}
-    output_specs = {
-        'feature_table': Table,
-        'stats': Table,
-        'result_folder': Qiime2FeatureFrequencyFolder
+    input_specs: InputSpecs = {
+        'quality_check_folder': InputSpec(Qiime2QualityCheckResultFolder)
     }
-    config_specs = {
+    output_specs: OutputSpecs = {
+        'feature_table': OutputSpec(Table),
+        'stats': OutputSpec(Table),
+        'result_folder': OutputSpec(Qiime2FeatureFrequencyFolder)
+    }
+    config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")

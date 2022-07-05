@@ -9,6 +9,9 @@ from gws_core import (ConfigParams, File, IntParam, MetadataTable,
                       MetadataTableImporter, Table, TableImporter,
                       TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
                       task_decorator)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
@@ -28,10 +31,14 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     OBSERVED_FEATURE_FILE = "observed_features.for_boxplot.tsv"
     SHANNON_INDEX_FILE = "shannon.for_boxplot.tsv"
 
-    input_specs = {'feature_frequency_folder': Qiime2FeatureFrequencyFolder}
-    output_specs = {'result_folder': Qiime2RarefactionAnalysisResultFolder,
-                    "rarefaction_table": ResourceSet}
-    config_specs = {
+    input_specs: InputSpecs = {
+        'feature_frequency_folder': InputSpec(Qiime2FeatureFrequencyFolder)
+    }
+    output_specs: OutputSpecs = {
+        "rarefaction_table": OutputSpec(ResourceSet),
+        'result_folder': OutputSpec(Qiime2RarefactionAnalysisResultFolder)
+    }
+    config_specs: ConfigSpecs = {
         "min_coverage": IntParam(default_value=20, min_value=20, short_description="Minimum number of reads to test"),
         "max_coverage":
         IntParam(

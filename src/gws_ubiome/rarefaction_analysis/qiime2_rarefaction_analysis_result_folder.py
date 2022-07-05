@@ -9,7 +9,10 @@ from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
                       IntParam, LinePlot2DView, MultiViews, StackedBarPlotView,
                       StrParam, StrRField, Table, TableImporter,
                       resource_decorator, view)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
 from gws_core.extra import TableBoxPlotView, TableView
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 
 
 @resource_decorator("Qiime2RarefactionAnalysisResultFolder",

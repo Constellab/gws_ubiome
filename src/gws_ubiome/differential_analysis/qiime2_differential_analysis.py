@@ -12,6 +12,9 @@ from gws_core import (ConfigParams, File, Folder, InputSpec, IntParam, Logger,
                       MetadataTableImporter, OutputSpec, ParamSet, Settings,
                       StrParam, Table, TableImporter, TableRowAnnotatorHelper,
                       TaskInputs, TaskOutputs, Utils, task_decorator)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
@@ -50,15 +53,15 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         "Species - Percentile abundances": "7.percent-abundances.tsv"
     }
 
-    input_specs = {
-        'taxonomy_result_folder': Qiime2TaxonomyDiversityFolder,
-        'metadata_file': File
+    input_specs: InputSpecs = {
+        'taxonomy_diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder),
+        'metadata_file': InputSpec(File)
     }
-    output_specs = {
-        'result_folder': Qiime2DifferentialAnalysisResultFolder,
-        'result_tables': ResourceSet
+    output_specs: OutputSpecs = {
+        'result_tables': OutputSpec(ResourceSet),
+        'result_folder': OutputSpec(Qiime2DifferentialAnalysisResultFolder)
     }
-    config_specs = {
+    config_specs: ConfigSpecs = {
         # "taxonomic_level":
         # IntParam(
         #     human_name="Taxonomic level", allowed_values=[0, 2, 3, 4, 5, 6, 7], default_value=0,
@@ -134,7 +137,7 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
-        qiime2_folder = inputs["taxonomy_result_folder"]
+        qiime2_folder = inputs["taxonomy_diversity_folder"]
         #tax_level = params["taxonomic_level"]
         metadata_col = params["metadata_column"]
         metadata_f = inputs["metadata_file"]

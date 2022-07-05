@@ -9,6 +9,9 @@ from gws_core import (ConfigParams, File, IntParam, MetadataTable,
                       MetadataTableImporter, Settings, Table, TableImporter,
                       TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
                       task_decorator)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
@@ -55,16 +58,15 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         "7_Species": "gg.taxa-bar-plots.qzv.diversity_metrics.level-7.csv.tsv.parsed.tsv"
     }
 
-    input_specs = {
-        'rarefaction_analysis_result_folder': Qiime2RarefactionAnalysisResultFolder
+    input_specs: InputSpecs = {
+        'rarefaction_analysis_result_folder': InputSpec(Qiime2RarefactionAnalysisResultFolder)
     }
-
-    output_specs = {
-        'result_folder': Qiime2TaxonomyDiversityFolder,
-        'diversity_tables': ResourceSet,
-        'taxonomy_tables': ResourceSet
+    output_specs: OutputSpecs = {
+        'diversity_tables': OutputSpec(ResourceSet),
+        'taxonomy_tables': OutputSpec(ResourceSet),
+        'result_folder': OutputSpec(Qiime2TaxonomyDiversityFolder)
     }
-    config_specs = {
+    config_specs: ConfigSpecs = {
         "rarefaction_plateau_value":
         IntParam(
             min_value=20,

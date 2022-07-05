@@ -9,10 +9,14 @@ from gws_core import (ConfigParams, File, Logger, MetadataTable,
                       MetadataTableExporter, MetadataTableImporter, StrParam,
                       Table, TableImporter, TableRowAnnotatorHelper,
                       TaskInputs, TaskOutputs, task_decorator)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
+from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from gws_omix import FastqFolder
+from ..deprecated.v024.dep_fastq_folder import FastqFolder as DepFastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 
@@ -56,15 +60,15 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     FORWARD_READ_FILE_PATH = "forward_boxplot.csv"
     REVERSE_READ_FILE_PATH = "reverse_boxplot.csv"
 
-    input_specs = {
-        'fastq_folder': FastqFolder,
+    input_specs: InputSpecs = {
+        'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)),
         'metadata_table': File
     }
-    output_specs = {
-        'result_folder': Qiime2QualityCheckResultFolder,
-        'quality_table': (ResourceSet, QualityCheckTable, )
+    output_specs: OutputSpecs = {
+        'result_folder': OutputSpec(Qiime2QualityCheckResultFolder),
+        'quality_table': OutputSpec((ResourceSet, QualityCheckTable, ))
     }
-    config_specs = {
+    config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],

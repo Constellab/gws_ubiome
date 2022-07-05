@@ -20,11 +20,14 @@ cat $metadatacsv > gws_metadata.csv
 
 cat <(grep -v "^#" gws_metadata.csv | head -1 ) <( egrep "^#column-type\t" gws_metadata.csv | sed 's/#column-type/#q2:types/' ) <( grep -v "^#" gws_metadata.csv | sed '1d' ) > qiime2_metadata.filtered.csv
 
+cat  qiime2_metadata.filtered.csv ;
+
 mkdir differential_analysis ;
 
 for tax_level in {2..7}
 do
-
+  echo $tax_level;
+  
   qiime taxa collapse \
      --i-table $qiime_dir/raw_files/filtered-table.qza \
      --i-taxonomy $qiime_dir/raw_files/gg.taxonomy.qza \
@@ -64,18 +67,18 @@ do
     # # Make the PCoA from the unweighted unifrac matrix
 
     # unifrac_unweighted_distance_matrix = $qiime_dir/raw_files/jaccard_unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv
-    qiime diversity pcoa --i-distance-matrix $qiime_dir/raw_files/jaccard_unweighted_unifrac_distance_matrix.qza --o-pcoa $tax_level.jaccard_unweighted_unifrac_pcoa_results.qza
+    #qiime diversity pcoa --i-distance-matrix $qiime_dir/raw_files/jaccard_unweighted_unifrac_distance_matrix.qza --o-pcoa $tax_level.jaccard_unweighted_unifrac_pcoa_results.qza
 
     # Make the biplot for unweighted UniFrac
-    qiime diversity pcoa-biplot --i-pcoa $tax_level.jaccard_unweighted_unifrac_pcoa_results.qza --i-features $tax_level.rarefied_table_relative.qza --o-biplot $tax_level.biplot_matrix_jaccard_unweighted_unifrac.qza
+    #qiime diversity pcoa-biplot --i-pcoa $tax_level.jaccard_unweighted_unifrac_pcoa_results.qza --i-features $tax_level.rarefied_table_relative.qza --o-biplot $tax_level.biplot_matrix_jaccard_unweighted_unifrac.qza
 
     # #cd biplot
 
     # Turn this matrix into an emperor plot
-    qiime emperor biplot --i-biplot $tax_level.biplot_matrix_jaccard_unweighted_unifrac.qza --m-sample-metadata-file qiime2_metadata.filtered.csv --m-feature-metadata-file $qiime_dir/raw_files/gg.taxonomy.qza --o-visualization $tax_level.jaccard_unweighted_unifrac_emperor_biplot.qzv
+    #qiime emperor biplot --i-biplot $tax_level.biplot_matrix_jaccard_unweighted_unifrac.qza --m-sample-metadata-file qiime2_metadata.filtered.csv --m-feature-metadata-file $qiime_dir/raw_files/gg.taxonomy.qza --o-visualization $tax_level.jaccard_unweighted_unifrac_emperor_biplot.qzv
 
 
-    unzip $tax_level.jaccard_unweighted_unifrac_emperor_biplot.qzv -d $tax_level.emperor_plot
+    #unzip $tax_level.jaccard_unweighted_unifrac_emperor_biplot.qzv -d $tax_level.emperor_plot
 
     #mv ./emperor_plot/*/*/*.tsv  ./differential_analysis
     #mv ./emperor_plot/*/*/*.csv  ./differential_analysis
