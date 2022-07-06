@@ -47,10 +47,10 @@ do
 
     unzip $tax_level.taxa-ancom-subject.qzv -d $tax_level.taxa-ancom
 
-    paste <( head -1 ./$tax_level.taxa-ancom/*/data/data.tsv ) <( head -1 ./$tax_level.taxa-ancom/*/data/ancom.tsv | cut -f3- ) > ./differential_analysis/$tax_level.data.tsv  ;  join  <( cat ./$tax_level.taxa-ancom/*/data/data.tsv | sed '1d' | sort -k1 ) <( cut -f1,3 ./$tax_level.taxa-ancom/*/data/ancom.tsv | sed '1d' | sort -k1 ) | tr ' ' '\t'  >> ./differential_analysis/$tax_level.data.tsv ;
+    paste <( head -1 ./$tax_level.taxa-ancom/*/data/data.tsv | tr ' ' '_' ) <( head -1 ./$tax_level.taxa-ancom/*/data/ancom.tsv | tr ' ' '_' | cut -f3- ) | tr ' ' '_' > ./differential_analysis/$tax_level.data.tsv  ;  join  <( cat ./$tax_level.taxa-ancom/*/data/data.tsv | sed '1d' | sort -k1 | tr ' ' '_' ) <( cut -f1,3 ./$tax_level.taxa-ancom/*/data/ancom.tsv | sed '1d' | sort -k1 | tr ' ' '_' ) | tr ' ' '\t'  >> ./differential_analysis/$tax_level.data.tsv ;
 
     cat ./$tax_level.taxa-ancom/*/data/data.tsv ;
-    #mv ./$tax_level.taxa-ancom/*/data/data.tsv  ./differential_analysis/$tax_level.data.tsv
+    #cat ./differential_analysis/$tax_level.data.tsv | sed 's/Reject null hypothesis/Reject_null_hypothesis/' >  ./differential_analysis/$tax_level.data.tsv
     mv  ./$tax_level.taxa-ancom/*/data/ancom.tsv ./differential_analysis/$tax_level.ancom.tsv
     mv  ./$tax_level.taxa-ancom/*/data/percent-abundances.tsv ./differential_analysis/$tax_level.percent-abundances.tsv
 
