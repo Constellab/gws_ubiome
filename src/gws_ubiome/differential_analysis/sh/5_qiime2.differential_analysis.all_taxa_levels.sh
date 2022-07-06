@@ -16,9 +16,9 @@ metadatacsv=$4
 
 # create metadata files and manifest file compatible with qiime2 env and gencovery env
 
-cat $metadatacsv > gws_metadata.csv
+cat $metadatacsv > gws_metadata.csv ;
 
-cat <(grep -v "^#" gws_metadata.csv | head -1 ) <( egrep "^#column-type\t" gws_metadata.csv | sed 's/#column-type/#q2:types/' ) <( grep -v "^#" gws_metadata.csv | sed '1d' ) > qiime2_metadata.filtered.csv
+cat <(grep "^sample-id" gws_metadata.csv  ) <( grep "^#column-type" gws_metadata.csv | sed 's/#column-type/#q2:types/' ) <( grep -v "^#" gws_metadata.csv | sed '1d' ) > qiime2_metadata.filtered.csv
 
 cat  qiime2_metadata.filtered.csv ;
 
@@ -26,7 +26,7 @@ mkdir differential_analysis ;
 
 for tax_level in {2..7}
 do
-  echo $tax_level;
+  echo -e "\n#####\n" $tax_level "\n#####\n";
   
   qiime taxa collapse \
      --i-table $qiime_dir/raw_files/filtered-table.qza \
@@ -60,9 +60,9 @@ do
     # #mkdir biplot
 
     # Make the relative frequency table from the rarefied table
-    qiime feature-table relative-frequency \
-    --i-table $qiime_dir/raw_files/filtered-table.qza \
-    --o-relative-frequency-table $tax_level.rarefied_table_relative.qza
+    #qiime feature-table relative-frequency \
+    #--i-table $qiime_dir/raw_files/filtered-table.qza \
+    #--o-relative-frequency-table $tax_level.rarefied_table_relative.qza
 
     # # Make the PCoA from the unweighted unifrac matrix
 
@@ -87,10 +87,10 @@ do
     #make_2d_plots.py -i exported/ordination.txt -m $qiime_dir/raw_files/qiime2_metadata.csv -o 2D-plots
 
 
-    mv $tax_level.rarefied_table_relative.qza ./differential_analysis ;
-    mv $tax_level.jaccard_unweighted_unifrac_pcoa_results.qza ./differential_analysis ;
-    mv $tax_level.biplot_matrix_jaccard_unweighted_unifrac.qza ./differential_analysis ;
-    mv $tax_level.jaccard_unweighted_unifrac_emperor_biplot.qzv ./differential_analysis ;
+   # mv $tax_level.rarefied_table_relative.qza ./differential_analysis ;
+   # mv $tax_level.jaccard_unweighted_unifrac_pcoa_results.qza ./differential_analysis ;
+   # mv $tax_level.biplot_matrix_jaccard_unweighted_unifrac.qza ./differential_analysis ;
+   # mv $tax_level.jaccard_unweighted_unifrac_emperor_biplot.qzv ./differential_analysis ;
 #    mv $tax_level.2D-plot* ./differential_analysis ;
 
 done
