@@ -16,6 +16,7 @@ from .feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 # > metadata
 from .metadata.qiime2_make_metadata import Qiime2MetadataTableMaker
+from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
 # from .metadata.qiime2_manifest_table import (Qiime2ManifestTable,
 #                                              Qiime2ManifestTableExporter,
 #                                              Qiime2ManifestTableImporter)
