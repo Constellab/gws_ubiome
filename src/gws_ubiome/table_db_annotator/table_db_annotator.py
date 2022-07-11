@@ -11,6 +11,8 @@ from gws_core import (ConfigParams, File, Folder, IntParam, Logger,
                       TableColumnAnnotatorHelper, TableImporter,
                       TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
                       task_decorator)
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 from gws_omix import FastqFolder
 
@@ -37,7 +39,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         - metadata file must follow specific nomenclature (columns are tab separated):
 
             Expected format :
-                #tax_id	annotation_info
+                # tax_id	annotation_info
                 bact_1  0
                 bact_2  1
                 bact_3  Variable;toto_1:0;others:1
@@ -54,18 +56,17 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         "g": "6",
         "s": "7",
     }
-    input_specs = {
-        'diversity_folder': Qiime2TaxonomyDiversityFolder,
-        'annotation_table': File
-    }
-    output_specs = {
-        'output_table': TaxonomyTable
+    input_specs: InputSpecs = {
+        'diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder, human_name="Diversity_qiime2_folder"),
+        'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")}
+    output_specs: OutputSpecs = {
+        'output_table': OutputSpec(TaxonomyTable, human_name="Annotated_taxa_compo_table")
     }
     config_specs = {
         "taxonomic_level":
         StrParam(
-            human_name="Taxonomic level", allowed_values=["k", "p", "c", "o", "f", "g", "s"],
-            short_description="Taxonomic level id: 1_Kingdom, 2_Phylum, 3_Class, 4_Order, 5_Family, 6_Genus, 7_Species"),
+            human_name="Taxonomic level", allowed_values=["all", "k", "p", "c", "o", "f", "g", "s"],
+            short_description="Taxonomic level id: all: all level, k: Kingdom, p: Phylum, c: Class, o: Order, f: Family, g: Genus, s: Species"),
     }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -108,25 +109,49 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         diversity_input_folder = inputs["diversity_folder"]
         tax_level = params["taxonomic_level"]
-        tax_level_id = self.TAX_LEVEL_DICT[tax_level]
-        taxa_file_path = os.path.join(diversity_input_folder.path, "table_files",
-                                      "gg.taxa-bar-plots.qzv.diversity_metrics.level-" + tax_level_id +
-                                      ".csv.tsv.parsed.tsv")
+        # tax_level_id = self.TAX_LEVEL_DICT[tax_level]
+        # taxa_file_path = os.path.join(diversity_input_folder.path, "table_files",
+        #                               "gg.taxa-bar-plots.qzv.diversity_metrics.level-" + tax_level_id +
+        #                               ".csv.tsv.parsed.tsv")
         metadata_table = inputs["annotation_table"]
 
         # TO BE DONE : adding the option when other tax affiliation db will be available for qiime2
         taxa_db_type = "GreenGenes"  # will be --> params["taxonomic_db_type"]
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        cmd = [
-            "bash",
-            os.path.join(script_file_dir, "./sh/qiime2.table_annotator.all_taxa_levels.sh"),
-            metadata_table.path,
-            taxa_file_path,
-            os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
-            taxa_db_type,
-            tax_level
-        ]
+        # cmd = [
+        #     "bash",
+        #     os.path.join(script_file_dir, "./sh/qiime2.table_annotator.all_taxa_levels.sh"),
+        #     metadata_table.path,
+        #     taxa_file_path,
+        #     os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
+        #     taxa_db_type,
+        #     tax_level
+        # ]
+        if tax_level == "all":
+            taxa_file_path = os.path.join(diversity_input_folder.path, "table_files")
+            cmd = [
+                "bash",
+                os.path.join(script_file_dir, "./sh/all_taxa.sh"),
+                metadata_table.path,
+                taxa_file_path,
+                os.path.join(script_file_dir, "./perl/taxa_annot_all.pl"),
+                taxa_db_type
+            ]
+        else:
+            tax_level_id = self.TAX_LEVEL_DICT[tax_level]
+            taxa_file_path = os.path.join(diversity_input_folder.path, "table_files",
+                                          "gg.taxa-bar-plots.qzv.diversity_metrics.level-" + tax_level_id +
+                                          ".csv.tsv.parsed.tsv")
+            cmd = [
+                "bash",
+                os.path.join(script_file_dir, "./sh/qiime2.table_annotator.all_taxa_levels.sh"),
+                metadata_table.path,
+                taxa_file_path,
+                os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
+                taxa_db_type,
+                tax_level
+            ]
         return cmd
 
 #    def _get_output_folder_path(self):
