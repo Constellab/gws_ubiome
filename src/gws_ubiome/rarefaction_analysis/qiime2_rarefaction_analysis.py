@@ -22,8 +22,8 @@ from .qiime2_rarefaction_analysis_result_folder import \
 from .rarefaction_table import RarefactionTableImporter
 
 
-@task_decorator("Qiime2RarefactionAnalysis", human_name="Qiime2 rarefaction analysis",
-                short_description="Performs Qiime2 rarefaction analysis")
+@task_decorator("Qiime2RarefactionAnalysis", human_name="Qiime2 observed feature and shanon curves analysis",
+                short_description="Performs Qiime2 observed feature and shanon analysis and produce curve that can be used for rarefaction analysis")
 class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     """
     Qiime2RarefactionAnalysis class.

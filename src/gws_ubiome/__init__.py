@@ -1,12 +1,13 @@
 # > base_env
+# > fastq
+from gws_omix import FastqFolder
+
 from .base_env.qiime2_env_task import Qiime2EnvTask
 # > differential analysis
 from .differential_analysis.qiime2_differential_analysis import \
     Qiime2DifferentialAnalysis
 from .differential_analysis.qiime2_differential_analysis_result_folder import \
     Qiime2DifferentialAnalysisResultFolder
-# > fastq
-from gws_omix import FastqFolder
 # > feature_frequency_table
 from .feature_frequency_table.qiime2_feature_frequency_extraction_paired_end import \
     Qiime2FeatureTableExtractorPE
@@ -16,7 +17,6 @@ from .feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 # > metadata
 from .metadata.qiime2_make_metadata import Qiime2MetadataTableMaker
-from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
 # from .metadata.qiime2_manifest_table import (Qiime2ManifestTable,
 #                                              Qiime2ManifestTableExporter,
 #                                              Qiime2ManifestTableImporter)
@@ -35,6 +35,9 @@ from .rarefaction_analysis.qiime2_rarefaction_analysis import \
 from .rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
     Qiime2RarefactionAnalysisResultFolder
 from .table.tax_table import TaxTable
+from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
+from .taxonomy_diversity.metagenomeseq_cumulative_sum_scaling_convertor import \
+    MetagenomeSeqCssConvertor
 # > taxonomy/diversity
 from .taxonomy_diversity.qiime2_taxonomy_diversity_extraction import \
     Qiime2TaxonomyDiversityExtractor

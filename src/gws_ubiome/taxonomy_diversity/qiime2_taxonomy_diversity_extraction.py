@@ -30,6 +30,9 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
 
     # Greengenes db
     DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
+    DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
+    DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
@@ -71,6 +74,9 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         IntParam(
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
+        "taxonomic_affiliation_database":
+        StrParam(allowed_values=["GreenGenes", "Silva"], default_value="GreenGenes",
+                 short_description="Database for taxonomic affiliation"),  # "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
@@ -113,17 +119,52 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         thrds = params["threads"]
+        db_taxo = params["taxonomic_affiliation_database"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        cmd = [
-            " bash ",
-            # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-            os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.sh"),
-            qiime2_folder.path,
-            plateau_val,
-            thrds,
-            self.DB_GREENGENES,
-            os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-        ]
+        if db_taxo == "GreenGenes":
+            cmd = [
+                " bash ",
+                # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+                os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.sh"),
+                qiime2_folder.path,
+                plateau_val,
+                thrds,
+                self.DB_GREENGENES,
+                os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
+            ]
+        elif db_taxo == "NCBI-16S":
+            cmd = [
+                " bash ",
+                # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+                os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.NCBI-16S.sh"),
+                qiime2_folder.path,
+                plateau_val,
+                thrds,
+                self.DB_NCBI_16S,
+                os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
+            ]
+        # elif db_taxo == "NCBI-BOLD-COI":
+            # cmd = [
+            #     " bash ",
+            #     # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+            #     os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.NCBI-16S.sh"),
+            #     qiime2_folder.path,
+            #     plateau_val,
+            #     thrds,
+            #     self.DB_SILVA,
+            #     os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
+            # ]
+        else:
+            cmd = [
+                " bash ",
+                # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+                os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.Silva.sh"),
+                qiime2_folder.path,
+                plateau_val,
+                thrds,
+                self.DB_SILVA,
+                os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
+            ]
         return cmd
 
     def _get_output_file_path(self):
