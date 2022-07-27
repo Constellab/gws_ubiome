@@ -7,57 +7,42 @@ import copy
 import numpy as np
 from gws_core import (BarPlotView, BoolParam, BoxPlotView, ConfigParams, File,
                       IntParam, StackedBarPlotView, StrParam, Table,
-                      TableImporter, TableUnfolderHelper, TableView, TagsParam,
+                      TableImporter, TableTagGrouperHelper,
+                      TableUnfolderHelper, TableView, TagsParam,
                       importer_decorator, resource_decorator, view)
-from gws_ubiome import TaxonomyTable
+
+from ..taxonomy_diversity.taxonomy_stacked_table import TaxonomyTable
 
 
 @resource_decorator(unique_name="TaxonomyTableTagged", hide=True)
-class TaxonomyTableTagged(TaxonomyTable):
+class TaxonomyTableTagged(Table):
 
     """
     TaxonomyTableTagged class
     """
 
-    @view(view_type=StackedBarPlotView, human_name='Stacked Bar Plot View with col tags',
-          short_description='Grouping boxplot according to a tag',
-          specs={"Metadata_tag": StrParam(),
-                 "Normalize": BoolParam(default_value=False),
-                 "Log10": BoolParam(default_value=False)},
-          default_view=False)
-    def view_as_grouped_boxplots(self, params: ConfigParams) -> StackedBarPlotView:
-        lp_view = StackedBarPlotView()
+    @view(view_type=StackedBarPlotView, human_name='Stacked Bar Plot View with column tags',
+          short_description='Grouping boxplot according to a column tag',
+          specs={"Metadata_tag": StrParam()})
+    def view_as_grouped_stackedbarplot(self, params: ConfigParams) -> StackedBarPlotView:
 
-        table_to_unfold: Table = None
-        if params.get("Normalize"):
-            dataframe = self.get_data()
-            normalize_dataframe = dataframe.div(dataframe.sum(axis=1), axis=0)
-            table_to_unfold = self._create_sub_table(normalize_dataframe, copy.deepcopy(self._meta))
-        else:
-            table_to_unfold = self
+        s_view = StackedBarPlotView(normalize=True)
+        annotated_table: Table = None
+        annotated_table = self
+        table_tagged = TableTagGrouperHelper.group_by_column_tags(
+            annotated_table, keys=[params.get("Metadata_tag")], func="sum")
+        initialdf = table_tagged.get_data()
 
-        # unfolding using "metadata_tag"
-        unfold_table = TableUnfolderHelper.unfold_cols_by_tags(
-            table_to_unfold, keys=[params.get("Metadata_tag")],
-            tag_key_column_name="row_name")
+        for i in range(0, initialdf.shape[1]):
+            if isinstance(initialdf.iat[0, i], str):
+                continue
+            y = initialdf.iloc[:, i].values.tolist()
+            s_view.add_series(y=y, name=initialdf.columns[i])
+#            s_view.add_data_from_dataframe(initialdf, value, sub_table.get_row_tags())
+        s_view.x_tick_labels = initialdf.index.to_list()  # data.iloc[:, 0].values.tolist()
 
-        # then matrix transposition
-        all_tags = table_to_unfold.get_available_row_tags()
-        # for value in tag_values:
-        for value in all_tags.get(params.get("Metadata_tag"), []):
-            sub_table = unfold_table.select_by_column_tags([{params.get("Metadata_tag"): value}])
-            initialdf = sub_table.get_data()
-            # log10 transformation of each values
-            if params.get("Log10"):
-                dataframe = np.log10(initialdf.replace(0, np.nan))
-            else:
-                dataframe = initialdf
-            # one serie per tag value containing each species values
-            lp_view.add_data_from_dataframe(dataframe, value, sub_table.get_column_tags())
+        return s_view
 
-        lp_view.x_tick_labels = self.column_names
-
-        return lp_view
 
 
 @importer_decorator(unique_name="TaxonomyTableTaggedImporter", human_name="Taxonomy Table importer",

@@ -37,7 +37,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot normalised (TSS)',
           short_description='Normalised stacked barplots of the taxonomic composition',
-          specs={})
+          specs={}, default_view=False)
     def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView(normalize=True)

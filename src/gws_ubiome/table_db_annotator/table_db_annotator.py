@@ -19,8 +19,8 @@ from gws_omix import FastqFolder
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
     Qiime2TaxonomyDiversityFolder
-from ..taxonomy_diversity.taxonomy_stacked_table import (TaxonomyTable,
-                                                         TaxonomyTableImporter)
+from .tax_table_annotated_table import (TaxonomyTableTagged,
+                                        TaxonomyTableTaggedImporter)
 
 
 @task_decorator("Qiime2TableDbAnnotator", human_name="Qiime2 taxa composition annotator",
@@ -60,7 +60,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         'diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder, human_name="Diversity_qiime2_folder"),
         'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")}
     output_specs: OutputSpecs = {
-        'output_table': OutputSpec(TaxonomyTable, human_name="Annotated_taxa_compo_table")
+        'output_table': OutputSpec(TaxonomyTableTagged, human_name="Annotated_taxa_compo_table")
     }
     config_specs = {
         "taxonomic_level":
@@ -84,7 +84,9 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         metadata_table = MetadataTableImporter.call(File(path=tag_file_path), {'delimiter': 'tab'})
 
         taxa_dict_path = os.path.join(self.working_dir, "taxa_found.tsv")
-        taxa_dict_table = TaxonomyTableImporter.call(File(path=taxa_dict_path), {'delimiter': 'tab', "index_column": 0})
+        taxa_dict_table = TaxonomyTableTaggedImporter.call(
+            File(path=taxa_dict_path),
+            {'delimiter': 'tab', "index_column": 0})
         # annotated_tables_set.add_resource(taxa_dict_table)
 
         # tagged_taxa_file_path = os.path.join(self.working_dir, "taxa_found.header_with_tag.tsv")

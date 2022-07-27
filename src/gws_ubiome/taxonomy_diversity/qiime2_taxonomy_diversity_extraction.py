@@ -75,8 +75,8 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes", "Silva", "NCBI-16S"], default_value="GreenGenes",
-                 short_description="Database for taxonomic affiliation"),  # "NCBI-16S"
+        StrParam(allowed_values=["GreenGenes", "NCBI-16S"], default_value="GreenGenes",
+                 short_description="Database for taxonomic affiliation"),  # TO DO: "Silva"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
@@ -132,7 +132,8 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
                 self.DB_GREENGENES,
                 os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
             ]
-        elif db_taxo == "NCBI-16S":
+        # elif db_taxo == "NCBI-16S":
+        else:
             cmd = [
                 " bash ",
                 # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
@@ -154,17 +155,17 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             #     self.DB_SILVA,
             #     os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
             # ]
-        else:
-            cmd = [
-                " bash ",
-                # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-                os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.Silva.sh"),
-                qiime2_folder.path,
-                plateau_val,
-                thrds,
-                self.DB_SILVA,
-                os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-            ]
+        # else:
+        #     cmd = [
+        #         " bash ",
+        #         # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
+        #         os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.Silva.sh"),
+        #         qiime2_folder.path,
+        #         plateau_val,
+        #         thrds,
+        #         self.DB_SILVA,
+        #         os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
+        #     ]
         return cmd
 
     def _get_output_file_path(self):
