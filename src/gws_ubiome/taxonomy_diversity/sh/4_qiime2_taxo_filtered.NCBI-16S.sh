@@ -20,47 +20,46 @@ qiime phylogeny align-to-tree-mafft-fasttree \
   --o-tree unrooted-tree.qza \
   --o-rooted-tree rooted-tree.qza
 
-#qiime feature-table filter-samples \
-#  --i-table $qiime_dir/table.qza \
-#  --p-min-frequency 1500 \
-#  --o-filtered-table filtered-table.qza
+qiime feature-table filter-samples \
+  --i-table $qiime_dir/table.qza \
+  --p-min-frequency $rarefication_plateau_depth_value \
+  --o-filtered-table filtered-table.qza
 
 qiime diversity core-metrics-phylogenetic \
   --i-phylogeny rooted-tree.qza \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-sampling-depth $rarefication_plateau_depth_value \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv \
   --output-dir core-metrics-results
 
 mv ./core-metrics-results/* ./
 
-qiime feature-classifier classify-sklearn \
-  --i-classifier $gg_db \
-  --i-reads $qiime_dir/rep-seqs.qza \
-  --o-classification gg.taxonomy.qza
+export TMPDIR="/data/tmp"
+
+qiime feature-classifier classify-sklearn --p-n-jobs -1 --i-classifier $gg_db --i-reads $qiime_dir/rep-seqs.qza --o-classification gg.taxonomy.qza
 
 qiime metadata tabulate \
   --m-input-file gg.taxonomy.qza \
   --o-visualization gg.taxonomy.qzv
 
 qiime taxa barplot \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --i-taxonomy gg.taxonomy.qza \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv  \
   --o-visualization gg.taxa-bar-plots.qzv
 
 qiime diversity alpha \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-metric chao1 \
   --o-alpha-diversity chao1.qza
 
 qiime diversity alpha \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-metric simpson \
   --o-alpha-diversity simpson.qza
 
 qiime diversity beta \
-  --i-table $qiime_dir/table.qza \
+  --i-table filtered-table.qza \
   --p-metric jaccard \
   --o-distance-matrix jaccard_unweighted_unifrac_distance_matrix.qza
 
@@ -78,12 +77,12 @@ for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./diversity/table_files/$i"."$(basename $j) ;done ;done
 
-for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' > $i.parsed.tsv ;done
+for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done
 
 mv *.qza ./diversity/raw_files ;
 mv *.qzv ./diversity/raw_files ;
 
-cp $qiime_dir/table.qza ./diversity/raw_files ;
+cp filtered-table.qza ./diversity/raw_files ;
 cp $qiime_dir/rep-seqs.qza ./diversity/raw_files ;
 cp $qiime_dir/demux.qza ./diversity/raw_files ;
 

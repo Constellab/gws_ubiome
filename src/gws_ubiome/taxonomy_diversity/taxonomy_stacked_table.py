@@ -20,7 +20,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot',
           short_description='Stacked barplots of the taxonomic composition',
-          specs={}, default_view=True)
+          specs={}, default_view=False)
     def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView()
@@ -81,8 +81,8 @@ class TaxonomyTable(Table):
 
     #     return s_view
 
-    @view(view_type=BoxPlotView, human_name='Boxplot view for tag',
-          short_description='Grouping boxplot according to a tag',
+    @view(view_type=BoxPlotView, human_name='Boxplot view for row tags',
+          short_description='Grouping boxplot according to a row tag',
           specs={"Metadata_tag": StrParam(),
                  "Normalize": BoolParam(default_value=False),
                  "Log10": BoolParam(default_value=False)},

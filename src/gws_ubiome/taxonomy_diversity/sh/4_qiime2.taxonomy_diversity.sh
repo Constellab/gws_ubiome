@@ -35,6 +35,7 @@ qiime diversity core-metrics-phylogenetic \
 mv ./core-metrics-results/* ./
 
 qiime feature-classifier classify-sklearn \
+  --p-n-jobs -1 \
   --i-classifier $gg_db \
   --i-reads $qiime_dir/rep-seqs.qza \
   --o-classification gg.taxonomy.qza

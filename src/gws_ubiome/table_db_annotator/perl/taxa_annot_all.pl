@@ -30,7 +30,7 @@ while(<Db>){
 	my@tax=split/\t/;
 	# get information for variable information
 	if($tax[1]=~/.*Variable;([^\s]+)/){
-		$hAnnotationTable{$tax[0]}=$1;
+		$hAnnotationTable{$tax[0]}="_".$1;
 	}
 	# get tag name
 	elsif($_=~/^#[^\t]+\t([^\t])/){
@@ -38,7 +38,7 @@ while(<Db>){
 	}
 	else{
 		if($tax[1]=~/^([^\s]+)/){
-			$hAnnotationTable{$tax[0]}=$1;
+			$hAnnotationTable{$tax[0]}="_".$1;
 		}
 	}
 }

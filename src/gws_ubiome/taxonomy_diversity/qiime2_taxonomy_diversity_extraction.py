@@ -6,9 +6,9 @@
 import os
 
 from gws_core import (ConfigParams, File, IntParam, MetadataTable,
-                      MetadataTableImporter, Settings, Table, TableImporter,
-                      TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      MetadataTableImporter, Settings, StrParam, Table,
+                      TableImporter, TableRowAnnotatorHelper, TaskInputs,
+                      TaskOutputs, task_decorator)
 from gws_core.config.config_types import ConfigParams, ConfigSpecs
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
@@ -75,7 +75,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes", "Silva"], default_value="GreenGenes",
+        StrParam(allowed_values=["GreenGenes", "Silva", "NCBI-16S"], default_value="GreenGenes",
                  short_description="Database for taxonomic affiliation"),  # "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
