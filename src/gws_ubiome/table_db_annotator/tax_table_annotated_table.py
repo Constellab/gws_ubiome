@@ -7,7 +7,7 @@ import copy
 import numpy as np
 from gws_core import (BarPlotView, BoolParam, BoxPlotView, ConfigParams, File,
                       IntParam, StackedBarPlotView, StrParam, Table,
-                      TableImporter, TableTagGrouperHelper,
+                      TableImporter, TableTagAggregatorHelper,
                       TableUnfolderHelper, TableView, TagsParam,
                       importer_decorator, resource_decorator, view)
 
@@ -29,7 +29,7 @@ class TaxonomyTableTagged(Table):
         s_view = StackedBarPlotView(normalize=True)
         annotated_table: Table = None
         annotated_table = self
-        table_tagged = TableTagGrouperHelper.group_by_column_tags(
+        table_tagged = TableTagAggregatorHelper.group_by_column_tags(
             annotated_table, keys=[params.get("Metadata_tag")], func="sum")
         initialdf = table_tagged.get_data()
 
@@ -41,7 +41,6 @@ class TaxonomyTableTagged(Table):
         s_view.x_tick_labels = initialdf.index.to_list()
 
         return s_view
-
 
 
 @importer_decorator(unique_name="TaxonomyTableTaggedImporter", human_name="Taxonomy Table importer",
