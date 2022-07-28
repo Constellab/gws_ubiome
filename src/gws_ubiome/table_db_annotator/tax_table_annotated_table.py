@@ -38,8 +38,7 @@ class TaxonomyTableTagged(Table):
                 continue
             y = initialdf.iloc[:, i].values.tolist()
             s_view.add_series(y=y, name=initialdf.columns[i])
-#            s_view.add_data_from_dataframe(initialdf, value, sub_table.get_row_tags())
-        s_view.x_tick_labels = initialdf.index.to_list()  # data.iloc[:, 0].values.tolist()
+        s_view.x_tick_labels = initialdf.index.to_list()
 
         return s_view
 
