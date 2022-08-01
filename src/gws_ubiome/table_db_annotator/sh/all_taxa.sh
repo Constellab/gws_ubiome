@@ -16,7 +16,7 @@ taxDbType=$4
 
 cat $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv.parsed.tsv | cut -f1 > taxa_merged_files.tsv ;
 
-for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do join taxa_merged_files.tsv $i  |  tr ' ' '\t' > tmp.tsv ; cat tmp.tsv > taxa_merged_files.tsv ; rm tmp.tsv ;done 
+for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do join taxa_merged_files.tsv $i  -t $'\t'  > tmp.tsv ; cat tmp.tsv > taxa_merged_files.tsv ; rm tmp.tsv ;done 
 
 # create metadata files and manifest file compatible with qiime2 env and gencovery env
 

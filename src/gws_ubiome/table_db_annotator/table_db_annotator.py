@@ -3,8 +3,10 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
+import glob
 import os
 
+import pandas as pd
 from gws_core import (ConfigParams, File, Folder, IntParam, Logger,
                       MetadataTable, MetadataTableExporter,
                       MetadataTableImporter, StrParam, Table,
@@ -111,25 +113,13 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         diversity_input_folder = inputs["diversity_folder"]
         tax_level = params["taxonomic_level"]
-        # tax_level_id = self.TAX_LEVEL_DICT[tax_level]
-        # taxa_file_path = os.path.join(diversity_input_folder.path, "table_files",
-        #                               "gg.taxa-bar-plots.qzv.diversity_metrics.level-" + tax_level_id +
-        #                               ".csv.tsv.parsed.tsv")
         metadata_table = inputs["annotation_table"]
 
         # TO BE DONE : adding the option when other tax affiliation db will be available for qiime2
         taxa_db_type = "GreenGenes"  # will be --> params["taxonomic_db_type"]
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        # cmd = [
-        #     "bash",
-        #     os.path.join(script_file_dir, "./sh/qiime2.table_annotator.all_taxa_levels.sh"),
-        #     metadata_table.path,
-        #     taxa_file_path,
-        #     os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
-        #     taxa_db_type,
-        #     tax_level
-        # ]
+
         if tax_level == "all":
             taxa_file_path = os.path.join(diversity_input_folder.path, "table_files")
             cmd = [
@@ -155,6 +145,3 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
                 tax_level
             ]
         return cmd
-
-#    def _get_output_folder_path(self):
-#        return os.path.join(self.working_dir, "quality_check")
