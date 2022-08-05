@@ -5,10 +5,14 @@
 
 import os
 
-from gws_core import (ConfigParams, File, MetadataTable, MetadataTableImporter,
-                      StrParam, TaskInputs, TaskOutputs, task_decorator)
-
+from gws_core import (ConfigParams, ConfigSpecs, File, IntParam, MetadataTable,
+                      MetadataTableImporter, StrParam, TaskInputs, TaskOutputs,
+                      task_decorator)
+from gws_core.config.config_types import ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_omix import FastqFolder
+
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 
 
@@ -49,9 +53,11 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
 
     # DEFAULT_METADATA_FILE_NAME = "metadata.csv"
 
-    input_specs = {'fastq_folder': FastqFolder}
-    output_specs = {'metadata_table': File}  # 'metadata_table': MetadataTable
-    config_specs = {
+    input_specs: InputSpecs = {'fastq_folder': InputSpec(
+        FastqFolder, short_description="FASTQ folder", human_name="Folder_folder")}
+    output_specs: OutputSpecs = {'metadata_table': OutputSpec(
+        File, short_description="Metadata file", human_name="Metadata_file")}  # 'metadata_table': MetadataTable
+    config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],

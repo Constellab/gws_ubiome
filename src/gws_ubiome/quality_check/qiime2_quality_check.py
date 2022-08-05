@@ -62,7 +62,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
 
     input_specs: InputSpecs = {
         'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)),
-        'metadata_table': File
+        'metadata_table': InputSpec(File, short_description="Metadata file", human_name="Metadata_file")
     }
     output_specs: OutputSpecs = {
         'result_folder': OutputSpec(Qiime2QualityCheckResultFolder),

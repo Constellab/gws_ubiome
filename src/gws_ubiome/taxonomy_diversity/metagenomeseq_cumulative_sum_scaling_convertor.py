@@ -9,6 +9,9 @@ from gws_core import (ConfigParams, File, IntParam, MetadataTable,
                       MetadataTableImporter, Settings, Table, TableImporter,
                       TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
                       task_decorator)
+from gws_core.config.config_types import ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.metagenomeseq_env_task import MetagenomeSeqEnvTask
@@ -34,14 +37,14 @@ class MetagenomeSeqCssConvertor(MetagenomeSeqEnvTask):
         "7_Species": "gg.taxa-bar-plots.qzv.diversity_metrics.level-7.csv.tsv.parsed.tsv.metagenomeSeq.CSS.txt"
     }
 
-    input_specs = {
-        'taxonomy_diversity_result_folder': Qiime2TaxonomyDiversityFolder
+    input_specs: InputSpecs = {
+        'taxonomy_diversity_result_folder': InputSpec(Qiime2TaxonomyDiversityFolder)
     }
 
-    output_specs = {
-        'taxonomy_tables_css': ResourceSet
+    output_specs: OutputSpecs = {
+        'taxonomy_tables_css': OutputSpec(ResourceSet)
     }
-    config_specs = {
+    config_specs: ConfigSpecs = {
         # "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 

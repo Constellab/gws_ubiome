@@ -55,7 +55,7 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
 
     input_specs: InputSpecs = {
         'taxonomy_diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder),
-        'metadata_file': InputSpec(File)
+        'metadata_file': InputSpec(File, short_description="Metadata file", human_name="Metadata_file")
     }
     output_specs: OutputSpecs = {
         'result_tables': OutputSpec(ResourceSet),
@@ -126,7 +126,7 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
             data = data.apply(pd.to_numeric, errors='coerce')
 
             table = Table(data=data)
-            table.set_all_columns_tags(column_tags) # set_column_tags
+            table.set_all_columns_tags(column_tags)  # set_column_tags
 
             table.name = key
             resource_table_set.add_resource(table)
