@@ -36,7 +36,8 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
-        "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")
+        "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
+        "hard_trimming_reads_size": IntParam(default_value=0, min_value=0, short_description="Read size to trim in 5prime")
     }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -66,15 +67,29 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
         thrd = params["threads"]
         trct_forward = params["truncated_forward_reads_size"]
         trct_reverse = params["truncated_reverse_reads_size"]
+        hard_trim = params["hard_trimming_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        cmd = [
-            " bash ",
-            os.path.join(script_file_dir, "./sh/2_qiime2_feature_frequency_extraction_paired_end.sh"),
-            qiime2_folder.path,
-            trct_forward,
-            trct_reverse,
-            thrd
-        ]
+        if (hard_trim == 0):
+            cmd = [
+                " bash ",
+                os.path.join(script_file_dir, "./sh/2_qiime2_feature_frequency_extraction_paired_end.sh"),
+                qiime2_folder.path,
+                trct_forward,
+                trct_reverse,
+                thrd
+            ]
+
+        else:
+            cmd = [
+                " bash ",
+                os.path.join(script_file_dir, "./sh/2_qiime2_feature_frequency_extraction_paired_end.hard_trim.sh"),
+                qiime2_folder.path,
+                trct_forward,
+                trct_reverse,
+                thrd,
+                hard_trim
+            ]
+
         return cmd
 
     def _get_output_file_path(self):
