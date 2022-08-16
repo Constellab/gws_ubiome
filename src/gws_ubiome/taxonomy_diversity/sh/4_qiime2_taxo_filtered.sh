@@ -68,29 +68,29 @@ qiime diversity beta \
   --p-metric jaccard \
   --o-distance-matrix jaccard_unweighted_unifrac_distance_matrix.qza
 
-mkdir diversity ;
-mkdir diversity/raw_files ;
-mkdir diversity/table_files ;
+mkdir taxonomy_and_diversity ;
+mkdir taxonomy_and_diversity/raw_files ;
+mkdir taxonomy_and_diversity/table_files ;
 
 unzip simpson.qza -d simpson
-cat  ./simpson/*/data/*.tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tSimpson(D)\tInverse-Simpson_(1-D)\tReciprocal-Simpson_(1/D)\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1-$t[1],"\t",1/$t[1],"\n"; } } ' > diversity/table_files/invSimpson.tab.tsv ;
+cat  ./simpson/*/data/*.tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tSimpson(D)\tInverse-Simpson_(1-D)\tReciprocal-Simpson_(1/D)\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1-$t[1],"\t",1/$t[1],"\n"; } } ' > taxonomy_and_diversity/table_files/invSimpson.tab.tsv ;
 
 for i in *.qza ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
 
 
-for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
-for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./diversity/table_files/$i"."$(basename $j) ;done ;done
+for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./taxonomy_and_diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
+for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./taxonomy_and_diversity/table_files/$i"."$(basename $j) ;done ;done
 
-for i in ./diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done
+for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done
 
-mv *.qza ./diversity/raw_files ;
-mv *.qzv ./diversity/raw_files ;
+mv *.qza ./taxonomy_and_diversity/raw_files ;
+mv *.qzv ./taxonomy_and_diversity/raw_files ;
 
-cp filtered-table.qza ./diversity/raw_files ;
-cp $qiime_dir/rep-seqs.qza ./diversity/raw_files ;
-cp $qiime_dir/demux.qza ./diversity/raw_files ;
+cp filtered-table.qza ./taxonomy_and_diversity/raw_files ;
+cp $qiime_dir/rep-seqs.qza ./taxonomy_and_diversity/raw_files ;
+cp $qiime_dir/demux.qza ./taxonomy_and_diversity/raw_files ;
 
-cp $qiime_dir/qiime2_manifest.csv ./diversity/raw_files ;
-cp $qiime_dir/gws_metadata.csv  ./diversity/raw_files ;
-cp $qiime_dir/qiime2_metadata.csv ./diversity/raw_files ;
+cp $qiime_dir/qiime2_manifest.csv ./taxonomy_and_diversity/raw_files ;
+cp $qiime_dir/gws_metadata.csv  ./taxonomy_and_diversity/raw_files ;
+cp $qiime_dir/qiime2_metadata.csv ./taxonomy_and_diversity/raw_files ;

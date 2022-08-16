@@ -41,13 +41,13 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         "Alpha Diversity - Evenness": "evenness_vector.qza.diversity_metrics.alpha-diversity.tsv",
         "Alpha Diversity - Faith pd": "faith_pd_vector.qza.diversity_metrics.alpha-diversity.tsv",
         "Alpha Diversity - Observed features": "observed_features_vector.qza.diversity_metrics.alpha-diversity.tsv",
+        "Alpha Diversity - Simpson": "simpson.qza.diversity_metrics.alpha-diversity.tsv",
+        "Alpha Diversity - Inv Simpson": "invSimpson.tab.tsv",
         "Beta Diversity - Bray Curtis": "bray_curtis_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
         "Beta Diversity - Jaccard distance": "jaccard_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
         "Beta Diversity - Jaccard unweighted unifrac": "jaccard_unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
         "Beta Diversity - Weighted unifrac": "weighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
-        "Beta Diversity - Unweighted unifrac": "unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv",
-        "Beta Diversity - Simpson": "simpson.qza.diversity_metrics.alpha-diversity.tsv",
-        "Beta Diversity - Inv Simpson": "invSimpson.tab.tsv"
+        "Beta Diversity - Unweighted unifrac": "unweighted_unifrac_distance_matrix.qza.diversity_metrics.distance-matrix.tsv"
     }
 
     # Taxo stacked barplot
@@ -90,7 +90,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
-        diversity_resource_table_set.name = "Set of diversity tables"
+        diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity)"
         for key, value in self.DIVERSITY_PATHS.items():
             path = os.path.join(self.working_dir, "diversity", "table_files", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
@@ -101,7 +101,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         # Create ressource set containing Taxonomy table with a forced customed view (TaxonomyTable; stacked barplot view)
 
         taxo_resource_table_set: ResourceSet = ResourceSet()
-        taxo_resource_table_set.name = "Set of stacked barplot views for taxonomic tables (7 levels)"
+        taxo_resource_table_set.name = "Set of taxonomic tables (7 levels)"
         for key, value in self.TAXO_PATHS.items():
             path = os.path.join(self.working_dir, "diversity", "table_files", value)
             table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
@@ -171,5 +171,5 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     def _get_output_file_path(self):
         return os.path.join(
             self.working_dir,
-            "diversity"
+            "taxonomy_and_diversity"
         )
