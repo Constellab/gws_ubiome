@@ -5,12 +5,14 @@
 
 import os
 
-from gws_core import (ConfigParams, File, Logger, MetadataTable,
-                      MetadataTableImporter, StrParam, Table, TaskInputs,
-                      TaskOutputs, task_decorator)
+from gws_core import (File, Logger, MetadataTable, MetadataTableImporter,
+                      StrParam, Table, TaskInputs, TaskOutputs, task_decorator)
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
+from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from gws_omix import FastqFolder
 
 
 @task_decorator("Qiime2MakeManifest", human_name="Make metadata manifest",
@@ -51,9 +53,9 @@ class Qiime2MakeManifest(Qiime2EnvTask):
 
     DEFAULT_METADATA_FILE_NAME = "metadata.csv"
 
-    input_specs = {'fastq_folder': FastqFolder}
-    output_specs = {'metadata_table': MetadataTable}
-    config_specs = {
+    input_specs: InputSpecs = {'fastq_folder': InputSpec(FastqFolder,)}
+    output_specs: OutputSpecs = {'metadata_table': OutputSpec(MetadataTable)}
+    config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],

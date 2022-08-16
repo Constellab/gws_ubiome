@@ -5,8 +5,10 @@
 
 import os
 
-from gws_core import (ConfigParams, IntParam, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import IntParam, TaskInputs, TaskOutputs, task_decorator
+from gws_core.config.config_types import ConfigParams, ConfigSpecs
+from gws_core.io.io_spec import InputSpec, OutputSpec
+from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from .dep_qiime2_rarefaction_folder import Qiime2RarefactionFolder
@@ -21,9 +23,9 @@ class Qiime2Rarefaction(Qiime2EnvTask):
     Qiime2Rarefaction class.
     """
 
-    input_specs = {'sample_frequencies_result_folder': Qiime2SampleFrequenciesFolder}
-    output_specs = {'result_folder': Qiime2RarefactionFolder}
-    config_specs = {
+    input_specs: InputSpecs = {'sample_frequencies_result_folder': InputSpec(Qiime2SampleFrequenciesFolder,)}
+    output_specs: OutputSpecs = {'result_folder': OutputSpec(Qiime2RarefactionFolder,)}
+    config_specs: ConfigSpecs = {
         "min_coverage": IntParam(min_value=20, short_description="Minimum number of reads to test"),
         "max_coverage":
         IntParam(
