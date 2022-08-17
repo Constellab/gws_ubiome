@@ -92,7 +92,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         diversity_resource_table_set: ResourceSet = ResourceSet()
         diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity)"
         for key, value in self.DIVERSITY_PATHS.items():
-            path = os.path.join(self.working_dir, "diversity", "table_files", value)
+            path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
             table_annotated.name = key
@@ -103,7 +103,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         taxo_resource_table_set: ResourceSet = ResourceSet()
         taxo_resource_table_set.name = "Set of taxonomic tables (7 levels)"
         for key, value in self.TAXO_PATHS.items():
-            path = os.path.join(self.working_dir, "diversity", "table_files", value)
+            path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
             table_annotated.name = key

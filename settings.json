@@ -2,7 +2,7 @@
     "name"          : "gws_ubiome",
     "author"        : "Gencovery",
     "author_email"  : "admin@gencovery.com",
-    "version"       : "0.3.0",
+    "version"       : "0.3.1",
     "description"   : "Gencovery brick for microbiome analysis",
     "variables": {
         "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
@@ -10,14 +10,17 @@
         "gws_ubiome:large_testdata_url": "https://storage.sbg.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/testdata/ubiome/qiime2/testdata.zip",
         "gws_ubiome:large_testdata_dir": "/data/gws_ubiome/testdata",
 
-        "gws_ubiome:greengenes_ref_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/sepp-refs-gg-13-8.qza",
-        "gws_ubiome:greengenes_ref_file": "/data/gws_ubiome/opendata/sepp-refs-gg-13-8.qza",
+        "gws_ubiome:sepp_ref_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/sepp-refs-gg-13-8.qza",
+        "gws_ubiome:sepp_ref_file": "/data/gws_ubiome/opendata/sepp-refs-gg-13-8.qza",
 
         "gws_ubiome:greengenes_classifier_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/gg-13-8-99-nb-classifier.qza",
         "gws_ubiome:greengenes_classifier_file": "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza",
 
         "gws_ubiome:silva_classifier_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/silva-138-99-nb-classifier.qza",
         "gws_ubiome:silva_classifier_file": "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza",
+
+        "gws_ubiome:RDP_classifier_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza",
+        "gws_ubiome:RDP_classifier_file": "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza",
 
         "gws_ubiome:ncbi_16s_classifier_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/ncbi-refseqs-classifier.16S_rRNA.20220712.qza",
         "gws_ubiome:ncbi_16s_classifier_file": "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
