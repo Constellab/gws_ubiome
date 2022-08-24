@@ -29,7 +29,7 @@ class TaxonomyTableTagged(Table):
         s_view = StackedBarPlotView(normalize=True)
         annotated_table: Table = None
         annotated_table = self
-        table_tagged = TableTagAggregatorHelper.group_by_column_tags(
+        table_tagged = TableTagAggregatorHelper.aggregate_by_column_tags(
             annotated_table, keys=[params.get("Metadata_tag")], func="sum")
         initialdf = table_tagged.get_data()
 

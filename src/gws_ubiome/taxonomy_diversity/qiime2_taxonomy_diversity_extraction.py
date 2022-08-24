@@ -66,7 +66,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     input_specs: InputSpecs = {
         'rarefaction_analysis_result_folder':
         InputSpec(
-            Qiime2RarefactionAnalysisResultFolder, Qiime2FeatureFrequencyFolder,
+            [Qiime2RarefactionAnalysisResultFolder, Qiime2FeatureFrequencyFolder],
             short_description="Feature freq. folder or rarefaction folder (!no rarefaction is done on counts!)",
             human_name="feature_freq_folder")}
     output_specs: OutputSpecs = {

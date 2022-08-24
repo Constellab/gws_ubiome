@@ -94,13 +94,12 @@ class Qiime2DifferentialAnalysis(Qiime2EnvTask):
         for key, value in self.OUTPUT_FILES.items():
             path = os.path.join(self.working_dir, "differential_analysis", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-            data = table.get_data()
-            dataframe = data.set_index()
-            res = dataframe.div(dataframe.sum(axis=1), axis=0)
-            table = Table(data=res)
-
+            #data = table.get_data()
+            #dataframe = data.set_index()
+            #res = dataframe.div(dataframe.sum(axis=1), axis=0)
+            #res = data.div(data.sum(axis=1), axis=0)
+            #table_div = Table(data=res)
             table.name = key
-            resource_table_set.add_resource(table)
 
             # Metadata table
             path = os.path.join(self.working_dir, "differential_analysis", value)

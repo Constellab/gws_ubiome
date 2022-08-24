@@ -62,7 +62,9 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         'diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder, human_name="Diversity_qiime2_folder"),
         'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")}
     output_specs: OutputSpecs = {
-        'output_table': OutputSpec(TaxonomyTableTagged, human_name="Annotated_taxa_compo_table")
+        'relative_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Relative_Abundance_Annotated_Table"),
+        'absolute_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Absolute_Abundance_Annotated_Table"),
+
     }
     config_specs = {
         "taxonomic_level":
@@ -80,34 +82,44 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
 
         #  Dictionary table containing corresponding taxa in both files
         annotated_tables_set: ResourceSet = ResourceSet()
-        annotated_tables_set.name = "Set of tables"
+        annotated_tables_set.name = "Set of tables"  # taxa_merged_files.relative.tsv
 
         tag_file_path = os.path.join(self.working_dir, "taxa_found.for_tags.tsv")
         metadata_table = MetadataTableImporter.call(File(path=tag_file_path), {'delimiter': 'tab'})
 
+        tag_file_relative_path = os.path.join(self.working_dir, "taxa_found.for_tags.relative.tsv")
+        metadata_relative_table = MetadataTableImporter.call(File(path=tag_file_relative_path), {'delimiter': 'tab'})
+
         taxa_dict_path = os.path.join(self.working_dir, "taxa_found.tsv")
+        taxa_relative_dict_path = os.path.join(self.working_dir, "taxa_found.relative.tsv")
+
         taxa_dict_table = TaxonomyTableTaggedImporter.call(
             File(path=taxa_dict_path),
             {'delimiter': 'tab', "index_column": 0})
-        # annotated_tables_set.add_resource(taxa_dict_table)
 
-        # tagged_taxa_file_path = os.path.join(self.working_dir, "taxa_found.header_with_tag.tsv")
-        # tagged_taxa_table = TableImporter.call(
-        #     File(path=tagged_taxa_file_path),
-        #     {'delimiter': 'tab', "index_column": 0})
-        # annotated_tables_set.add_resource(tagged_taxa_table)
-
-        # create annotated feature table
+        taxa_relative_dict_table = TaxonomyTableTaggedImporter.call(
+            File(path=taxa_relative_dict_path),
+            {'delimiter': 'tab', "index_column": 0})
 
         # file to use to add tag
 
         table_annotated_col = TableColumnAnnotatorHelper.annotate(taxa_dict_table, metadata_table)
-        table_annotated = TableRowAnnotatorHelper.annotate(table_annotated_col, sample_metadata_table)
-        table_annotated.name = "Annotated taxa composition table"
+        table_relative_annotated_col = TableColumnAnnotatorHelper.annotate(
+            taxa_relative_dict_table, metadata_relative_table)
+
+        table_absolute_abundance_annotated = TableRowAnnotatorHelper.annotate(
+            table_annotated_col, sample_metadata_table)
+        table_relative_abundance_annotated = TableRowAnnotatorHelper.annotate(
+            table_relative_annotated_col, sample_metadata_table)
+
+        table_absolute_abundance_annotated.name = "Annotated taxa composition table (absolute count)"
+        table_relative_abundance_annotated.name = "Annotated taxa composition table (relative count)"
         # annotated_tables_set.add_resource(table_annotated)
 
         return {
-            'output_table': table_annotated  # annotated_tables_set
+            'relative_abundance_table': table_relative_abundance_annotated,
+            'absolute_abundance_table': table_absolute_abundance_annotated
+
         }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
