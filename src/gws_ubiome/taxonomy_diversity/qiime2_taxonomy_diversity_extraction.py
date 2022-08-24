@@ -15,6 +15,8 @@ from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
+from ..feature_frequency_table.qiime2_feature_frequency_folder import \
+    Qiime2FeatureFrequencyFolder
 from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
     Qiime2RarefactionAnalysisResultFolder
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
@@ -62,8 +64,11 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     }
 
     input_specs: InputSpecs = {
-        'rarefaction_analysis_result_folder': InputSpec(Qiime2RarefactionAnalysisResultFolder)
-    }
+        'rarefaction_analysis_result_folder':
+        InputSpec(
+            Qiime2RarefactionAnalysisResultFolder, Qiime2FeatureFrequencyFolder,
+            short_description="Feature freq. folder or rarefaction folder (!no rarefaction is done on counts!)",
+            human_name="feature_freq_folder")}
     output_specs: OutputSpecs = {
         'diversity_tables': OutputSpec(ResourceSet),
         'taxonomy_tables': OutputSpec(ResourceSet),

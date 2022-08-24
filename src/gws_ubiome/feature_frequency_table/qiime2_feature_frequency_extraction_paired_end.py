@@ -31,8 +31,11 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     output_specs: OutputSpecs = {
         'feature_table': OutputSpec(Table),
         'stats': OutputSpec(Table),
-        'result_folder': OutputSpec(Qiime2FeatureFrequencyFolder)
-    }
+        'result_folder':
+        OutputSpec(
+            Qiime2FeatureFrequencyFolder,
+            short_description="Rarefaction curves folder. Can be used with taxonomy task (!no rarefaction are donne on counts!))",
+            human_name="Rarefaction_curves")}
     config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
