@@ -96,7 +96,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
-        diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity)"
+        diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table"
         for key, value in self.DIVERSITY_PATHS.items():
             path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
