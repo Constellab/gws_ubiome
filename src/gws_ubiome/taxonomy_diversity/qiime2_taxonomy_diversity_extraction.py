@@ -32,9 +32,10 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
 
     # Greengenes db
     DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
     DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
-    DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
+    #DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
+    #DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
@@ -80,8 +81,8 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes", "NCBI-16S", "RDP", "Silva"], default_value="GreenGenes",
-                 short_description="Database for taxonomic affiliation"),  # TO DO: "Silva"
+        StrParam(allowed_values=["GreenGenes", "NCBI-16S"], default_value="GreenGenes",
+                 short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
@@ -145,7 +146,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
                 qiime2_folder.path,
                 plateau_val,
                 thrds,
-                self.DB_NCBI_16S,
+                self.DB_SILVA,
                 os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
             ]
         elif db_taxo == "RDP":
@@ -156,7 +157,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
                 qiime2_folder.path,
                 plateau_val,
                 thrds,
-                self.DB_NCBI_16S,
+                self.DB_RDP,
                 os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
             ]
         else:
