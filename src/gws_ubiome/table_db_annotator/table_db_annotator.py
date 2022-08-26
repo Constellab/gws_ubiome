@@ -140,6 +140,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
                 metadata_table.path,
                 taxa_file_path,
                 os.path.join(script_file_dir, "./perl/taxa_annot_all.pl"),
+                os.path.join(script_file_dir, "./perl/ratio_calc.pl"),
                 taxa_db_type
             ]
         else:
@@ -153,6 +154,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
                 metadata_table.path,
                 taxa_file_path,
                 os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
+                os.path.join(script_file_dir, "./perl/ratio_calc.pl"),
                 taxa_db_type,
                 tax_level
             ]
