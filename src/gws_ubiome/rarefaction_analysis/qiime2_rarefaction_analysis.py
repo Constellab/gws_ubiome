@@ -55,8 +55,8 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
         # path = os.path.join(result_folder.path, "gws_metadata.csv")
         # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
 
-        observed_path = os.path.join(self.working_dir, "rarefaction", self.OBSERVED_FEATURE_FILE)
-        shannon_path = os.path.join(self.working_dir, "rarefaction", self.SHANNON_INDEX_FILE)
+        observed_path = os.path.join(self.working_dir, "rarefaction_curves_analysis", self.OBSERVED_FEATURE_FILE)
+        shannon_path = os.path.join(self.working_dir, "rarefaction_curves_analysis", self.SHANNON_INDEX_FILE)
 
         observed_feature_table = RarefactionTableImporter.call(
             File(path=observed_path),
@@ -98,4 +98,4 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
         return cmd
 
     def _get_output_file_path(self):
-        return os.path.join(self.working_dir, "rarefaction")
+        return os.path.join(self.working_dir, "rarefaction_curves_analysis")

@@ -21,15 +21,15 @@ qiime diversity alpha-rarefaction \
   --p-iterations $iterations \
   --p-max-depth $max_value
 
-mkdir rarefaction ;
+mkdir rarefaction_curves_analysis ;
 
 unzip alpha_rarefaction_curves.qzv -d tmp_dir ;
-cat tmp_dir/*/data/shannon.csv | perl $perl_script_transform_table_for_boxplot - > ./rarefaction/shannon.for_boxplot.tsv ;
-cat tmp_dir/*/data/observed_features.csv | perl $perl_script_transform_table_for_boxplot - > ./rarefaction/observed_features.for_boxplot.tsv ;
-cp $qiime_dir/rep-seqs.qza ./rarefaction ;
-cp $qiime_dir/table.qza ./rarefaction ;
-cp $qiime_dir/demux.qza ./rarefaction ;
+cat tmp_dir/*/data/shannon.csv | perl $perl_script_transform_table_for_boxplot - > ./rarefaction_curves_analysis/shannon.for_boxplot.tsv ;
+cat tmp_dir/*/data/observed_features.csv | perl $perl_script_transform_table_for_boxplot - > ./rarefaction_curves_analysis/observed_features.for_boxplot.tsv ;
+cp $qiime_dir/rep-seqs.qza ./rarefaction_curves_analysis ;
+cp $qiime_dir/table.qza ./rarefaction_curves_analysis ;
+cp $qiime_dir/demux.qza ./rarefaction_curves_analysis ;
 
-cp $qiime_dir/qiime2_manifest.csv ./rarefaction ;
-cp $qiime_dir/gws_metadata.csv  ./rarefaction ;
-cp $qiime_dir/qiime2_metadata.csv ./rarefaction ;
+cp $qiime_dir/qiime2_manifest.csv ./rarefaction_curves_analysis ;
+cp $qiime_dir/gws_metadata.csv  ./rarefaction_curves_analysis ;
+cp $qiime_dir/qiime2_metadata.csv ./rarefaction_curves_analysis ;
