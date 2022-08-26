@@ -17,10 +17,11 @@ from gws_core.resource.resource_set import ResourceSet
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
-from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
-    Qiime2RarefactionAnalysisResultFolder
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
+
+# from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
+#     Qiime2RarefactionAnalysisResultFolder
 
 
 @task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Taxonomy diversity extractor",
@@ -33,7 +34,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     # Greengenes db
     DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
     #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
-    DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
+    #DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
     #DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
     #DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
@@ -67,8 +68,10 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     input_specs: InputSpecs = {
         'rarefaction_analysis_result_folder':
         InputSpec(
-            [Qiime2RarefactionAnalysisResultFolder, Qiime2FeatureFrequencyFolder],
-            short_description="Feature freq. folder or rarefaction folder (!no rarefaction is done on counts!)",
+            # [Qiime2RarefactionAnalysisResultFolder, Qiime2FeatureFrequencyFolder],
+            # short_description="Feature freq. folder or rarefaction folder (!no rarefaction is done on counts!)",
+            Qiime2FeatureFrequencyFolder,
+            short_description="Feature freq. folder",
             human_name="feature_freq_folder")}
     output_specs: OutputSpecs = {
         'diversity_tables': OutputSpec(ResourceSet),
@@ -81,8 +84,8 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes", "NCBI-16S"], default_value="GreenGenes",
-                 short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva"
+        StrParam(allowed_values=["GreenGenes"], default_value="GreenGenes",
+                 short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
@@ -96,7 +99,7 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
-        diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table"
+        diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table (ASVs or OTUs)"
         for key, value in self.DIVERSITY_PATHS.items():
             path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})

@@ -94,3 +94,4 @@ cp $qiime_dir/demux.qza ./taxonomy_and_diversity/raw_files ;
 cp $qiime_dir/qiime2_manifest.csv ./taxonomy_and_diversity/raw_files ;
 cp $qiime_dir/gws_metadata.csv  ./taxonomy_and_diversity/raw_files ;
 cp $qiime_dir/qiime2_metadata.csv ./taxonomy_and_diversity/raw_files ;
+cp $qiime_dir/table.qza ./taxonomy_and_diversity/raw_files ;

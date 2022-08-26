@@ -17,6 +17,8 @@ from gws_core.resource.resource_set import ResourceSet
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
+from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
+    Qiime2TaxonomyDiversityFolder
 from .qiime2_rarefaction_analysis_result_folder import \
     Qiime2RarefactionAnalysisResultFolder
 from .rarefaction_table import RarefactionTableImporter
@@ -32,7 +34,7 @@ class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     SHANNON_INDEX_FILE = "shannon.for_boxplot.tsv"
 
     input_specs: InputSpecs = {
-        'feature_frequency_folder': InputSpec(Qiime2FeatureFrequencyFolder)
+        'feature_frequency_folder': InputSpec([Qiime2TaxonomyDiversityFolder,Qiime2FeatureFrequencyFolder])
     }
     output_specs: OutputSpecs = {
         "rarefaction_table": OutputSpec(ResourceSet),
