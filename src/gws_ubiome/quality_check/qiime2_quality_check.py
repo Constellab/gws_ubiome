@@ -122,13 +122,16 @@ class Qiime2QualityCheck(Qiime2EnvTask):
             }
 
         else:
+            resource_table: ResourceSet = ResourceSet()
             qual_path = os.path.join(self.working_dir, "quality_check", self.READS_FILE_PATH)
-            quality_table_single_end = TableImporter.call(
+            quality_table_single_end = QualityTableImporter.call(
                 File(path=qual_path),
                 {'delimiter': 'tab', "index_column": 0})
             quality_table = TableRowAnnotatorHelper.annotate(quality_table_single_end, metadata_table)
-            resource_table = quality_table
-            resource_table.name = "Quality table"
+
+            resource_table.name = "Quality table - Single end files"
+            # Resource set
+            resource_table.add_resource(quality_table)
             return {
                 "result_folder": result_folder,
                 "quality_table": resource_table
@@ -159,12 +162,12 @@ class Qiime2QualityCheck(Qiime2EnvTask):
                 fastq_folder_path,
                 manifest_table_file_path
             ]
-            Logger.info(cmd)
+            # Logger.info(cmd)
         else:
             cmd = [
                 "bash",
                 os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_single_end.sh"),
-                fastq_folder.path,
+                fastq_folder_path,
                 manifest_table_file_path
             ]
         return cmd

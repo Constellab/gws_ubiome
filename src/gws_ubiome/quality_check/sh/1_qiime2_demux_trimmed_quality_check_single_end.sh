@@ -8,7 +8,7 @@
 ## single-end project
 
 fastq_dir=$1
-metadatacsv =$2
+metadatacsv=$2
 
 cat $metadatacsv > gws_metadata.csv
 
@@ -32,7 +32,12 @@ qiime demux summarize \
 unzip demux.qzv -d tmp_dir
 mkdir quality_check ;
 
-cat ./tmp_dir/*/data/seven-number-summaries.tsv | sed -n '1p;4,8p' > ./quality_check/quality-boxplot.csv # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
+echo -e "\n############# Quality file generated #############\n"
+ls ./tmp_dir ;
+ls ./tmp_dir/*/data/forward-seven-number-summaries.tsv  ;
+echo -e "\n############# Quality file generated #############\n"
+
+cat ./tmp_dir/*/data/forward-seven-number-summaries.tsv  | sed -n '1p;4,8p' > ./quality_check/quality-boxplot.csv # de 9% à 91% ; rajouter nom échantillons dans nom fichier et dans figures éventuellements
 
 mv demux.qza ./quality_check ;
 

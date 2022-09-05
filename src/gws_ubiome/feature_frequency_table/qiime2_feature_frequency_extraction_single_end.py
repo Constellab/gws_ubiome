@@ -5,9 +5,9 @@
 
 import os
 
-from gws_core import (ConfigParams, File, IntParam, Table, TableImporter,
-                      TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
+                      Table, TableImporter, TableRowAnnotatorHelper,
+                      TaskInputs, TaskOutputs, task_decorator)
 from gws_core.config.config_types import ConfigParams, ConfigSpecs
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
@@ -49,8 +49,8 @@ class Qiime2FeatureTableExtractorSE(Qiime2EnvTask):
         path = os.path.join(result_file.path, "denoising-stats.tsv")
         stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
-        path = os.path.join(result_file.path, "gws_metadata.tsv")
-        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        path = os.path.join(result_file.path, "gws_metadata.csv")
+        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
         feature_table = TableRowAnnotatorHelper.annotate(feature_table, metadata_table)
         stats_table = TableRowAnnotatorHelper.annotate(stats_table, metadata_table)
 
@@ -61,7 +61,7 @@ class Qiime2FeatureTableExtractorSE(Qiime2EnvTask):
         }
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
-        qiime2_folder = inputs["quality_check_result_folder"]
+        qiime2_folder = inputs["quality_check_folder"]
         threads = params["threads"]
         truncated_reads_size = params["truncated_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))

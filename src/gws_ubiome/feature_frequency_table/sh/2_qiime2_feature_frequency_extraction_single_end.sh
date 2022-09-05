@@ -13,7 +13,7 @@ trcL=$3
 
 qiime dada2 denoise-single \
   --p-trunc-len $trcL \
-  --i-demultiplexed-seqs $qiime_dir/single-end-demux.qza \
+  --i-demultiplexed-seqs $qiime_dir/demux.qza \
   --p-n-threads $threads \
   --o-table table.qza \
   --o-representative-sequences rep-seqs.qza \
