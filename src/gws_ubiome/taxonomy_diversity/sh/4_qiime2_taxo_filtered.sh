@@ -13,10 +13,14 @@ threads=$3
 gg_db=$4
 perl_script_transform_table=$5
 
+mkdir taxonomy_and_diversity ;
+mkdir taxonomy_and_diversity/raw_files ;
+mkdir taxonomy_and_diversity/table_files ;
+
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences $qiime_dir/rep-seqs.qza \
-  --o-alignment aligned-rep-seqs.qza \
-  --o-masked-alignment masked-aligned-rep-seqs.qza \
+  --o-alignment ./taxonomy_and_diversity/raw_files/aligned-rep-seqs.qza \
+  --o-masked-alignment ./taxonomy_and_diversity/raw_files/masked-aligned-rep-seqs.qza \
   --o-tree unrooted-tree.qza \
   --o-rooted-tree rooted-tree.qza
 
@@ -68,16 +72,14 @@ qiime diversity beta \
   --p-metric jaccard \
   --o-distance-matrix jaccard_unweighted_unifrac_distance_matrix.qza
 
-mkdir taxonomy_and_diversity ;
-mkdir taxonomy_and_diversity/raw_files ;
-mkdir taxonomy_and_diversity/table_files ;
-
+#mkdir taxonomy_and_diversity ;
+#mkdir taxonomy_and_diversity/raw_files ;
+#mkdir taxonomy_and_diversity/table_files ;
 unzip simpson.qza -d simpson
 cat  ./simpson/*/data/*.tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tSimpson(D)\tInverse-Simpson_(1-D)\tReciprocal-Simpson_(1/D)\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1-$t[1],"\t",1/$t[1],"\n"; } } ' > ./taxonomy_and_diversity/table_files/invSimpson.tab.tsv ;
 
 for i in *.qza ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
-
 
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./taxonomy_and_diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./taxonomy_and_diversity/table_files/$i"."$(basename $j) ;done ;done

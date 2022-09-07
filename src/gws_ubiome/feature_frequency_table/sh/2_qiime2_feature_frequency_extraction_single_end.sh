@@ -12,9 +12,10 @@ threads=$2
 trcL=$3
 
 qiime dada2 denoise-single \
-  --p-trunc-len $trcL \
   --i-demultiplexed-seqs $qiime_dir/demux.qza \
+  --p-trunc-len $trcL \
   --p-n-threads $threads \
+  --p-n-reads-learn 1000 \
   --o-table table.qza \
   --o-representative-sequences rep-seqs.qza \
   --o-denoising-stats denoising-stats.qza
