@@ -24,7 +24,7 @@ from .taxonomy_stacked_table import TaxonomyTableImporter
 #     Qiime2RarefactionAnalysisResultFolder
 
 
-@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Taxonomy diversity extractor",
+@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Qiime 2 Taxonomy diversity extractor",
                 short_description="Compute various diversity index and taxonomy assessement using OTU/ASV")
 class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     """

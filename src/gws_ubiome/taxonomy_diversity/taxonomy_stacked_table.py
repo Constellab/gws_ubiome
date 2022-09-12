@@ -20,7 +20,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot',
           short_description='Stacked barplots of the taxonomic composition',
-          specs={}, default_view=False)
+          specs={}, default_view=True)
     def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView()
@@ -37,10 +37,10 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot normalised (TSS)',
           short_description='Normalised stacked barplots of the taxonomic composition',
-          specs={}, default_view=False)
+          specs={}, default_view=True)
     def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
-        s_view = StackedBarPlotView(normalize=True)
+        s_view = StackedBarPlotView(normalize=False)
         data = self.get_data()
 
         for i in range(0, data.shape[1]):
