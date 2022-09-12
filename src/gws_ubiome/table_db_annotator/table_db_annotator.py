@@ -66,12 +66,12 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         'absolute_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Absolute_Abundance_Annotated_Table"),
 
     }
-    config_specs = {
-        "taxonomic_level":
-        StrParam(
-            human_name="Taxonomic level", allowed_values=["all", "k", "p", "c", "o", "f", "g", "s"],
-            short_description="Taxonomic level id: all: all level, k: Kingdom, p: Phylum, c: Class, o: Order, f: Family, g: Genus, s: Species"),
-    }
+    # config_specs = {
+    #     "taxonomic_level":
+    #     StrParam(
+    #         human_name="Taxonomic level", allowed_values=["all", "k", "p", "c", "o", "f", "g", "s"],
+    #         short_description="Taxonomic level id: all: all level, k: Kingdom, p: Phylum, c: Class, o: Order, f: Family, g: Genus, s: Species"),
+    # }
 
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
 
@@ -124,7 +124,7 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
         diversity_input_folder = inputs["diversity_folder"]
-        tax_level = params["taxonomic_level"]
+        #tax_level = params["taxonomic_level"]
         metadata_table = inputs["annotation_table"]
 
         # TO BE DONE : adding the option when other tax affiliation db will be available for qiime2
@@ -132,30 +132,30 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        if tax_level == "all":
-            taxa_file_path = os.path.join(diversity_input_folder.path, "table_files")
-            cmd = [
-                "bash",
-                os.path.join(script_file_dir, "./sh/all_taxa.sh"),
-                metadata_table.path,
-                taxa_file_path,
-                os.path.join(script_file_dir, "./perl/taxa_annot_all.pl"),
-                os.path.join(script_file_dir, "./perl/ratio_calc.pl"),
-                taxa_db_type
-            ]
-        else:
-            tax_level_id = self.TAX_LEVEL_DICT[tax_level]
-            taxa_file_path = os.path.join(diversity_input_folder.path, "table_files",
-                                          "gg.taxa-bar-plots.qzv.diversity_metrics.level-" + tax_level_id +
-                                          ".csv.tsv.parsed.tsv")
-            cmd = [
-                "bash",
-                os.path.join(script_file_dir, "./sh/qiime2.table_annotator.all_taxa_levels.sh"),
-                metadata_table.path,
-                taxa_file_path,
-                os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
-                os.path.join(script_file_dir, "./perl/ratio_calc.pl"),
-                taxa_db_type,
-                tax_level
-            ]
+        # if tax_level == "all":
+        taxa_file_path = os.path.join(diversity_input_folder.path, "table_files")
+        cmd = [
+            "bash",
+            os.path.join(script_file_dir, "./sh/all_taxa.sh"),
+            metadata_table.path,
+            taxa_file_path,
+            os.path.join(script_file_dir, "./perl/taxa_annot_all.pl"),
+            os.path.join(script_file_dir, "./perl/ratio_calc.pl"),
+            taxa_db_type
+        ]
+        # else:
+        #     tax_level_id = self.TAX_LEVEL_DICT[tax_level]
+        #     taxa_file_path = os.path.join(diversity_input_folder.path, "table_files",
+        #                                   "gg.taxa-bar-plots.qzv.diversity_metrics.level-" + tax_level_id +
+        #                                   ".csv.tsv.parsed.tsv")
+        #     cmd = [
+        #         "bash",
+        #         os.path.join(script_file_dir, "./sh/qiime2.table_annotator.all_taxa_levels.sh"),
+        #         metadata_table.path,
+        #         taxa_file_path,
+        #         os.path.join(script_file_dir, "./perl/taxa_annotator.pl"),
+        #         os.path.join(script_file_dir, "./perl/ratio_calc.pl"),
+        #         taxa_db_type,
+        #         tax_level
+        #     ]
         return cmd
