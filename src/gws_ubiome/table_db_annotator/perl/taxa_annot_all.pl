@@ -66,14 +66,14 @@ while(<File>){
 						$header.="\t".$1."#tag:".$hAnnotationTable{$1};
 					}
 					else{
-						$header.="\t".$1."#tag:NA";
+						$header.="\t".$1."#tag:_nan";
 					}
 				}
 				elsif($_=~/^[^_]{1}\_\_$/){
-					$header.="\t".$_."#tag:NA";
+					$header.="\t".$_."#tag:_nan";
 				}
 				elsif($_=~/^\_\_$/){
-					$header.="\t".$_."#tag:NA";
+					$header.="\t".$_."#tag:_nan";
 				}
 				else{
 					$header.=$_;

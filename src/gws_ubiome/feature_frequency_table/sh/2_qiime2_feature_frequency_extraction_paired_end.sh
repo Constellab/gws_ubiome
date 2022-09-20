@@ -41,7 +41,7 @@ cat tmp_dir_3/*/data/dna-sequences.fasta > ./sample_freq_details/ASV-sequences.f
 mv rep-seqs.qza ./sample_freq_details ;
 mv table.qza ./sample_freq_details ;
 cp $qiime_dir/demux.qza ./sample_freq_details ;
-
+cp feature-table.qzv ./sample_freq_details ;
 
 cp $qiime_dir/qiime2_manifest.csv ./sample_freq_details ;
 cp $qiime_dir/gws_metadata.csv  ./sample_freq_details ;

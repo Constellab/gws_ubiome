@@ -27,11 +27,28 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 qiime feature-table filter-samples \
   --i-table $qiime_dir/table.qza \
   --p-min-frequency $rarefication_plateau_depth_value \
-  --o-filtered-table filtered-table.qza
+  --o-filtered-table ./taxonomy_and_diversity/raw_files/filtered-table.qza
+
+echo "######################"
+echo "######################"
+echo "######################"
+echo "######################"
+echo "Current dir : "
+pwd
+echo "######################"
+echo "verif extract"
+ls ./taxonomy_and_diversity/raw_files/filtered-table.qza
+ls ./taxonomy_and_diversity/raw_files/
+unzip ./taxonomy_and_diversity/raw_files/filtered-table.qza -d test_extract
+ls ./test_extract
+echo "######################"
+echo "######################"
+echo "######################"
+echo "######################"
 
 qiime diversity core-metrics-phylogenetic \
   --i-phylogeny rooted-tree.qza \
-  --i-table filtered-table.qza \
+  --i-table ./taxonomy_and_diversity/raw_files/filtered-table.qza \
   --p-sampling-depth $rarefication_plateau_depth_value \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv \
   --output-dir core-metrics-results
@@ -52,23 +69,23 @@ qiime metadata tabulate \
   --o-visualization gg.taxonomy.qzv
 
 qiime taxa barplot \
-  --i-table filtered-table.qza \
+  --i-table ./taxonomy_and_diversity/raw_files/filtered-table.qza \
   --i-taxonomy gg.taxonomy.qza \
   --m-metadata-file $qiime_dir/qiime2_manifest.csv  \
   --o-visualization gg.taxa-bar-plots.qzv
 
 qiime diversity alpha \
-  --i-table filtered-table.qza \
+  --i-table ./taxonomy_and_diversity/raw_files/filtered-table.qza \
   --p-metric chao1 \
   --o-alpha-diversity chao1.qza
 
 qiime diversity alpha \
-  --i-table filtered-table.qza \
+  --i-table ./taxonomy_and_diversity/raw_files/filtered-table.qza \
   --p-metric simpson \
   --o-alpha-diversity simpson.qza
 
 qiime diversity beta \
-  --i-table filtered-table.qza \
+  --i-table ./taxonomy_and_diversity/raw_files/filtered-table.qza \
   --p-metric jaccard \
   --o-distance-matrix jaccard_unweighted_unifrac_distance_matrix.qza
 
@@ -86,10 +103,51 @@ for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./taxonomy
 
 for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done
 
+
+
+### geenrate asv annot file ###
+
+unzip gg.taxonomy.qza  -d gg_taxo_files
+
+qiime feature-table transpose \
+  --i-table ./taxonomy_and_diversity/raw_files/filtered-table.qza \
+  --o-transposed-feature-table transposed-table.qza
+
+qiime metadata tabulate \
+  --m-input-file gg.taxonomy.qza \
+  --m-input-file transposed-table.qza \
+  --o-visualization merged-data.qzv
+#--m-input-file rep-seqs.qza \
+
+qiime tools export \
+  --input-path merged-data.qzv \
+  --output-path merged-data
+
+cat ./merged-data/metadata.tsv | awk '{print $2"\t"$1}' | sed '1d' > ./taxonomy_and_diversity/raw_files/asv_dict.csv
+#cat ./taxonomy_and_diversity/table_files/*evel-7.tsv > taxonomic_table.all_levels.csv
+
+cp merged-data.qzv ./taxonomy_and_diversity/raw_files
+cp transposed-table.qza ./taxonomy_and_diversity/raw_files
+
+###
+
 mv *.qza ./taxonomy_and_diversity/raw_files ;
 mv *.qzv ./taxonomy_and_diversity/raw_files ;
 
-cp filtered-table.qza ./taxonomy_and_diversity/raw_files ;
+echo "######################"
+echo "######################"
+echo "######################"
+echo "######################"
+echo "Current dir : "
+pwd
+echo "######################"
+echo "verif extract"
+ls ./taxonomy_and_diversity/raw_files/filtered-table.qza
+ls ./taxonomy_and_diversity/raw_files/
+echo "######################"
+echo "######################"
+echo "######################"
+echo "######################"
 cp $qiime_dir/rep-seqs.qza ./taxonomy_and_diversity/raw_files ;
 cp $qiime_dir/demux.qza ./taxonomy_and_diversity/raw_files ;
 

@@ -107,6 +107,8 @@ class Qiime2TableDbAnnotator(Qiime2EnvTask):
         table_relative_annotated_col = TableColumnAnnotatorHelper.annotate(
             taxa_relative_dict_table, metadata_relative_table)
 
+        #
+
         table_absolute_abundance_annotated = TableRowAnnotatorHelper.annotate(
             table_annotated_col, sample_metadata_table)
         table_relative_abundance_annotated = TableRowAnnotatorHelper.annotate(
