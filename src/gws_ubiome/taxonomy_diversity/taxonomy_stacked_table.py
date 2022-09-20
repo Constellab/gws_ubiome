@@ -20,7 +20,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot',
           short_description='Stacked barplots of the taxonomic composition',
-          specs={}, default_view=True)
+          specs={}, default_view=False)
     def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView()

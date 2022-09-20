@@ -29,22 +29,22 @@ qiime feature-table filter-samples \
   --p-min-frequency $rarefication_plateau_depth_value \
   --o-filtered-table ./taxonomy_and_diversity/raw_files/filtered-table.qza
 
-echo "######################"
-echo "######################"
-echo "######################"
-echo "######################"
-echo "Current dir : "
-pwd
-echo "######################"
-echo "verif extract"
-ls ./taxonomy_and_diversity/raw_files/filtered-table.qza
-ls ./taxonomy_and_diversity/raw_files/
-unzip ./taxonomy_and_diversity/raw_files/filtered-table.qza -d test_extract
-ls ./test_extract
-echo "######################"
-echo "######################"
-echo "######################"
-echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "Current dir : "
+# pwd
+# echo "######################"
+# echo "verif extract"
+# ls ./taxonomy_and_diversity/raw_files/filtered-table.qza
+# ls ./taxonomy_and_diversity/raw_files/
+# unzip ./taxonomy_and_diversity/raw_files/filtered-table.qza -d test_extract
+# ls ./test_extract
+# echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "######################"
 
 qiime diversity core-metrics-phylogenetic \
   --i-phylogeny rooted-tree.qza \
@@ -123,7 +123,12 @@ qiime tools export \
   --input-path merged-data.qzv \
   --output-path merged-data
 
-cat ./merged-data/metadata.tsv | awk '{print $2"\t"$1}' | sed '1d' > ./taxonomy_and_diversity/raw_files/asv_dict.csv
+ls ./merged-data
+
+cat ./merged-data/metadata.tsv | egrep  -v '^#q2:types' | cut -f1,2 | sed 's/ //g'  > ./taxonomy_and_diversity/raw_files/asv_dict.csv
+cat ./merged-data/metadata.tsv | egrep  -v '^#q2:types' | cut -f1,4-  > ./taxonomy_and_diversity/table_files/asv_table.csv
+
+#| cut -f1,3- | sed '1d' | rev | cut -f3- | rev 
 #cat ./taxonomy_and_diversity/table_files/*evel-7.tsv > taxonomic_table.all_levels.csv
 
 cp merged-data.qzv ./taxonomy_and_diversity/raw_files
@@ -134,20 +139,20 @@ cp transposed-table.qza ./taxonomy_and_diversity/raw_files
 mv *.qza ./taxonomy_and_diversity/raw_files ;
 mv *.qzv ./taxonomy_and_diversity/raw_files ;
 
-echo "######################"
-echo "######################"
-echo "######################"
-echo "######################"
-echo "Current dir : "
-pwd
-echo "######################"
-echo "verif extract"
-ls ./taxonomy_and_diversity/raw_files/filtered-table.qza
-ls ./taxonomy_and_diversity/raw_files/
-echo "######################"
-echo "######################"
-echo "######################"
-echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "Current dir : "
+# pwd
+# echo "######################"
+# echo "verif extract"
+# ls ./taxonomy_and_diversity/raw_files/filtered-table.qza
+# ls ./taxonomy_and_diversity/raw_files/
+# echo "######################"
+# echo "######################"
+# echo "######################"
+# echo "######################"
 cp $qiime_dir/rep-seqs.qza ./taxonomy_and_diversity/raw_files ;
 cp $qiime_dir/demux.qza ./taxonomy_and_diversity/raw_files ;
 
