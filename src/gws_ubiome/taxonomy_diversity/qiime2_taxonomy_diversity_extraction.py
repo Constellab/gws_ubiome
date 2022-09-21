@@ -18,6 +18,7 @@ from gws_core.resource.resource_set import ResourceSet
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
+from .feature_table import FeatureTable, FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
@@ -120,24 +121,17 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
             path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
-
-            # asv_table_path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            # asv_table = TableImporter.call(File(path=asv_table_path), {'delimiter': 'tab'})
-            # #asv_table = MetadataTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab'})
-            # #table_annotated = TableColumnAnnotatorHelper.annotate(table, asv_table)
-            # table_annotated = asv_table
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
 
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
             path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+            metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
-            asv_table = TaxonomyTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
+            asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             #asv_table = MetadataTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab'})
             table_annotated = TableRowAnnotatorHelper.annotate(asv_table, metadata_table)
-            #table_annotated = asv_table
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
 
