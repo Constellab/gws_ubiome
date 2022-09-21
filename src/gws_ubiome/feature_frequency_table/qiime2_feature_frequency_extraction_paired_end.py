@@ -70,7 +70,7 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
         thrd = params["threads"]
         trct_forward = params["truncated_forward_reads_size"]
         trct_reverse = params["truncated_reverse_reads_size"]
-        hard_trim = params["hard_trimming_reads_size"]
+        hard_trim = params["5_prime_hard_trimming_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         if (hard_trim == 0):
             cmd = [
