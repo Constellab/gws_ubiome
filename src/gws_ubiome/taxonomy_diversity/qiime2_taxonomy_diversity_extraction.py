@@ -127,11 +127,12 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
             path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+            asv_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
             asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             #asv_table = MetadataTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab'})
-            table_annotated = TableRowAnnotatorHelper.annotate(asv_table, metadata_table)
+            table_annotated = TableRowAnnotatorHelper.annotate(asv_table, asv_metadata_table)
+            table_annotated = TableColumnAnnotatorHelper.annotate(asv_table, metadata_table)
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
 
