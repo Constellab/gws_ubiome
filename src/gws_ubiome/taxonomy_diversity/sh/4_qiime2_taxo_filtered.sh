@@ -101,9 +101,31 @@ for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.csv ;do cat $j | tr ',' '\t' > ./taxonomy_and_diversity/table_files/$i"."$(basename $j)".tsv" ;done ;done
 for i in *.diversity_metrics ;do for j in ./$i/*/*/*.tsv ;do cat $j > ./taxonomy_and_diversity/table_files/$i"."$(basename $j) ;done ;done
 
-for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done
+
+# Taxo compo table files
+
+#OLD_METHOD
+#for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i | sed '1d' | rev | cut -f2- | rev > $i.parsed.tsv ;done # cut -f3-
 
 
+# Only continue for 'develop' or 'release/*' branches
+BRANCH_REGEX="absolute-filepath"
+CURRENT_REGEX=$(head -1 $qiime_dir/qiime2_manifest.csv | cut -f2)
+
+if [[ $CURRENT_REGEX == $BRANCH_REGEX ]];
+then
+    echo "BRANCH '$BRANCH' matches BRANCH_REGEX '$BRANCH_REGEX'"
+    for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i |  sed '1d' | rev | cut -f2- | rev > $i.parsed.tsv ;done # singled-end
+else
+    echo "BRANCH '$BRANCH' DOES NOT MATCH BRANCH_REGEX '$BRANCH_REGEX'"
+    for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i |  sed '1d' | rev | cut -f3- | rev > $i.parsed.tsv ;done # paired-end
+fi
+
+#for i in ./taxonomy_and_diversity/table_files/*evel-*.tsv ;do head $i; perl $perl_script_transform_table $i > $i.parsed.complete.tsv ; perl $perl_script_transform_table $i > $i.parsed.tsv ;done # cut -f3-
+
+# kingdomFileName=$(for i in *level-1*parsed.tsv ;do basename $i ;done )
+# cut -f1,2 $kingdomFileName > tmp.tsv ;
+# cat tmp.tsv >$kingdomFileName ;
 
 ### geenrate asv annot file ###
 

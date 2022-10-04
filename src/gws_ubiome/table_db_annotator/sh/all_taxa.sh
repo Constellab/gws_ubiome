@@ -19,15 +19,12 @@ taxDbType=$5
 cat $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv.parsed.tsv | cut -f1 > taxa_merged_files.tsv ;
 cat $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-1.csv.tsv.parsed.tsv | cut -f1 > taxa_merged_files.relative.tsv ;
 
-#for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do join taxa_merged_files.tsv $i  -t $'\t' | perl -ne 'chomp; $cpt++; if($cpt==1){ print $_,"\n";} else{ @t=split/\t/; $total=0; $cpt2=0; foreach(@t){ $cpt2++;   if($cpt2==1){$sample=$_ ; } else{ $total+=$_; $h{$sample}{$cpt2}=$_;  } } $hTotal{$sample}=$total; } foreach $s ( sort keys %h ){ foreach $k ( sort {$a <=> $b} keys %{$h{$s}} ){ print "\t",$h{$s}{$k}/$hTotal{$s}; } print "\n"; }  ' > tmp.tsv ; cat tmp.tsv > taxa_merged_files.tsv ; rm tmp.tsv ;done 
+#for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do cat $i | perl $ratioCalc - > ratio.tmp ; join taxa_merged_files.relative.tsv ratio.tmp   -t $'\t'  > tmp.tsv ; cat tmp.tsv > taxa_merged_files.relative.tsv ; rm tmp.tsv; rm ratio.tmp ;done 
+#for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do  join taxa_merged_files.tsv $i  -t $'\t' > tmp.tsv ; cat tmp.tsv > taxa_merged_files.tsv ; rm tmp.tsv ;done 
 
-for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do cat $i | perl $ratioCalc - > ratio.tmp ; join taxa_merged_files.relative.tsv ratio.tmp   -t $'\t'  > tmp.tsv ; cat tmp.tsv > taxa_merged_files.relative.tsv ; rm tmp.tsv; rm ratio.tmp ;done 
-
-
-
-for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-*.csv.tsv.parsed.tsv ;do join taxa_merged_files.tsv $i  -t $'\t' > tmp.tsv ; cat tmp.tsv > taxa_merged_files.tsv ; rm tmp.tsv ;done 
-#perl -ne 'chomp; $cpt++; if($cpt==1){ print $_,"\n";} else{ @t=split/\t/; $total=0; foreach(@t){ $cpt2++;   if($cpt2==1){print $_ ; } else{ $total+=$_; $h{$cpt2}=$_; }  } foreach $k (sort $a<=> $b keys %h){ print "\t", $h{k}/$total; } print "\n"; '
-#awk ' NR==1 { print } NR>1  { printf("%s %d %.2f%% %.2f%%\n", $1, $2, ($3*100/($3+$4)), ($4*100/($3+$4))) }'
+#for j in {2..7} ;do 
+for j in {2..7} ;do for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-$j*csv.tsv.parsed.tsv ;do echo "#### RELATIVE ####" ; echo $i ; cat $i | perl $ratioCalc ;  cat $i | perl $ratioCalc - > ratio.tmp ; join taxa_merged_files.relative.tsv ratio.tmp   -t $'\t'  > tmp.tsv ; cat tmp.tsv > taxa_merged_files.relative.tsv ; rm tmp.tsv; rm ratio.tmp ;done ;done
+for j in {2..7} ;do for i in $rawTaxTableDir/gg.taxa-bar-plots.qzv.diversity_metrics.level-$j*csv.tsv.parsed.tsv ;do echo "#### ABSOLUTE ####" ; echo $i ; cat $i ; join taxa_merged_files.tsv $i  -t $'\t' > tmp.tsv ; cat tmp.tsv > taxa_merged_files.tsv ; rm tmp.tsv ;done ;done
 
 # create metadata files and manifest file compatible with qiime2 env and gencovery env
 

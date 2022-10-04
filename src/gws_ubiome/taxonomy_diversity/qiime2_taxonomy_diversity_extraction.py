@@ -9,7 +9,7 @@ from gws_core import (ConfigParams, File, IntParam, MetadataTable,
                       MetadataTableImporter, Settings, StrParam, Table,
                       TableColumnAnnotatorHelper, TableImporter,
                       TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      task_decorator, Settings)
 from gws_core.config.config_types import ConfigParams, ConfigSpecs
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
@@ -21,6 +21,8 @@ from ..feature_frequency_table.qiime2_feature_frequency_folder import \
 from .feature_table import FeatureTable, FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
+
+settings = Settings.retrieve()
 
 # from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
 #     Qiime2RarefactionAnalysisResultFolder
@@ -34,6 +36,9 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     """
 
     # Greengenes db
+    # gws_ubiome:greengenes_classifier_file
+    #DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
+
     DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
     #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
     #DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
