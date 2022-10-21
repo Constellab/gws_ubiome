@@ -93,7 +93,9 @@ qiime diversity beta \
 #mkdir taxonomy_and_diversity/raw_files ;
 #mkdir taxonomy_and_diversity/table_files ;
 unzip simpson.qza -d simpson
-cat  ./simpson/*/data/*.tsv | sed '1d' | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tSimpson(D)\tInverse-Simpson_(1-D)\tReciprocal-Simpson_(1/D)\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1-$t[1],"\t",1/$t[1],"\n"; } } ' > ./taxonomy_and_diversity/table_files/invSimpson.tab.tsv ;
+
+# | sed '1d'
+cat  ./simpson/*/data/*.tsv  | perl -ne 'chomp; @t=split/\t/; $li++;  if($li==1){ print "sample-id\tSimpson(D)\tInverse-Simpson_(1-D)\tReciprocal-Simpson_(1/D)\n";  } else{ if($t[1]==0.0 ){ print $t[0],"\tNA\tNA\tNA\n";  } else{ print $t[0],"\t",$t[1],"\t",1-$t[1],"\t",1/$t[1],"\n"; } } ' > ./taxonomy_and_diversity/table_files/invSimpson.tab.tsv ;
 
 for i in *.qza ;do unzip $i -d $i".diversity_metrics" ;done
 for i in *.qzv ;do unzip $i -d $i".diversity_metrics" ;done
