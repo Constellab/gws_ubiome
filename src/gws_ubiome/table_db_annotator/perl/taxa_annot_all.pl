@@ -75,8 +75,11 @@ while(<File>){
 				elsif($_=~/^\_\_$/){
 					$header.="\t".$_."#tag:_nan";
 				}
-				else{
+				elsif($_=~/^index$/){
 					$header.=$_;
+				}
+				else{
+					$header.="\t".$_."#tag:_nan"; # Unorthodox greengenes taxa ids are taken into account
 				}
 			}
 			print $header."\n";
