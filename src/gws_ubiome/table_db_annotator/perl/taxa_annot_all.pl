@@ -79,7 +79,7 @@ while(<File>){
 					$header.=$_;
 				}
 				else{
-					$header.="\t".$_."#tag:_nan";  # Unorthodox greengenes taxa ids are taken into account
+					$header.="\t".$_."#tag:_nan";   # Unorthodox greengenes taxa ids are taken into account
 				}
 			}
 			print $header."\n";
