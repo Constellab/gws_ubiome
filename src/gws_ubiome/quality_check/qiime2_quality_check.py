@@ -21,11 +21,11 @@ from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 
 
-@task_decorator("Qiime2QualityCheck", human_name="Sequencing quality",
+@task_decorator("Qiime2QualityCheck", human_name="Qiime2 Quality",
                 short_description="Performs a sequencing quality analysis with Qiime2")
 class Qiime2QualityCheck(Qiime2EnvTask):
     """
-    A Qiime2QualityCheck class function.
+    Qiime2QualityCheck class.
 
     This task examines the quality of the metabarcoding sequences using the function demux summarize from Qiime2. Both paired-end and single-end sequences can be used,
     but sequences have to be demultiplexed first. It generates interactive positional quality plots based on randomly selected sequences, and the quality plots present the
@@ -67,10 +67,8 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     FORWARD_READ_FILE_PATH = "forward_boxplot.csv"
     REVERSE_READ_FILE_PATH = "reverse_boxplot.csv"
 
-    input_specs: InputSpecs = {
-        'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)),
-        'metadata_table': InputSpec(File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")
-    }
+    input_specs: InputSpecs = {'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)), 'metadata_table': InputSpec(
+        File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")}
     output_specs: OutputSpecs = {
         'result_folder': OutputSpec(Qiime2QualityCheckResultFolder),
         'quality_table': OutputSpec((ResourceSet, QualityCheckTable, ))
