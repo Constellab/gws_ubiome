@@ -21,16 +21,23 @@ from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 
 
-@task_decorator("Qiime2QualityCheck", human_name="Qiime2 quality check analysis",
-                short_description="Performs sequencing quality check analysis")
+@task_decorator("Qiime2QualityCheck", human_name="Sequencing quality",
+                short_description="Performs a sequencing quality analysis with Qiime2")
 class Qiime2QualityCheck(Qiime2EnvTask):
     """
-    Qiime2QualityCheck class.
+    A Qiime2QualityCheck class function.
+
+    This task examines the quality of the metabarcoding sequences using the function demux summarize from Qiime2. Both paired-end and single-end sequences can be used,
+    but sequences have to be demultiplexed first. It generates interactive positional quality plots based on randomly selected sequences, and the quality plots present the
+    average positional qualities across all of the sequences selected. Default parameter is used, i.e. 10,000 random sequences are selected to generate quality plots.
+
+    More information here https://docs.qiime2.org/2022.8/plugins/available/demux/summarize/
 
     [Mandatory]:
         - fastq_folder must contains all fastq files (paired or not).
 
-        - metadata file must follow specific nomenclature (columns are tab separated):
+        - metadata file must follow a specific nomenclature when columns are tab separated. The gws_ubiome task 'Qiime2 metadata table maker' automatically generates a ready-to-use
+        metadata file when given a fastq folder as input. You can also upload your own metadata file.
 
             For paired-end files :
                 #author:
@@ -62,7 +69,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
 
     input_specs: InputSpecs = {
         'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)),
-        'metadata_table': InputSpec(File, short_description="Metadata file", human_name="Metadata_file")
+        'metadata_table': InputSpec(File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")
     }
     output_specs: OutputSpecs = {
         'result_folder': OutputSpec(Qiime2QualityCheckResultFolder),
