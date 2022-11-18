@@ -28,11 +28,16 @@ settings = Settings.retrieve()
 #     Qiime2RarefactionAnalysisResultFolder
 
 
-@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Qiime 2 Taxonomy diversity extractor",
-                short_description="Compute various diversity index and taxonomy assessement using OTU/ASV")
+@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Qiime 2 Greengenes & diversity",
+                short_description="Compute various diversity index and taxonomy assessement of ASVs using GreenGenes")
 class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     """
     Qiime2TaxonomyDiversityExtractor class.
+
+    This task classifies reads by taxon using a pre-fitted sklearn-based taxonomy classifier. By default, we suggest a pre-fitted Naive Bayes classifier for the database GreenGenes (in version 13.8) with reference full-length sequences clustered at 99% sequence similarity.
+
+    The GreenGenes database is no longer being maintained. The last version is version 13.8 (2013).
+    We suggest to use the task ```Qiime2 RDP & Diversity``` or ```Qiime2 NCBI & Diversity``` or  ```Qiime2 Silva & Diversity``` instead.
     """
 
     # Greengenes db
