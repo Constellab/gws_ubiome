@@ -40,10 +40,10 @@ class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     #DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
 
     DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
-    #DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
+    DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
     #DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
-    #DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
+    DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
