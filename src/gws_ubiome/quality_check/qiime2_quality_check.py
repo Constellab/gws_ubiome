@@ -27,9 +27,7 @@ class Qiime2QualityCheck(Qiime2EnvTask):
     """
     Qiime2QualityCheck class.
 
-    This task examines the quality of the metabarcoding sequences using the function demux summarize from Qiime2. Both paired-end and single-end sequences can be used,
-    but sequences have to be demultiplexed first. It generates interactive positional quality plots based on randomly selected sequences, and the quality plots present the
-    average positional qualities across all of the sequences selected. Default parameter is used, i.e. 10,000 random sequences are selected to generate quality plots.
+    This task examines the quality of the metabarcoding sequences using the function ```demux summarize``` from Qiime2. Both paired-end and single-end sequences can be used, but sequences have to be demultiplexed first. It generates interactive positional quality plots based on randomly selected sequences, and the quality plots present the average positional qualities across all of the sequences selected. Default parameter is used, i.e. 10,000 random sequences are selected to generate quality plots.
 
     More information here https://docs.qiime2.org/2022.8/plugins/available/demux/summarize/
 

@@ -20,7 +20,7 @@ from ..quality_check.qiime2_quality_check_result_folder import \
 
 
 @task_decorator("Qiime2FeatureTableExtractorPE",  human_name="Qiime2 feature inference (paired-end)",
-                short_description="Infers ASVs from paired-end sequencing")
+                short_description="Infering ASVs from paired-end sequencing")
 class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     """
     Qiime2FeatureTableExtractorPE class.
@@ -35,7 +35,7 @@ class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
 
     ```5_prime_hard_trimming_reads_size``` refers to the position at which forward and reverse read sequences should be *trimmed* due to low quality. This trims the 5' end of the input sequences (i.e. the left side).
 
-    If both truncLen and trimLeft are provided, filtered reads will have length truncLen-trimLeft.
+    If both ```truncated_forward_reads_size``` and ```5_prime_hard_trimming_reads_size``` are provided, filtered reads will have length ```truncated_forward_reads_size```-```5_prime_hard_trimming_reads_size```.
 
     *Example*
 

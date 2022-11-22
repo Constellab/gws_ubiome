@@ -19,11 +19,33 @@ from ..quality_check.qiime2_quality_check_result_folder import \
     Qiime2QualityCheckResultFolder
 
 
-@task_decorator("Qiime2FeatureTableExtractorSE", human_name="Qiime2 feature frequency table extractor (single-end)",
-                short_description="Extracts the feature frequency table per sample from single-end sequencing")
+@task_decorator("Qiime2FeatureTableExtractorSE", human_name="Qiime2 feature inference (single-end)",
+                short_description="Infering ASVs from single-end sequencing")
 class Qiime2FeatureTableExtractorSE(Qiime2EnvTask):
     """
     Qiime2FeatureTableExtractorSE class.
+
+    This task infers Amplicon Sequence Variants (ASVs) using the function ```qiime dada2 denoise-single``` from Qiime2. This task starts by trimming and filtering sequences (see below) before infering ASVs with DADA2 (The Divisive Amplicon Denoising Algorithm).
+
+    **About trimming sequences:**
+
+    It is convenient to ensure that the quality of the reads does not fall below a PHRED score at 25 (corresponding to 1 incorrect base over a length of 320). To avoid problems in the determination of chimeras it is convenient to eliminate the first nucleotides as they may correspond to the primers that have been used in the 16S amplification.
+
+    ```truncated_reads_size``` refers to the position at which read sequences should be *truncated* due to decrease in quality. This truncates the 3' end of sequences (i.e. the right side).
+
+    ```5_prime_hard_trimming_reads_size``` refers to the position at which read sequences should be *trimmed* due to low quality. This trims the 5' end of the input sequences (i.e. the left side).
+
+    If both ```truncated_reads_size``` and ```5_prime_hard_trimming_reads_size``` are provided, filtered reads will have length ```truncated_reads_size```-```5_prime_hard_trimming_reads_size```.
+
+    *Example*
+
+    With the following sequence of 10 nucleotides **ATCATCATCG**, using ```truncated_reads_size``` at 8 and ```5_prime_hard_trimming_reads_size``` at 2 will result in a sequence of 6 nucleotide **CATCAT**.
+
+    **About Dada2:**
+
+    Dada2 turns single-end sequences into denoised, chimera-free, inferred sample sequences. The core denoising algorithm is built on a model of the errors in sequenced amplicon reads. For more information about Dada2, we suggest to read Benjamin J. Callahan *et al.*, 2016 (https://www.nature.com/articles/nmeth.3869)
+
+
     """
     input_specs: InputSpecs = {
         'quality_check_folder': InputSpec(Qiime2QualityCheckResultFolder)
