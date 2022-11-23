@@ -25,11 +25,9 @@ from .rarefaction_table import RarefactionTableImporter
 
 
 @task_decorator("Qiime2RarefactionAnalysis", human_name="Qiime2 Rarefaction",
-                short_description="Draws rarefaction curves for alpha-diversity indices")
+                short_description="Drawing rarefaction curves for alpha-diversity indices")
 class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     """
-    Qiime2FeatureTableExtractorPE class.
-
     This task generate interactive alpha rarefaction curves by computing rarefactions between `min_coverage` and `max_coverage`. For Illumina sequencing with MiSeq sequencing platform, we recommand using 1,000 reads for `min_coverage` and 10,000 for `max_coverage`.
 
     `iteration` refers as the number of rarefied feature tables to compute at each step. We recommand to use at least 10 iterations (default values).
