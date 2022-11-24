@@ -21,8 +21,8 @@ from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 
 
-@task_decorator("Qiime2QualityCheck", human_name="Qiime2 Quality",
-                short_description="Performs a sequencing quality analysis with Qiime2")
+@task_decorator("Qiime2QualityCheck", human_name="Q2QualityCheck",
+                short_description="Performs a sequencing quality check analysis with Qiime2")
 class Qiime2QualityCheck(Qiime2EnvTask):
     """
     Qiime2QualityCheck class.

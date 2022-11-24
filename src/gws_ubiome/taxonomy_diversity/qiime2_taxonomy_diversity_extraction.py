@@ -28,7 +28,7 @@ settings = Settings.retrieve()
 #     Qiime2RarefactionAnalysisResultFolder
 
 
-@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Qiime2 Greengenes & diversity",
+@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Q2GreengenesDiversity",
                 short_description="Computing various diversity index and taxonomy assessement of ASVs using GreenGenes")
 class Qiime2TaxonomyDiversityExtractor(Qiime2EnvTask):
     """

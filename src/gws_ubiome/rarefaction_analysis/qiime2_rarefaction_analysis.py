@@ -24,7 +24,7 @@ from .qiime2_rarefaction_analysis_result_folder import \
 from .rarefaction_table import RarefactionTableImporter
 
 
-@task_decorator("Qiime2RarefactionAnalysis", human_name="Qiime2 Rarefaction",
+@task_decorator("Qiime2RarefactionAnalysis", human_name="Q2RarefactionAnalysis",
                 short_description="Drawing rarefaction curves for alpha-diversity indices")
 class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     """

@@ -19,8 +19,8 @@ from ..quality_check.qiime2_quality_check_result_folder import \
     Qiime2QualityCheckResultFolder
 
 
-@task_decorator("Qiime2FeatureTableExtractorPE",  human_name="Qiime2 feature inference (paired-end)",
-                short_description="Infering ASVs from paired-end sequencing")
+@task_decorator("Qiime2FeatureTableExtractorPE",  human_name="Q2FeatureInferencePE",
+                short_description="Inference of ASVs from paired-end sequencing")
 class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
     """
     Qiime2FeatureTableExtractorPE class.
