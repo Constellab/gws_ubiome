@@ -24,17 +24,20 @@ from .qiime2_rarefaction_analysis_result_folder import \
 from .rarefaction_table import RarefactionTableImporter
 
 
-@task_decorator("Qiime2RarefactionAnalysis", human_name="Qiime2 observed feature and shanon curves analysis",
-                short_description="Performs Qiime2 observed feature and shanon analysis and produce curve that can be used for rarefaction analysis")
+@task_decorator("Qiime2RarefactionAnalysis", human_name="Q2RarefactionAnalysis",
+                short_description="Drawing rarefaction curves for alpha-diversity indices")
 class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     """
-    Qiime2RarefactionAnalysis class.
+    This task generate interactive alpha rarefaction curves by computing rarefactions between `min_coverage` and `max_coverage`. For Illumina sequencing with MiSeq sequencing platform, we recommand using 1,000 reads for `min_coverage` and 10,000 for `max_coverage`.
+
+    `iteration` refers as the number of rarefied feature tables to compute at each step. We recommand to use at least 10 iterations (default values).
+
     """
     OBSERVED_FEATURE_FILE = "observed_features.for_boxplot.tsv"
     SHANNON_INDEX_FILE = "shannon.for_boxplot.tsv"
 
     input_specs: InputSpecs = {
-        'feature_frequency_folder': InputSpec([Qiime2TaxonomyDiversityFolder,Qiime2FeatureFrequencyFolder])
+        'feature_frequency_folder': InputSpec([Qiime2TaxonomyDiversityFolder, Qiime2FeatureFrequencyFolder])
     }
     output_specs: OutputSpecs = {
         "rarefaction_table": OutputSpec(ResourceSet),
