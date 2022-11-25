@@ -19,15 +19,13 @@ class TestQiime2QualityCheck(BaseTestCase):
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
 
-        metadata_table: MetadataTable = MetadataTableImporter.call(
-            File(path=os.path.join(testdata_dir, "gws_metadata.csv"))
-        )
+        metadata_file: File = File(path=os.path.join(testdata_dir, "gws_metadata.csv"))
 
         tester = TaskRunner(
             params={'sequencing_type': 'paired-end'},
             inputs={
                 'fastq_folder': FastqFolder(path=os.path.join(large_testdata_dir,  "fastq_dir")),
-                'metadata_table': metadata_table
+                'metadata_table': metadata_file
             },
             task_type=Qiime2QualityCheck
         )
