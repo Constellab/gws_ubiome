@@ -7,14 +7,14 @@ import os
 
 from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
                       Table, TableImporter, TableRowAnnotatorHelper,
-                      TaskInputs, TaskOutputs, task_decorator)
+                      TaskInputs, TaskOutputs, task_decorator, Task)
 from gws_core.config.config_types import ConfigParams, ConfigSpecs
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..base_env.qiime2_env_task import Qiime2EnvTask
+#from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from ..quality_check.qiime2_quality_check_result_folder import \
@@ -23,7 +23,7 @@ from ..quality_check.qiime2_quality_check_result_folder import \
 
 @task_decorator("Qiime2FeatureTableExtractorPE",  human_name="Q2FeatureInferencePE",
                 short_description="Inference of ASVs from paired-end sequencing")
-class Qiime2FeatureTableExtractorPE(Qiime2EnvTask):
+class Qiime2FeatureTableExtractorPE(Task):
     """
     Qiime2FeatureTableExtractorPE class.
 
