@@ -8,8 +8,9 @@
 ## single-end project
 
 qiime_dir=$1
-threads=$2
-trcL=$3
+trcL=$2
+threads=$3
+
 
 qiime dada2 denoise-single \
   --i-demultiplexed-seqs $qiime_dir/demux.qza \
