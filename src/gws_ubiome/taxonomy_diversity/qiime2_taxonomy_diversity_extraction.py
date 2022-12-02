@@ -50,10 +50,10 @@ class Qiime2TaxonomyDiversityExtractor(Task):
     # DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
 
     DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
     #DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
     # DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
-    #DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
+    DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
@@ -105,137 +105,10 @@ class Qiime2TaxonomyDiversityExtractor(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes"], default_value="GreenGenes",
+        StrParam(allowed_values=["GreenGenes", "Silva", "RDP"], default_value="GreenGenes",
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
-
-    # def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-    #     result_folder = Qiime2TaxonomyDiversityFolder()
-    #     result_folder.path = self._get_output_file_path()
-
-    #     #  Importing Metadata table
-    #     path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
-    #     metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
-
-    #     # Create ressource set containing diversity tables
-    #     diversity_resource_table_set: ResourceSet = ResourceSet()
-    #     diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table (ASVs or OTUs)"
-    #     for key, value in self.DIVERSITY_PATHS.items():
-    #         path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
-    #         table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-    #         table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
-    #         table_annotated.name = key
-    #         diversity_resource_table_set.add_resource(table_annotated)
-
-    #     # Create ressource set containing Taxonomy table with a forced customed view (TaxonomyTable; stacked barplot view)
-
-    #     taxo_resource_table_set: ResourceSet = ResourceSet()
-    #     taxo_resource_table_set.name = "Set of taxonomic tables (7 levels)"
-    #     for key, value in self.TAXO_PATHS.items():
-    #         path = os.path.join(self.working_dir, "taxonomy_and_diversity", "table_files", value)
-    #         table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-    #         table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
-    #         table_annotated.name = key
-    #         taxo_resource_table_set.add_resource(table_annotated)
-
-    #     for key, value in self.FEATURE_TABLES_PATH.items():
-    #         #  Importing Metadata table
-    #         path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-    #         asv_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
-    #         asv_table_path = os.path.join(result_folder.path, "table_files", value)
-    #         asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
-    #         # asv_table = MetadataTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab'})
-    #         table_annotated = TableRowAnnotatorHelper.annotate(asv_table, asv_metadata_table)
-    #         table_annotated = TableColumnAnnotatorHelper.annotate(asv_table, metadata_table)
-    #         table_annotated.name = key
-    #         taxo_resource_table_set.add_resource(table_annotated)
-
-    #     return {
-    #         'result_folder': result_folder,
-    #         'diversity_tables': diversity_resource_table_set,
-    #         'taxonomy_tables': taxo_resource_table_set
-    #     }
-
-    # def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
-    # qiime2_folder = inputs["rarefaction_analysis_result_folder"]
-    # plateau_val = params["rarefaction_plateau_value"]
-    # thrds = params["threads"]
-    # db_taxo = params["taxonomic_affiliation_database"]
-    # script_file_dir = os.path.dirname(os.path.realpath(__file__))
-    # if db_taxo == "GreenGenes":
-    #     cmd = [
-    #         " bash ",
-    #         # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-    #         os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.sh"),
-    #         qiime2_folder.path,
-    #         plateau_val,
-    #         thrds,
-    #         self.DB_GREENGENES,
-    #         os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-    #     ]
-    # # elif db_taxo == "Silva":
-    # #     cmd = [
-    # #         " bash ",
-    # #         # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-    # #         os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.Silva.sh"),
-    # #         qiime2_folder.path,
-    # #         plateau_val,
-    # #         thrds,
-    # #         self.DB_SILVA,
-    # #         os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-    # #     ]
-    # # elif db_taxo == "RDP":
-    # #     cmd = [
-    # #         " bash ",
-    # #         # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-    # #         os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.RDP.sh"),
-    # #         qiime2_folder.path,
-    # #         plateau_val,
-    # #         thrds,
-    # #         self.DB_RDP,
-    # #         os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-    # #     ]
-    # # else:
-    # #     cmd = [
-    # #         " bash ",
-    # #         # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-    # #         os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.NCBI-16S.sh"),
-    # #         qiime2_folder.path,
-    # #         plateau_val,
-    # #         thrds,
-    # #         self.DB_NCBI_16S,
-    # #         os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-    # #     ]
-    # # elif db_taxo == "NCBI-BOLD-COI":
-    #     # cmd = [
-    #     #     " bash ",
-    #     #     # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-    #     #     os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.NCBI-16S.sh"),
-    #     #     qiime2_folder.path,
-    #     #     plateau_val,
-    #     #     thrds,
-    #     #     self.DB_SILVA,
-    #     #     os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-    #     # ]
-    # # else:
-    # #     cmd = [
-    # #         " bash ",
-    # #         # os.path.join(script_file_dir, "./sh/4_qiime2.taxonomy_diversity.sh"),
-    # #         os.path.join(script_file_dir, "./sh/4_qiime2_taxo_filtered.Silva.sh"),
-    # #         qiime2_folder.path,
-    # #         plateau_val,
-    # #         thrds,
-    # #         self.DB_SILVA,
-    # #         os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl")
-    # #     ]
-    # return cmd
-
-    # def _get_output_file_path(self):
-    #     return os.path.join(
-    #         self.working_dir,
-    #         "taxonomy_and_diversity"
-    #     )
 
     async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
@@ -250,15 +123,30 @@ class Qiime2TaxonomyDiversityExtractor(Task):
             outputs = self.run_cmd_lines(shell_proxy,
                                          script_file_dir,
                                          qiime2_folder_path,
-                                         plateau_val
+                                         plateau_val,
+                                         self.DB_GREENGENES
                                          )
-
+        if db_taxo == "Silva":
+            outputs = self.run_cmd_lines(shell_proxy,
+                                         script_file_dir,
+                                         qiime2_folder_path,
+                                         plateau_val,
+                                         self.DB_SILVA
+                                         )
+        if db_taxo == "RDP":
+            outputs = self.run_cmd_lines(shell_proxy,
+                                         script_file_dir,
+                                         qiime2_folder_path,
+                                         plateau_val,
+                                         self.DB_RDP
+                                         )
         return outputs
 
     def run_cmd_lines(self, shell_proxy: Qiime2ShellProxyHelper,
                       script_file_dir: str,
                       qiime2_folder_path: str,
-                      plateau_val: int) -> None:
+                      plateau_val: int,
+                      db_name: str) -> None:
 
         # This script create Qiime2 core diversity metrics based on clustering
         cmd_1 = [
@@ -279,7 +167,8 @@ class Qiime2TaxonomyDiversityExtractor(Task):
             "bash",
             os.path.join(script_file_dir, "./sh/2_qiime2_taxonomic_assignment.sh"),
             qiime2_folder_path,
-            self.DB_GREENGENES
+            db_name
+            # self.DB_GREENGENES
         ]
         self.log_info_message("Performing Qiime2 taxonomic assignment with pre-trained model")
         res = shell_proxy.run(cmd_2)
