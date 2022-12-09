@@ -29,6 +29,11 @@ from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
 class Qiime2DifferentialAnalysis(Qiime2EnvTask):
     """
     Qiime2DifferentialAnalysis class.
+
+    This task perform ANCOM differential analysis test (integrated to Qiime2 suite) using input metadata informations.
+
+    For more information: the ANCOM test is a well described in the original paper: https://www.tandfonline.com/doi/full/10.3402/mehd.v26.27663
+
     """
     OUTPUT_FILES = {
         "Phylum - ANCOM Stat : W stat": "2.ancom.tsv",
