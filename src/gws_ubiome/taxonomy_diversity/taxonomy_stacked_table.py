@@ -40,7 +40,7 @@ class TaxonomyTable(Table):
           specs={}, default_view=True)
     def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
-        s_view = StackedBarPlotView(normalize=False)
+        s_view = StackedBarPlotView(normalize=True)
         data = self.get_data()
 
         for i in range(0, data.shape[1]):

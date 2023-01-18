@@ -22,7 +22,7 @@ class FeatureTable(Table):
           short_description='Normalised feature stacked barplots',
           specs={}, default_view=False)
     def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
-        s_view = StackedBarPlotView(normalize=True)
+        s_view = StackedBarPlotView(normalize=False)
         data = self.get_data()
         tdata = data.T
         for i in range(0, tdata.shape[1]):
@@ -37,7 +37,7 @@ class FeatureTable(Table):
           short_description='Feature stacked barplots',
           specs={}, default_view=False)
     def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
-        s_view = StackedBarPlotView(normalize=False)
+        s_view = StackedBarPlotView(normalize=True)
         data = self.get_data()
         tdata = data.T
         for i in range(0, tdata.shape[1]):
