@@ -28,26 +28,25 @@ settings = Settings.retrieve()
 #     Qiime2RarefactionAnalysisResultFolder
 
 
-@task_decorator("Qiime2TaxonomyDiversityExtractor", human_name="Q2GreengenesDiversity",
-                short_description="Computing various diversity index and taxonomy assessement of ASVs using GreenGenes")
-class Qiime2TaxonomyDiversityExtractor(Task):
+@task_decorator("Qiime2TaxonomyDiversitySilvaExtractor", human_name="Q2SilvaDiversity",
+                short_description="Computing various diversity index and taxonomy assessement of ASVs using Silva")
+class Qiime2TaxonomyDiversitySilvaExtractor(Task):
     """
-    Qiime2TaxonomyDiversityExtractor class.
+    Qiime2TaxonomyDiversitySilvaExtractor class.
 
-    This task classifies reads by taxon using a pre-fitted sklearn-based taxonomy classifier. By default, we suggest a pre-fitted Naive Bayes classifier for the database GreenGenes (in version 13.8) with reference full-length sequences clustered at 99% sequence similarity.
+    This task classifies reads by taxon using a pre-fitted sklearn-based taxonomy classifier. By default, we suggest a pre-fitted Naive Bayes classifier for the database Silva (in version 13.8) with reference full-length sequences clustered at 99% sequence similarity.
 
     **Minimum required configuration:** Digital lab SC2
 
-    **About GreenGenes:**
-    The GreenGenes database is no longer being maintained. The last version is version 13.8 (2013). We suggest to use the task ```Qiime2 RDP & diversity``` or ```Qiime2 NCBI & diversity``` or  ```Qiime2 Silva & diversity``` instead.
-    """
+    **About Silva:**
+    SILVA provides comprehensive, quality checked and regularly updated datasets of aligned small Ribosomal RNA sequences. """
 
     # Greengenes db
     # gws_ubiome:greengenes_classifier_file
     # DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
 
-    DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    #DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
+    DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
     #DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
     # DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
     #DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
@@ -102,7 +101,7 @@ class Qiime2TaxonomyDiversityExtractor(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes"], default_value="GreenGenes",  # , "Silva", "RDP"
+        StrParam(allowed_values=["Silva"], default_value="Silva",
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
@@ -116,20 +115,20 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         qiime2_folder_path = qiime2_folder.path
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy()
-        if db_taxo == "GreenGenes":
-            outputs = self.run_cmd_lines(shell_proxy,
-                                         script_file_dir,
-                                         qiime2_folder_path,
-                                         plateau_val,
-                                         self.DB_GREENGENES
-                                         )
-        # if db_taxo == "Silva":
+        # if db_taxo == "GreenGenes":
         #     outputs = self.run_cmd_lines(shell_proxy,
         #                                  script_file_dir,
         #                                  qiime2_folder_path,
         #                                  plateau_val,
-        #                                  self.DB_SILVA
+        #                                  self.DB_GREENGENES
         #                                  )
+        if db_taxo == "Silva":
+            outputs = self.run_cmd_lines(shell_proxy,
+                                         script_file_dir,
+                                         qiime2_folder_path,
+                                         plateau_val,
+                                         self.DB_SILVA
+                                         )
         # if db_taxo == "RDP":
         #     outputs = self.run_cmd_lines(shell_proxy,
         #                                  script_file_dir,
