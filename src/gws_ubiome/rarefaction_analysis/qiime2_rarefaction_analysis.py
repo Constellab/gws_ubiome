@@ -14,28 +14,27 @@ from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
-from ..base_env.qiime2_env_task import Qiime2EnvTask
+from ..base_env.qiime2_env_task import Qiime2EnvTask, Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
     Qiime2TaxonomyDiversityFolder
 from .qiime2_rarefaction_analysis_result_folder import \
     Qiime2RarefactionAnalysisResultFolder
-from .rarefaction_table import RarefactionTableImporter
-from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
+from .rarefaction_table import RarefactionTable, RarefactionTableImporter
 
 
 @task_decorator("Qiime2RarefactionAnalysis", human_name="Q2RarefactionAnalysis",
                 short_description="Drawing rarefaction curves for alpha-diversity indices")
 class Qiime2RarefactionAnalysis(Qiime2EnvTask):
     """
-    This task generate interactive alpha rarefaction curves by computing rarefactions between `min_coverage` and `max_coverage`. For Illumina sequencing with MiSeq sequencing platform, we recommand using 1,000 reads for `min_coverage` and 10,000 for `max_coverage`.
+    This task generates interactive alpha rarefaction curves by computing rarefactions between `min_coverage` and `max_coverage`. For Illumina sequencing with MiSeq sequencing platform, we recommand using 1,000 reads for `min_coverage` and 10,000 for `max_coverage`.
 
     `iteration` refers as the number of rarefied feature tables to compute at each step. We recommand to use at least 10 iterations (default values).
 
     """
-    OBSERVED_FEATURE_FILE = "observed_features.for_boxplot.tsv"
-    SHANNON_INDEX_FILE = "shannon.for_boxplot.tsv"
+    OBSERVED_FEATURE_FILE = "observed_features.for_boxplot.csv"
+    SHANNON_INDEX_FILE = "shannon.for_boxplot.csv"
 
     input_specs: InputSpecs = {
         'feature_frequency_folder': InputSpec([Qiime2TaxonomyDiversityFolder, Qiime2FeatureFrequencyFolder])

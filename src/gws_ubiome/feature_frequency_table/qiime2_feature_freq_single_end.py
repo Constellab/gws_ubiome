@@ -13,6 +13,8 @@ from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
+from ..feature_frequency_table.feature_frequency_table import (
+    FeatureFrequencyTable, FeatureFrequencyTableImporter)
 #from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
@@ -51,7 +53,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         'quality_check_folder': InputSpec(Qiime2QualityCheckResultFolder)
     }
     output_specs: OutputSpecs = {
-        'feature_table': OutputSpec(Table),
+        'feature_table': OutputSpec(FeatureFrequencyTable),
         'stats': OutputSpec(Table),
         'result_folder':
         OutputSpec(
@@ -230,8 +232,9 @@ class Qiime2FeatureTableExtractorSE(Task):
         result_file.path = output_folder_path
 
         # create annotated feature table
-        path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
-        feature_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        #path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
+        path = os.path.join(result_file.path, "denoising-stats.tsv")
+        feature_table = FeatureFrequencyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "denoising-stats.tsv")
         stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})

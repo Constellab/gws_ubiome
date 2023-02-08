@@ -1,11 +1,11 @@
 {
-  "name"          : "gws_ubiome",
-  "author"        : "Gencovery",
-  "author_email"  : "admin@gencovery.com",
-  "version"       : "0.3.9",
-  "description"   : "Gencovery brick for microbiome analysis",
-  "variables": {
-      "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
+    "name"          : "gws_ubiome",
+    "author"        : "Gencovery",
+    "author_email"  : "admin@gencovery.com",
+    "version"       : "0.4.0",
+    "description"   : "Gencovery brick for microbiome analysis",
+    "variables": {
+        "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
 
       "gws_ubiome:large_testdata_url": "https://storage.sbg.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/testdata/ubiome/qiime2/testdata.zip",
       "gws_ubiome:large_testdata_dir": "/data/gws_ubiome/testdata",

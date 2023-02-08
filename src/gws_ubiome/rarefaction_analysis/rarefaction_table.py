@@ -71,18 +71,19 @@ class RarefactionTable(Table):
 @importer_decorator(unique_name="RarefactionTableImporter", human_name="Rarefaction Table importer",
                     target_type=RarefactionTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
 class RarefactionTableImporter(TableImporter):
-    async def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Resource:
-        rarefaction_table: RarefactionTable = await super().import_from_path(source, params, target_type)
+    pass
+    # async def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Resource:
+    #     rarefaction_table: RarefactionTable = await super().import_from_path(source, params, target_type)
 
-        dataframe: DataFrame = rarefaction_table.get_data()
+    #     dataframe: DataFrame = rarefaction_table.get_data()
 
-        column_tags = []
-        for column_name in dataframe:
-            try:
-                tags = loads(column_name)
-            except:
-                tags = {}
-            column_tags.append(tags)
+    #     column_tags = []
+    #     for column_name in dataframe:
+    #         try:
+    #             tags = loads(column_name)
+    #         except:
+    #             tags = {}
+    #         column_tags.append(tags)
 
-        rarefaction_table.set_all_columns_tags(column_tags)  # set_column_tags set_all_columns_tags
-        return rarefaction_table
+    #     rarefaction_table.set_all_columns_tags(column_tags)  # set_column_tags set_all_columns_tags
+    #     return rarefaction_table

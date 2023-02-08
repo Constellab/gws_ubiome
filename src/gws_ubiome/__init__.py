@@ -45,6 +45,8 @@ from .taxonomy_diversity.qiime2_taxonomy_diversity_extraction import \
     Qiime2TaxonomyDiversityExtractor
 from .taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
     Qiime2TaxonomyDiversityFolder
+from .taxonomy_diversity.qiime2_taxonomy_diversity_NCBI import \
+    Qiime2TaxonomyDiversityNCBIExtractor
 from .taxonomy_diversity.qiime2_taxonomy_diversity_RDP import \
     Qiime2TaxonomyDiversityRDPExtractor
 from .taxonomy_diversity.qiime2_taxonomy_diversity_SILVA import \

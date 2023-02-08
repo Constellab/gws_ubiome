@@ -39,8 +39,8 @@ echo "######### stats DONE"
 export TMPDIR="/data/tmp"
 
 
-echo "###### start classifiction SILVA" # --p-reads-per-batch 10000
-qiime feature-classifier classify-sklearn --p-reads-per-batch 5000 --p-pre-dispatch 1 --i-classifier $gg_db --i-reads $qiime_dir/rep-seqs.qza --o-classification gg.taxonomy.qza
+echo "###### start classifiction SILVA" # --p-reads-per-batch 10000 --p-reads-per-batch 5000 --p-pre-dispatch 1
+qiime feature-classifier classify-sklearn --p-n-jobs -1  --i-classifier $gg_db --i-reads $qiime_dir/rep-seqs.qza --o-classification gg.taxonomy.qza
 
 echo " ###### DONE classification"
 # qiime feature-classifier classify-sklearn \
