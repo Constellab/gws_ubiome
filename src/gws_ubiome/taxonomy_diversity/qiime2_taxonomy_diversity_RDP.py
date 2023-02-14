@@ -6,23 +6,23 @@
 import os
 
 from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      Settings, StrParam, TableColumnAnnotatorHelper,
-                      TableImporter, TableRowAnnotatorHelper, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+                      StrParam, TableColumnAnnotatorHelper,
+                      TableImporter, TableRowAnnotatorHelper, Task,
+                      TaskFileDownloader, TaskInputs, TaskOutputs,
+                      task_decorator)
 from gws_core.config.config_types import ConfigSpecs  # ConfigParams,
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-#from ..base_env.qiime2_env_task import Qiime2EnvTask
+# from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from .feature_table import FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
-settings = Settings.retrieve()
 
 # from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
 #     Qiime2RarefactionAnalysisResultFolder
@@ -46,11 +46,12 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     # gws_ubiome:greengenes_classifier_file
     # DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
 
-    #DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
-    #DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
+    # DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
+    # DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    # DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
     # DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
-    DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
+    DB_RDP_LOCATION = "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
+    DB_RDP_DESTINATION = "RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
@@ -110,7 +111,7 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
-        #thrds = params["threads"]
+        # thrds = params["threads"]
         db_taxo = params["taxonomic_affiliation_database"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
@@ -131,11 +132,19 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
         #                                  self.DB_SILVA
         #                                  )
         if db_taxo == "RDP":
+            # create the file_downloader from a task.
+            file_downloader = TaskFileDownloader(
+                Qiime2TaxonomyDiversityRDPExtractor.get_brick_name(),
+                self.message_dispatcher)
+
+            # download a file
+            file_path = file_downloader.download_file_if_missing(
+                self.DB_RDP_LOCATION, self.DB_RDP_DESTINATION)
             outputs = self.run_cmd_lines(shell_proxy,
                                          script_file_dir,
                                          qiime2_folder_path,
                                          plateau_val,
-                                         self.DB_RDP
+                                         file_path
                                          )
         return outputs
 

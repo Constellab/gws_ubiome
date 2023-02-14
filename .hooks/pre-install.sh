@@ -77,8 +77,3 @@
 # source_url=`jq '.variables."gws_ubiome:ncbi_16s_classifier_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
 # dest_target=`jq '.variables."gws_ubiome:ncbi_16s_classifier_file"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
 # pulldata "$source_url" "$dest_target"
-
-# # Pull Silva Classifier
-# source_url=`jq '.variables."gws_ubiome:silva_classifier_url"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-# dest_target=`jq '.variables."gws_ubiome:silva_classifier_file"' ${CURRENT_FILE_DIR}/../settings.json | sed -e 's/^"//' -e 's/"$//'`
-# pulldata "$source_url" "$dest_target"

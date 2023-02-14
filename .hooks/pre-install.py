@@ -75,12 +75,6 @@ def call_hook():
     # url = settings["variables"]["gws_ubiome:ncbi_16s_classifier_url"]
     # dest_path = settings["variables"]["gws_ubiome:ncbi_16s_classifier_file"]
     # download(url, dest_path)
-
-    # # Pull Silva Classifier
-    # url = settings["variables"]["gws_ubiome:silva_classifier_url"]
-    # dest_path = settings["variables"]["gws_ubiome:silva_classifier_file"]
-    # download(url, dest_path)
-
     # Other tasks ...
 
 
