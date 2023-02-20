@@ -52,6 +52,23 @@ class TaxonomyTable(Table):
 
         return s_view
 
+    @view(view_type=Table, human_name='Taxonomy table normalised (TSS)',
+          short_description='TSS normalised taxonomic composition table',
+          specs={}, default_view=False)
+    def view_as_noramlised_taxo_table(self, params: ConfigParams) -> Table:
+
+        s_view = Table()
+        data = self.get_data()
+
+        for i in range(0, data.shape[1]):
+            if isinstance(data.iat[0, i], str):
+                continue
+            y = data.iloc[:, i].values.tolist()
+            s_view.add_series(y=y, name=data.columns[i])
+        s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
+
+        return s_view
+
     # @view(view_type=StackedBarPlotView, human_name='Stackedbarplot column tags',
     #       short_description='Grouping Stacked bar plot view with column tags',
     #       specs={"Metadata_tag": StrParam()
