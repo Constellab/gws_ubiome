@@ -5,6 +5,7 @@
 import copy
 
 import numpy as np
+import pandas as pd
 from gws_core import (BarPlotView, BoolParam, BoxPlotView, ConfigParams, File,
                       IntParam, StackedBarPlotView, StrParam, Table,
                       TableImporter, TableUnfolderHelper, TableView, TagsParam,
@@ -52,20 +53,26 @@ class TaxonomyTable(Table):
 
         return s_view
 
-    @view(view_type=Table, human_name='Taxonomy table normalised (TSS)',
+    @view(view_type=TableView, human_name='Taxonomy table normalised (TSS)',
           short_description='TSS normalised taxonomic composition table',
           specs={}, default_view=False)
-    def view_as_noramlised_taxo_table(self, params: ConfigParams) -> Table:
+    def view_as_noramlised_taxo_table(self, params: ConfigParams) -> TableView:
 
-        s_view = Table()
-        data = self.get_data()
+        df = self.get_data()
 
-        for i in range(0, data.shape[1]):
-            if isinstance(data.iat[0, i], str):
-                continue
-            y = data.iloc[:, i].values.tolist()
-            s_view.add_series(y=y, name=data.columns[i])
-        s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
+        row_sums = df.sum(axis=1)
+        normalized_df = df.div(row_sums, axis=0)  # .round(3)
+        table = Table(normalized_df)
+        table.copy_row_tags(self)
+        table.copy_column_tags(self)
+        s_view = TableView(table)
+
+        # for i in range(0, data.shape[1]):
+        #     if isinstance(data.iat[0, i], str):
+        #         continue
+        #     y = data.iloc[:, i].values.tolist()
+        #     s_view.add_series(y=y, name=data.columns[i])
+        # s_view.x_tick_labels = data.index.to_list()  # data.iloc[:, 0].values.tolist()
 
         return s_view
 
