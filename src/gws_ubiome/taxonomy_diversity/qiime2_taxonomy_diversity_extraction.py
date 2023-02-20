@@ -102,7 +102,7 @@ class Qiime2TaxonomyDiversityExtractor(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["GreenGenes"], default_value="GreenGenes",  # , "Silva", "RDP"
+        StrParam(allowed_values=["GreenGenes-v13.8"], default_value="GreenGenes-v13.8",  # , "Silva", "RDP"
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
@@ -116,7 +116,7 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         qiime2_folder_path = qiime2_folder.path
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy()
-        if db_taxo == "GreenGenes":
+        if db_taxo == "GreenGenes-v13.8":
             outputs = self.run_cmd_lines(shell_proxy,
                                          script_file_dir,
                                          qiime2_folder_path,

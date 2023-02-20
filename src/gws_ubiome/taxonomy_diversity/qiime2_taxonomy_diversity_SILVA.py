@@ -101,7 +101,7 @@ class Qiime2TaxonomyDiversitySilvaExtractor(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["Silva"], default_value="Silva",
+        StrParam(allowed_values=["Silva-v13.8"], default_value="Silva-v13.8",
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
@@ -122,7 +122,7 @@ class Qiime2TaxonomyDiversitySilvaExtractor(Task):
         #                                  plateau_val,
         #                                  self.DB_GREENGENES
         #                                  )
-        if db_taxo == "Silva":
+        if db_taxo == "Silva-v13.8":
             file_downloader = TaskFileDownloader(
                 Qiime2TaxonomyDiversitySilvaExtractor.get_brick_name(),
                 self.message_dispatcher)

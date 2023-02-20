@@ -15,7 +15,7 @@ from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-#from ..base_env.qiime2_env_task import Qiime2EnvTask
+# from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from .feature_table import FeatureTableImporter
@@ -47,11 +47,11 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
     # gws_ubiome:greengenes_classifier_file
     # DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
 
-    #DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    #DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
+    # DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
+    # DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
     DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
     # DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
-    #DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
+    # DB_RDP = "/data/gws_ubiome/opendata/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
@@ -103,7 +103,7 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["NCBI"], default_value="NCBI",
+        StrParam(allowed_values=["NCBI-16S_rRNA.20220712"], default_value="NCBI-16S_rRNA.20220712",
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
@@ -111,7 +111,7 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
     async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
-        #thrds = params["threads"]
+        # thrds = params["threads"]
         db_taxo = params["taxonomic_affiliation_database"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
@@ -124,7 +124,7 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
         #                                  plateau_val,
         #                                  self.DB_GREENGENES
         #                                  )
-        if db_taxo == "NCBI":
+        if db_taxo == "NCBI-16S_rRNA.20220712":
             outputs = self.run_cmd_lines(shell_proxy,
                                          script_file_dir,
                                          qiime2_folder_path,
