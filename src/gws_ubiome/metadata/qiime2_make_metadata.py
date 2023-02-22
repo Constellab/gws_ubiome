@@ -5,20 +5,20 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, IntParam, MetadataTable,
-                      MetadataTableImporter, StrParam, TaskInputs, TaskOutputs,
-                      task_decorator)
-from gws_core.config.config_types import ConfigSpecs
+from gws_core import (ConfigParams, ConfigSpecs, File, Settings, StrParam,
+                      Task, TaskInputs, TaskOutputs, task_decorator)
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_omix import FastqFolder
 
-from ..base_env.qiime2_env_task import Qiime2EnvTask
+from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
+
+settings = Settings.retrieve()
 
 
 @task_decorator("Qiime2MetadataTableMaker", human_name="Qiime2 metadata table maker",
                 short_description="Create a metadata table (tab separator) from a fastq folder")
-class Qiime2MetadataTableMaker(Qiime2EnvTask):
+class Qiime2MetadataTableMaker(Task):
     """
     Qiime2MetadataTableMaker class.
 
@@ -50,13 +50,10 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
                 sample-3    sample3.fastq.gz
 
     """
-
-    # DEFAULT_METADATA_FILE_NAME = "metadata.csv"
-
     input_specs: InputSpecs = {'fastq_folder': InputSpec(
         FastqFolder, short_description="FASTQ folder", human_name="Folder_folder")}
     output_specs: OutputSpecs = {'metadata_table': OutputSpec(
-        File, short_description="Metadata file", human_name="Metadata_file")}  # 'metadata_table': MetadataTable
+        File, short_description="Metadata file", human_name="Metadata_file")}
     config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(
@@ -70,47 +67,89 @@ class Qiime2MetadataTableMaker(Qiime2EnvTask):
         StrParam(
             default_value="_R2",
             short_description="Paired-end sequencing forward file name differanciator, e.g: sample-A_R2.fastq.gz"),
-        "metadata_file_name":  # temporary
+        "metadata_file_name":
         StrParam(
             default_value="metadata.txt",
             short_description="Choose an output metadata file name")
 
     }
 
-    def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        output_file = params["metadata_file_name"]
-        path = os.path.join(self.working_dir, output_file)
-        result_file = File(path=path)
-        #metadata_table = MetadataTableImporter.call(result_file)
-        return {"metadata_table": result_file}  # "metadata_table": metadata_table
-
-    def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
+    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         fastq_folder = inputs["fastq_folder"]
         seq = params["sequencing_type"]
         output_name = params["metadata_file_name"]
         fastq_folder_path = fastq_folder.path
+        script_file_dir = os.path.dirname(os.path.realpath(__file__))
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
 
         if seq == "paired-end":
             fwd = params["forward_file_differentiator"]
             rvs = params["reverse_file_differentiator"]
-            script_file_dir = os.path.dirname(os.path.realpath(__file__))
-            cmd = [
-                "bash",
-                os.path.join(script_file_dir, "./sh/0_qiime2_manifest_paired_end.sh"),
-                fastq_folder_path,
-                fwd,
-                rvs,
-                output_name
-                # self.DEFAULT_METADATA_FILE_NAME
-            ]
-            return cmd
+            outputs = self.run_cmd_paired_end(shell_proxy,
+                                              # os.path.join(script_file_dir, "./sh/0_qiime2_manifest_paired_end.sh"),
+                                              script_file_dir,
+                                              fastq_folder_path,
+                                              fwd,
+                                              rvs,
+                                              output_name
+                                              )
         else:
             script_file_dir = os.path.dirname(os.path.realpath(__file__))
-            cmd = [
-                "bash",
-                os.path.join(script_file_dir, "./sh/0_qiime2_manifest_single_end.sh"),
-                fastq_folder.path,
-                output_name
-                # self.DEFAULT_METADATA_FILE_NAME
-            ]
-            return cmd
+            outputs = self.run_cmd_single_end(shell_proxy,
+                                              script_file_dir,
+                                              fastq_folder.path,
+                                              output_name
+                                              )
+        return outputs
+
+    def run_cmd_paired_end(self, shell_proxy: Qiime2ShellProxyHelper,
+                           script_file_dir: str,
+                           fastq_folder_path: str,
+                           forward: str,
+                           reverse: str,
+                           output: str
+                           ) -> None:
+        cmd = [
+            "bash",
+            os.path.join(script_file_dir, "./sh/0_qiime2_manifest_paired_end.sh"),
+            fastq_folder_path,
+            forward,
+            reverse,
+            output
+        ]
+
+        shell_proxy.run(cmd)
+        res = shell_proxy.run(cmd)
+        if res != 0:
+            raise Exception("Script did not finished")
+
+        path = os.path.join(shell_proxy.working_dir, output)
+        result_file = File(path=path)
+
+        return {
+            "metadata_table": result_file
+        }
+
+    def run_cmd_single_end(self, shell_proxy: Qiime2ShellProxyHelper,
+                           script_file_dir: str,
+                           fastq_folder_path: str,
+                           output: str
+                           ) -> None:
+        cmd = [
+            "bash",
+            os.path.join(script_file_dir, "./sh/0_qiime2_manifest_single_end.sh"),
+            fastq_folder_path,
+            output
+        ]
+
+        shell_proxy.run(cmd)
+        res = shell_proxy.run(cmd)
+        if res != 0:
+            raise Exception("Script did not finished")
+
+        path = os.path.join(shell_proxy.working_dir, output)
+        result_file = File(path=path)
+
+        return {
+            "metadata_table": result_file
+        }
