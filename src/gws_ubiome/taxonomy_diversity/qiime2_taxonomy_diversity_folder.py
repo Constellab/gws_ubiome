@@ -10,7 +10,7 @@ from gws_core.extra import TableView
 
 @resource_decorator("Qiime2TaxonomyDiversityFolder",
                     human_name="Qiime2 taxonomy diversity folder",
-                    short_description="Folder containing all extracted Qiime2 taxonomy diversity tables", hide=True)
+                    short_description="Folder containing all extracted Qiime2 taxonomy diversity tables", hide=False)
 class Qiime2TaxonomyDiversityFolder(Folder):
     ''' Qiime2TaxonomyDiversityFolder Folder file class '''
 

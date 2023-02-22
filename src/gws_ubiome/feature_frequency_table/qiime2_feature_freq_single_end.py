@@ -23,7 +23,7 @@ from ..quality_check.qiime2_quality_check_result_folder import \
 
 
 @task_decorator("Qiime2FeatureTableExtractorSE",  human_name="Q2FeatureInferenceSE",
-                short_description="Inference of ASVs from paired-end sequencing")
+                short_description="Inference of ASVs from single-end sequencing")
 class Qiime2FeatureTableExtractorSE(Task):
     """
     Qiime2FeatureTableExtractorSE class.
