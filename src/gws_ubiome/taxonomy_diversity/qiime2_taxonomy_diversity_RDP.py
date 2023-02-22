@@ -6,10 +6,9 @@
 import os
 
 from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      StrParam, TableColumnAnnotatorHelper,
-                      TableImporter, TableRowAnnotatorHelper, Task,
-                      TaskFileDownloader, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      StrParam, TableColumnAnnotatorHelper, TableImporter,
+                      TableRowAnnotatorHelper, Task, TaskFileDownloader,
+                      TaskInputs, TaskOutputs, task_decorator)
 from gws_core.config.config_types import ConfigSpecs  # ConfigParams,
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
@@ -22,7 +21,6 @@ from ..feature_frequency_table.qiime2_feature_frequency_folder import \
 from .feature_table import FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
-
 
 # from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
 #     Qiime2RarefactionAnalysisResultFolder
@@ -116,7 +114,7 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
         # if db_taxo == "GreenGenes":
         #     outputs = self.run_cmd_lines(shell_proxy,
         #                                  script_file_dir,

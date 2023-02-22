@@ -116,7 +116,7 @@ class old_Qiime2FeatureTableExtractorSE(Task):
         truncated_reads_size = params["truncated_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # if hard_trim == 0:  # When sequencing data are not being hard-trimmed
         outputs = self.run_cmd_single_end(shell_proxy,

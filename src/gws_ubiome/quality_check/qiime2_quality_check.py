@@ -5,24 +5,24 @@
 
 import os
 
-# from gws_core import (ConfigParams, File, MetadataTable,
-#                       MetadataTableExporter, MetadataTableImporter, StrParam,
-#                       Table, TableImporter, TableRowAnnotatorHelper,
-#                       TaskInputs, TaskOutputs, task_decorator, Task)
-
 from gws_core import (ConfigParams, File, MetadataTableImporter, StrParam,
-                      TableRowAnnotatorHelper, TaskInputs, TaskOutputs,
-                      task_decorator, Task)
+                      TableRowAnnotatorHelper, Task, TaskInputs, TaskOutputs,
+                      task_decorator)
 from gws_core.config.config_types import ConfigSpecs
 from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 from gws_omix import FastqFolder
 
+from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..deprecated.v024.dep_fastq_folder import FastqFolder as DepFastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
-from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
+
+# from gws_core import (ConfigParams, File, MetadataTable,
+#                       MetadataTableExporter, MetadataTableImporter, StrParam,
+#                       Table, TableImporter, TableRowAnnotatorHelper,
+#                       TaskInputs, TaskOutputs, task_decorator, Task)
 
 
 @task_decorator("Qiime2QualityCheck", human_name="Q2QualityCheck",
@@ -91,7 +91,7 @@ class Qiime2QualityCheck(Task):
         manifest_table_file_path = metadata_table.path
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         if seq == "paired-end":
             outputs = self.run_cmd_paired_end(shell_proxy,

@@ -128,7 +128,7 @@ class Qiime2FeatureTableExtractorPE(Task):
         hard_trim = params["5_prime_hard_trimming_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         if hard_trim == 0:  # When sequencing data are not being hard-trimmed
             outputs = self.run_cmd_paired_end(shell_proxy,

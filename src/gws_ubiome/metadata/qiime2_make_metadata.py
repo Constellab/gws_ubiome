@@ -80,7 +80,7 @@ class Qiime2MetadataTableMaker(Task):
         output_name = params["metadata_file_name"]
         fastq_folder_path = fastq_folder.path
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         if seq == "paired-end":
             fwd = params["forward_file_differentiator"]

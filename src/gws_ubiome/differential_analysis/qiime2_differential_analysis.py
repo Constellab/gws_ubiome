@@ -84,7 +84,7 @@ class Qiime2DifferentialAnalysis(Task):
         thrds = params["threads"]
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # perform ANCOM analysis
 

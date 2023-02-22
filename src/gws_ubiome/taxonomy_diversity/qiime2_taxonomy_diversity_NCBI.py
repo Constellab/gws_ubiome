@@ -116,7 +116,7 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
         # if db_taxo == "GreenGenes":
         #     outputs = self.run_cmd_lines(shell_proxy,
         #                                  script_file_dir,

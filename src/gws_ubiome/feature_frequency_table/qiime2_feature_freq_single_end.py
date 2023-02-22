@@ -15,7 +15,7 @@ from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
     FeatureFrequencyTable, FeatureFrequencyTableImporter)
-#from ..base_env.qiime2_env_task import Qiime2EnvTask
+# from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from ..quality_check.qiime2_quality_check_result_folder import \
@@ -126,7 +126,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         hard_trim = params["5_prime_hard_trimming_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy()
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         if hard_trim == 0:  # When sequencing data are not being hard-trimmed
             outputs = self.run_cmd_single_end(shell_proxy,
@@ -232,7 +232,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         result_file.path = output_folder_path
 
         # create annotated feature table
-        #path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
+        # path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
         path = os.path.join(result_file.path, "denoising-stats.tsv")
         feature_table = FeatureFrequencyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
