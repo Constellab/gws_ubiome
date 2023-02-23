@@ -39,8 +39,8 @@ from .rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
 from .rarefaction_analysis.rarefaction_table import RarefactionTable
 from .table.tax_table import TaxTable
 from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
-from .taxonomy_diversity.metagenomeseq_cumulative_sum_scaling_convertor import \
-    MetagenomeSeqCssConvertor
+# from .taxonomy_diversity.metagenomeseq_cumulative_sum_scaling_convertor import \
+#     MetagenomeSeqCssConvertor
 # > taxonomy/diversity
 from .taxonomy_diversity.qiime2_taxonomy_diversity_extraction import \
     Qiime2TaxonomyDiversityExtractor

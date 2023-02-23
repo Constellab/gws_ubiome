@@ -17,22 +17,6 @@ class FeatureTable(Table):
     """
     FeatureTable class
     """
-
-    @view(view_type=StackedBarPlotView, human_name='Feature stacked barplot normalised (TSS)',
-          short_description='Normalised feature stacked barplots',
-          specs={}, default_view=False)
-    def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
-        s_view = StackedBarPlotView(normalize=False)
-        data = self.get_data()
-        tdata = data.T
-        for i in range(0, tdata.shape[1]):
-            if isinstance(tdata.iat[0, i], str):
-                continue
-            y = tdata.iloc[:, i].values.tolist()
-            s_view.add_series(y=y, name=tdata.columns[i])
-        s_view.x_tick_labels = tdata.index.to_list()  # data.iloc[:, 0].values.tolist()
-        return s_view
-
     @view(view_type=StackedBarPlotView, human_name='Feature stacked barplot',
           short_description='Feature stacked barplots',
           specs={}, default_view=False)
@@ -45,7 +29,9 @@ class FeatureTable(Table):
                 continue
             y = tdata.iloc[:, i].values.tolist()
             s_view.add_series(y=y, name=tdata.columns[i])
-        s_view.x_tick_labels = tdata.index.to_list()  # data.iloc[:, 0].values.tolist()
+        s_view.x_tick_labels = tdata.index.to_list()
+        s_view.y_label = "Feature count"
+        s_view.x_label = "Samples"
         return s_view
 
 

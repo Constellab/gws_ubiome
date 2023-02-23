@@ -72,15 +72,3 @@ class Qiime2MetadataTableImporter(TableImporter):
                 f"Invalid metadata file. Incorrect type in the column {target_type.SECOND_LINE_COLUMN_TYPE}")
 
         return csv_table
-
-
-# ####################################################################
-#
-# Exporter class
-#
-# ####################################################################
-
-@exporter_decorator(unique_name="Qiime2MetadataTableExporter", human_name="Qiime2 metadata table exporter",
-                    source_type=Qiime2MetadataTable, target_type=Qiime2MetadataTableFile)
-class Qiime2MetadataTableExporter(TableExporter):
-    pass

@@ -19,12 +19,6 @@ from ..deprecated.v024.dep_fastq_folder import FastqFolder as DepFastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 
-# from gws_core import (ConfigParams, File, MetadataTable,
-#                       MetadataTableExporter, MetadataTableImporter, StrParam,
-#                       Table, TableImporter, TableRowAnnotatorHelper,
-#                       TaskInputs, TaskOutputs, task_decorator, Task)
-
-
 @task_decorator("Qiime2QualityCheck", human_name="Q2QualityCheck",
                 short_description="Performs a sequencing quality check analysis with Qiime2")
 class Qiime2QualityCheck(Task):

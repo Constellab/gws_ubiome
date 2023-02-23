@@ -21,6 +21,7 @@ from .feature_table import FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
+
 @task_decorator("Qiime2TaxonomyDiversityRDPExtractor", human_name="Q2RDPDiversity",
                 short_description="Computing various diversity index and taxonomy assessement of ASVs using RDP")
 class Qiime2TaxonomyDiversityRDPExtractor(Task):
@@ -35,14 +36,6 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     Ribosomal Database Project (RDP; http://rdp.cme.msu.edu/) provides the research community with aligned and annotated rRNA gene sequence data.
     """
 
-    # Greengenes db
-    # gws_ubiome:greengenes_classifier_file
-    # DB_GREENGENES = settings.get_variable("gws_ubiome:greengenes_classifier_file")
-
-    # DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
-    # DB_SILVA = "/data/gws_ubiome/opendata/silva-138-99-nb-classifier.qza"
-    # DB_NCBI_16S = "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
-    # DB_NCBI_BOLD_COI = "/data/gws_ubiome/opendata/ncbi-bold-classifier.COI.20220712.qza"
     DB_RDP_LOCATION = "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
     DB_RDP_DESTINATION = "RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
 
@@ -74,14 +67,11 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     }
 
     FEATURE_TABLES_PATH = {
-        # "ASV_feature_taxa_dict": "asv_dict.csv",
         "ASV_features_count": "asv_table.csv"
     }
     input_specs: InputSpecs = {
         'rarefaction_analysis_result_folder':
         InputSpec(
-            # [Qiime2RarefactionAnalysisResultFolder, Qiime2FeatureFrequencyFolder],
-            # short_description="Feature freq. folder or rarefaction folder (!no rarefaction is done on counts!)",
             Qiime2FeatureFrequencyFolder,
             short_description="Feature freq. folder",
             human_name="feature_freq_folder")}
@@ -104,26 +94,11 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
-        # thrds = params["threads"]
         db_taxo = params["taxonomic_affiliation_database"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
-        # if db_taxo == "GreenGenes":
-        #     outputs = self.run_cmd_lines(shell_proxy,
-        #                                  script_file_dir,
-        #                                  qiime2_folder_path,
-        #                                  plateau_val,
-        #                                  self.DB_GREENGENES
-        #                                  )
-        # if db_taxo == "Silva":
-        #     outputs = self.run_cmd_lines(shell_proxy,
-        #                                  script_file_dir,
-        #                                  qiime2_folder_path,
-        #                                  plateau_val,
-        #                                  self.DB_SILVA
-        #                                  )
         if db_taxo == "RDP-v18.202208":
             # create the file_downloader from a task.
             file_downloader = TaskFileDownloader(
@@ -167,7 +142,6 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
             os.path.join(script_file_dir, "./sh/2_qiime2_taxonomic_assignment.sh"),
             qiime2_folder_path,
             db_name
-            # self.DB_GREENGENES
         ]
         self.log_info_message("Performing Qiime2 taxonomic assignment with pre-trained model")
         res = shell_proxy.run(cmd_2)
@@ -184,8 +158,6 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
         ]
         self.log_info_message("Calculating Qiime2 extra diversity indexes")
         res = shell_proxy.run(cmd_3)
-        # if res != 0:
-        #    raise Exception("Extra diveristy indexes calculus did not finished")
         self.update_progress_value(48, "Done")
 
         # Converting Qiime2 barplot output compatible with constellab front
@@ -264,7 +236,6 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
             asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             t_asv = asv_table.transpose()
-            # asv_table = MetadataTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab'})
             table_annotated = TableRowAnnotatorHelper.annotate(t_asv, metadata_table)
             table_annotated = TableColumnAnnotatorHelper.annotate(t_asv, asv_metadata_table)
             table_annotated.name = key
