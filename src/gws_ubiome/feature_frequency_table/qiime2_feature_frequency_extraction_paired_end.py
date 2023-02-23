@@ -15,7 +15,6 @@ from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
     FeatureFrequencyTable, FeatureFrequencyTableImporter)
-#from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from ..quality_check.qiime2_quality_check_result_folder import \

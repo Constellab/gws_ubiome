@@ -15,16 +15,11 @@ from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-# from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
     Qiime2FeatureFrequencyFolder
 from .feature_table import FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
-
-# from ..rarefaction_analysis.qiime2_rarefaction_analysis_result_folder import \
-#     Qiime2RarefactionAnalysisResultFolder
-
 
 @task_decorator("Qiime2TaxonomyDiversitySilvaExtractor", human_name="Q2SilvaDiversity",
                 short_description="Computing various diversity index and taxonomy assessement of ASVs using Silva", hide=True)

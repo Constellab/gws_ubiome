@@ -26,7 +26,6 @@ from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
 @task_decorator("Qiime2DifferentialAnalysis", human_name="Qiime2 ANCOM differential analysis",
                 short_description="Perform ANCOM differential analysis using metadata information")
 class Qiime2DifferentialAnalysis(Task):
-    # class Qiime2DifferentialAnalysis(Qiime2EnvTask):
     """
     Qiime2DifferentialAnalysis class.
 
