@@ -86,7 +86,6 @@ class Qiime2MetadataTableMaker(Task):
             fwd = params["forward_file_differentiator"]
             rvs = params["reverse_file_differentiator"]
             outputs = self.run_cmd_paired_end(shell_proxy,
-                                              # os.path.join(script_file_dir, "./sh/0_qiime2_manifest_paired_end.sh"),
                                               script_file_dir,
                                               fastq_folder_path,
                                               fwd,

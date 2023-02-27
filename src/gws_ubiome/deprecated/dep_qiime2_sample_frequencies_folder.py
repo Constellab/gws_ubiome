@@ -3,11 +3,9 @@
 # About us: https://gencovery.com
 
 
-from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
-                      IntParam, LinePlot2DView, MultiViews, StackedBarPlotView,
-                      StrParam, StrRField, Table, TableImporter,
-                      resource_decorator, view)
-from gws_core.extra import TableBoxPlotView, TableView
+from gws_core import (BoxPlotView, ConfigParams, File, Folder, StrRField,
+                      Table, TableImporter, resource_decorator, view)
+from gws_core.extra import TableView
 
 
 @resource_decorator("Qiime2SampleFrequenciesFolder", human_name="Qiime2 sample frequencies folder",

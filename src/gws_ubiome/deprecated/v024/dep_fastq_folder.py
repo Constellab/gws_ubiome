@@ -4,7 +4,7 @@
 
 from typing import List, Union
 
-from gws_core import File, Folder, Shell, ShellProxy, resource_decorator
+from gws_core import Folder, Shell, ShellProxy, resource_decorator
 
 
 @resource_decorator("FastqFolder",
@@ -30,7 +30,6 @@ class FastqFolder(Folder):
 
         if bz2_exists:
             cmd = ["for f in *.bz2 ;do bzcat < \"$f\" | pigz -9 -c >\"${f%.*}.gz\" ;done ; rm *.bz2 ;"]
-#            cmd = [ "parallel --dry-run 'bzcat < {} | pigz -9 -c > {.}.gz' ::: *bz2 > tmp.sh ; bash tmp.sh ; rm tmp.sh ; rm *.bz2 ;" ]
             shell_proxy = ShellProxy(Shell)
             try:
                 shell_proxy.run(cmd, cwd=self.path, shell_mode=True)

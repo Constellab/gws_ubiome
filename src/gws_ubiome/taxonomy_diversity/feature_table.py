@@ -5,15 +5,12 @@
 import copy
 
 import numpy as np
-from gws_core import (BarPlotView, BoolParam, BoxPlotView, ConfigParams, File,
-                      IntParam, StackedBarPlotView, StrParam, Table,
-                      TableImporter, TableUnfolderHelper, TableView, TagsParam,
+from gws_core import (ConfigParams, StackedBarPlotView, Table, TableImporter,
                       importer_decorator, resource_decorator, view)
 
 
 @resource_decorator(unique_name="FeatureTable", hide=False)
 class FeatureTable(Table):
-
     """
     FeatureTable class
     """

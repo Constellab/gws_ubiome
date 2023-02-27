@@ -66,48 +66,6 @@ class old_Qiime2FeatureTableExtractorSE(Task):
         "truncated_reads_size": IntParam(
             min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")}
 
-    # def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-    #     result_file = Qiime2FeatureFrequencyFolder()
-    #     result_file.path = self._get_output_file_path()
-
-    #     # create annotated feature table
-    #     path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
-    #     feature_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-
-    #     path = os.path.join(result_file.path, "denoising-stats.tsv")
-    #     stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-
-    #     path = os.path.join(result_file.path, "gws_metadata.csv")
-    #     metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
-    #     feature_table = TableRowAnnotatorHelper.annotate(feature_table, metadata_table)
-    #     stats_table = TableRowAnnotatorHelper.annotate(stats_table, metadata_table)
-
-    #     return {
-    #         "result_folder": result_file,
-    #         "stats": stats_table,
-    #         "feature_table": feature_table
-    #     }
-
-    # def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
-    #     qiime2_folder = inputs["quality_check_folder"]
-    #     threads = params["threads"]
-    #     truncated_reads_size = params["truncated_reads_size"]
-    #     script_file_dir = os.path.dirname(os.path.realpath(__file__))
-    #     cmd = [
-    #         " bash ",
-    #         os.path.join(script_file_dir, "./sh/2_qiime2_feature_frequency_extraction_single_end.sh"),
-    #         qiime2_folder.path,
-    #         threads,
-    #         truncated_reads_size
-    #     ]
-    #     return cmd
-
-    # def _get_output_file_path(self):
-    #     return os.path.join(
-    #         self.working_dir,
-    #         "sample_freq_details"
-    #     )
-
     async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["quality_check_folder"]
         qiime2_folder_path = qiime2_folder.path
@@ -116,23 +74,12 @@ class old_Qiime2FeatureTableExtractorSE(Task):
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
-
-        # if hard_trim == 0:  # When sequencing data are not being hard-trimmed
         outputs = self.run_cmd_single_end(shell_proxy,
                                           script_file_dir,
                                           qiime2_folder_path,
                                           truncated_reads_size,
                                           thrds
                                           )
-        # else:  # When sequencing data are being hard-trimmed
-        #     outputs = self.run_cmd_paired_end_hard_trim(shell_proxy,
-        #                                                 script_file_dir,
-        #                                                 qiime2_folder_path,
-        #                                                 trct_forward,
-        #                                                 trct_reverse,
-        #                                                 thrd,
-        #                                                 hard_trim
-        #                                                 )
 
         # Output formating and annotation
 
@@ -183,7 +130,6 @@ class old_Qiime2FeatureTableExtractorSE(Task):
         result_file.path = output_folder_path
 
         # create annotated feature table
-        #path = os.path.join(result_file.path, "sample-frequency-detail.tsv")
         path = os.path.join(result_file.path, "denoising-stats.tsv")
         feature_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 

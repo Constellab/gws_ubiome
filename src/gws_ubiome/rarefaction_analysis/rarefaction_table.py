@@ -6,9 +6,9 @@
 from json import loads
 from typing import Type
 
-from gws_core import (ConfigParams, FSNode, LinePlot2DView, Table,
+from gws_core import (ConfigParams, FSNode, LinePlot2DView, Resource, Table,
                       TableImporter, importer_decorator, resource_decorator,
-                      view, Resource)
+                      view)
 from numpy import nanquantile
 from pandas import DataFrame
 
@@ -24,15 +24,7 @@ class RarefactionTable(Table):
           short_description='Lineplot of the rarefaction table',
           specs={}, default_view=True)
     def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
-        # type_ = params["type"]
-        # table: Table = self._load_table(type_=type_)
-        # table = table.select_numeric_columns(drop_na='all')
-
         lp_view = LinePlot2DView()
-        # data = self.get_data()
-        # table = self.get_data()
-
-        # data = table.get_data()
         column_tags = self.get_column_tags()
         all_sample_ids = list(set([tag["sample-id"] for tag in column_tags]))
 
@@ -47,7 +39,7 @@ class RarefactionTable(Table):
             lp_view.add_series(x=positions, y=median, name=sample_id, tags=sample_column_tags)
 
         lp_view.x_label = "depth"
-        # lp_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
+        lp_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
         return lp_view
 
 
@@ -68,5 +60,5 @@ class RarefactionTableImporter(TableImporter):
                 tags = {}
             column_tags.append(tags)
 
-        rarefaction_table.set_all_columns_tags(column_tags)  # set_column_tags set_all_columns_tags
+        rarefaction_table.set_all_columns_tags(column_tags)
         return rarefaction_table

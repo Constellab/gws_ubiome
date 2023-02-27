@@ -12,7 +12,6 @@ from gws_core import (ConfigParams, File, InputSpec, IntParam,
                       TableImporter, TableRowAnnotatorHelper, Task, TaskInputs,
                       TaskOutputs, task_decorator)
 from gws_core.config.config_types import ConfigSpecs
-# from gws_core.io.io_spec import InputSpec, OutputSpec
 from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
 from gws_core.resource.resource_set import ResourceSet
 
@@ -72,9 +71,6 @@ class Qiime2DifferentialAnalysis(Task):
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")}
 
     async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        # def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        # result_folder = Qiime2DifferentialAnalysisResultFolder()
-        # result_folder.path = self._get_output_file_path()
 
         # get options, I/O variables
         qiime2_folder = inputs["taxonomy_diversity_folder"]
@@ -97,67 +93,12 @@ class Qiime2DifferentialAnalysis(Task):
 
         return outputs
 
-        # # Ressource set containing ANCOM output tables
-        # resource_table_set: ResourceSet = ResourceSet()
-        # resource_table_set.name = "Set of differential analysis tables"
-        # for key, value in self.OUTPUT_FILES.items():
-        #     path = os.path.join(self.working_dir, "differential_analysis", value)
-        #     table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-        #     table.name = key
-
-        #     # Metadata table
-        #     path = os.path.join(self.working_dir, "differential_analysis", value)
-        #     metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
-
-        #     table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
-        #     table_annotated.name = key
-        #     resource_table_set.add_resource(table_annotated)
-
-        # for key, value in self.PERCENTILE_TABLE.items():
-        #     path = os.path.join(self.working_dir, "differential_analysis", value)
-        #     table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-        #     data = table.get_data()
-        #     column_tags = []
-
-        #     column_names = table.column_names
-        #     first_row = [val if val else "unknown" for _, val in enumerate(data.iloc[0, :])]
-        #     group_key = params["metadata_column"]
-        #     final_col_names = []
-        #     for i, col_name in enumerate(column_names):
-        #         column_tags.append({
-        #             group_key: first_row[i],
-        #             "quantile": col_name,
-        #         })
-        #         final_col_names.append(str(first_row[i])+"_"+str(col_name))
-
-        #     data = data.iloc[1:, :]
-        #     data.columns = final_col_names
-        #     data = data.apply(pd.to_numeric, errors='coerce')
-
-        #     table = Table(data=data)
-        #     table.set_all_columns_tags(column_tags)  # set_column_tags
-
-        #     table.name = key
-        #     resource_table_set.add_resource(table)
-
-        # return {
-        #     "result_folder": result_folder,
-        #     "result_tables": resource_table_set
-        # }
-
     def run_cmd(self, shell_proxy: Qiime2ShellProxyHelper,
                 qiime2_folder: str,
                 metadata_col: str,
                 metadata_f: str,
                 thrds: int,
                 script_file_dir: str) -> None:
-        # def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:
-        # qiime2_folder = inputs["taxonomy_diversity_folder"]
-        # metadata_col = params["metadata_column"]
-        # metadata_f = inputs["metadata_file"]
-        # thrds = params["threads"]
-
-        # script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
         cmd = [
             " bash ", os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.all_taxa_levels.sh"),
@@ -218,11 +159,3 @@ class Qiime2DifferentialAnalysis(Task):
             "result_folder": result_folder,
             "result_tables": resource_table_set
         }
-
-        # return cmd
-
-    # def _get_output_file_path(self):
-    #     return os.path.join(
-    #         self.working_dir,
-    #         "differential_analysis"
-    #     )
