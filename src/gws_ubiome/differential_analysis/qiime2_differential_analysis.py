@@ -79,6 +79,8 @@ class Qiime2DifferentialAnalysis(Task):
         thrds = params["threads"]
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
+        # test last qiime2 version, for the new ancom fonction (ancombc)
+        # shell_proxy = Qiime2_2022_11_ShellProxyHelper.create_proxy(self.message_dispatcher)
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # perform ANCOM analysis
@@ -93,7 +95,7 @@ class Qiime2DifferentialAnalysis(Task):
 
         return outputs
 
-    def run_cmd(self, shell_proxy: Qiime2ShellProxyHelper,
+    def run_cmd(self, shell_proxy: Qiime2ShellProxyHelper,  # shell_proxy: Qiime2_2022_11_ShellProxyHelper,
                 qiime2_folder: str,
                 metadata_col: str,
                 metadata_f: str,

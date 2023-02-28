@@ -1,0 +1,5 @@
+channels:
+  - qiime2/label/r2022.11
+
+dependencies:
+  - qiime2

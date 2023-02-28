@@ -20,12 +20,12 @@ class FeatureFrequencyTable(Table):
           default_view=True)
     def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
         bx_view = BoxPlotView()
-        my_column = self.get_column_data('1 - percentage of input merged')
-        bx_view.add_data(my_column, name="merged")
-        my_column = self.get_column_data('2 - percentage of input passed filter')
-        bx_view.add_data(my_column, name="passed filter")
-        my_column = self.get_column_data('3 - percentage of input non-chimeric')
-        bx_view.add_data(my_column, name="non-chimeric")
+        my_column = self.get_column_data('percentage of input passed filter')
+        bx_view.add_data(my_column, name="1 - passed filter")
+        my_column = self.get_column_data('percentage of input merged')
+        bx_view.add_data(my_column, name="2 - merged")
+        my_column = self.get_column_data('percentage of input non-chimeric')
+        bx_view.add_data(my_column, name="3 - non-chimeric")
 
         bx_view.y_label = "Values (%)"
         bx_view.x_label = "Metrics"

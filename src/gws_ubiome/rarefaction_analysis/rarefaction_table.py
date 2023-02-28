@@ -34,12 +34,14 @@ class RarefactionTable(Table):
             positions = [float(tag["depth"]) for tag in sample_column_tags]
 
             sample_data = sample_table.get_data()
+
             quantile = nanquantile(sample_data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
             median = quantile[1, :].tolist()
             lp_view.add_series(x=positions, y=median, name=sample_id, tags=sample_column_tags)
+        lp_view.x_label = "Count depth"
+        lp_view.y_label = "Index value"
+#        lp_view.y_label = "Shannon index" if self.get_default_name() == "rarefaction_shannon" else "Observed features value"
 
-        lp_view.x_label = "depth"
-        lp_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
         return lp_view
 
 
