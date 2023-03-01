@@ -5,10 +5,7 @@
 
 import os
 
-from gws_core import IntParam, TaskInputs, TaskOutputs, task_decorator
-from gws_core.config.config_types import ConfigParams, ConfigSpecs
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
+from gws_core import IntParam, TaskInputs, TaskOutputs, task_decorator, ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..quality_check.qiime2_quality_check_result_folder import \

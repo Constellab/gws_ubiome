@@ -6,11 +6,8 @@
 import os
 
 from gws_core import (ConfigParams, File, IntParam, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
-from gws_core.config.config_types import ConfigSpecs
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
-from gws_core.resource.resource_set import ResourceSet
+                      TaskOutputs, task_decorator, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs,
+                      ResourceSet)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \

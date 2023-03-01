@@ -5,15 +5,13 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Settings, StrParam,
-                      Task, TaskInputs, TaskOutputs, task_decorator)
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
+from gws_core import (ConfigParams, ConfigSpecs, File, StrParam,
+                      Task, TaskInputs, TaskOutputs, task_decorator, 
+                      ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 
-settings = Settings.retrieve()
 
 
 @task_decorator("Qiime2MetadataTableMaker", human_name="Qiime2 metadata table maker",

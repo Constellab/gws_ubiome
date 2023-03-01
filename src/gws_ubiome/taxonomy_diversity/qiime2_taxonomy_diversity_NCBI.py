@@ -6,13 +6,10 @@
 import os
 
 from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      Settings, StrParam, TableColumnAnnotatorHelper,
-                      TableImporter, TableRowAnnotatorHelper, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
-from gws_core.config.config_types import ConfigSpecs  # ConfigParams,
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
-from gws_core.resource.resource_set import ResourceSet
+                      StrParam,
+                      TableImporter, TableAnnotatorHelper, Task, TaskInputs,
+                      TaskOutputs, task_decorator, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs,
+                      ResourceSet)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -21,7 +18,6 @@ from .feature_table import FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
-settings = Settings.retrieve()
 
 
 @task_decorator("Qiime2TaxonomyDiversityNCBIExtractor", human_name="Q2NCBIDiversity",
@@ -218,7 +214,7 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
         for key, value in self.DIVERSITY_PATHS.items():
             path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table)
             table_annotated.name = key
             diversity_resource_table_set.add_resource(table_annotated)
 
@@ -229,7 +225,7 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
         for key, value in self.TAXO_PATHS.items():
             path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
             table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table)
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
 
@@ -240,8 +236,8 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
             asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             t_asv = asv_table.transpose()
-            table_annotated = TableRowAnnotatorHelper.annotate(t_asv, metadata_table)
-            table_annotated = TableColumnAnnotatorHelper.annotate(t_asv, asv_metadata_table)
+            table_annotated = TableAnnotatorHelper.annotate_rows(t_asv, metadata_table)
+            table_annotated = TableAnnotatorHelper.annotate_columns(t_asv, asv_metadata_table)
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
 

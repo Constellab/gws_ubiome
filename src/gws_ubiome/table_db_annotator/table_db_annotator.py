@@ -6,11 +6,9 @@
 import os
 
 from gws_core import (ConfigParams, File, MetadataTableImporter,
-                      TableColumnAnnotatorHelper, TableRowAnnotatorHelper,
-                      Task, TaskInputs, TaskOutputs, task_decorator)
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
-from gws_core.resource.resource_set import ResourceSet
+                      TableAnnotatorHelper,
+                      Task, TaskInputs, TaskOutputs, task_decorator, 
+                      InputSpec, OutputSpec, InputSpecs, OutputSpecs)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
@@ -124,12 +122,12 @@ class Qiime2TableDbAnnotator(Task):
 
         # file to use to add tag
 
-        table_annotated_col = TableColumnAnnotatorHelper.annotate(taxa_dict_table, metadata_table)
-        table_relative_annotated_col = TableColumnAnnotatorHelper.annotate(
+        table_annotated_col = TableAnnotatorHelper.annotate_columns(taxa_dict_table, metadata_table)
+        table_relative_annotated_col = TableAnnotatorHelper.annotate_columns(
             taxa_relative_dict_table, metadata_relative_table)
-        table_absolute_abundance_annotated = TableRowAnnotatorHelper.annotate(
+        table_absolute_abundance_annotated = TableAnnotatorHelper.annotate_rows(
             table_annotated_col, sample_metadata_table)
-        table_relative_abundance_annotated = TableRowAnnotatorHelper.annotate(
+        table_relative_abundance_annotated = TableAnnotatorHelper.annotate_rows(
             table_relative_annotated_col, sample_metadata_table)
 
         table_absolute_abundance_annotated.name = "Annotated taxa composition table (absolute count)"

@@ -1,6 +1,5 @@
 
 import os
-import shutil
 
 import pandas
 from gws_core import BaseTestCase, File, Settings, TaskRunner
@@ -11,7 +10,7 @@ from gws_ubiome import (Qiime2DifferentialAnalysis,
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
 
     async def test_importer(self):
-        settings = Settings.retrieve()
+        settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         taxonomy_result_folder = Qiime2TaxonomyDiversityFolder(path=os.path.join(large_testdata_dir, "diversity"))
         tester = TaskRunner(

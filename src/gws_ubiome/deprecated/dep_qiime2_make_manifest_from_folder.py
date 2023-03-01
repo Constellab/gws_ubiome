@@ -5,11 +5,9 @@
 
 import os
 
-from gws_core import (File, Logger, MetadataTable, MetadataTableImporter,
-                      StrParam, Table, TaskInputs, TaskOutputs, task_decorator)
-from gws_core.config.config_types import ConfigParams, ConfigSpecs
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
+from gws_core import (File, MetadataTable, MetadataTableImporter,
+                      StrParam, TaskInputs, TaskOutputs, task_decorator,
+                      ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask

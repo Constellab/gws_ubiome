@@ -6,11 +6,9 @@
 import os
 
 from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      Table, TableImporter, TableRowAnnotatorHelper, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
-from gws_core.config.config_types import ConfigSpecs
-from gws_core.io.io_spec import InputSpec, OutputSpec
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
+                      Table, TableImporter, TableAnnotatorHelper, Task,
+                      TaskInputs, TaskOutputs, task_decorator,
+                      ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
@@ -195,9 +193,9 @@ class Qiime2FeatureTableExtractorPE(Task):
 
         path = os.path.join(result_file.path, "gws_metadata.csv")
         metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
-        feature_table = TableRowAnnotatorHelper.annotate(feature_table, metadata_table)
+        feature_table = TableAnnotatorHelper.annotate_rows(feature_table, metadata_table)
         feature_table.name = "Denoising Metrics Boxplots"
-        stats_table = TableRowAnnotatorHelper.annotate(stats_table, metadata_table)
+        stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table)
         stats_table.name = "Denoising Metrics Table"
 
         return {

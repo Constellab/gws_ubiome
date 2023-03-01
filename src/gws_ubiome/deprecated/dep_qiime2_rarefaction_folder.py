@@ -5,11 +5,10 @@
 import json
 
 import numpy
-from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
-                      IntParam, LinePlot2DView, MultiViews, StackedBarPlotView,
+from gws_core import (BoxPlotView, ConfigParams, File, Folder,
+                      LinePlot2DView,
                       StrParam, StrRField, Table, TableImporter,
-                      resource_decorator, view)
-from gws_core.extra import TableBoxPlotView, TableView
+                      resource_decorator, view, TableView)
 
 
 @resource_decorator("Qiime2RarefactionFolder", human_name="Qiime2 rarefaction folder",

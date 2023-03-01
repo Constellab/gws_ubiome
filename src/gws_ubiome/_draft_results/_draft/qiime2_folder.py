@@ -2,16 +2,12 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-import json
 
-import numpy
 from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
                       IntParam, LinePlot2DView, MultiViews, StackedBarPlotView,
                       StrParam, StrRField, Table, TableImporter,
                       resource_decorator, view)
-from gws_core.extra import TableBoxPlotView, TableView
 
-from ..helper.importer_helper import ImporterHelper
 
 # Qiime 2 : output formats
 

@@ -7,7 +7,7 @@ import os
 import shutil
 
 import pandas
-from gws_core import (BaseTestCase, File, MetadataTable, MetadataTableImporter,
+from gws_core import (BaseTestCase, File,
                       Settings, TaskRunner)
 from gws_ubiome import Qiime2QualityCheck
 from gws_omix import FastqFolder
@@ -17,7 +17,7 @@ from gws_omix import FastqFolder
 class TestQiime2QualityCheck(BaseTestCase):
 
     async def test_quality_check(self):
-        settings = Settings.retrieve()
+        settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
 

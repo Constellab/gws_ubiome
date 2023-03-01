@@ -4,8 +4,7 @@
 
 
 from gws_core import (BoxPlotView, ConfigParams, File, Folder, StrRField,
-                      Table, TableImporter, resource_decorator, view)
-from gws_core.extra import TableView
+                      Table, TableImporter, resource_decorator, view, TableView)
 
 
 @resource_decorator("Qiime2SampleFrequenciesFolder", human_name="Qiime2 sample frequencies folder",

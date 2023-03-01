@@ -9,11 +9,9 @@ import os
 import pandas as pd
 from gws_core import (ConfigParams, File, InputSpec, IntParam,
                       MetadataTableImporter, OutputSpec, StrParam, Table,
-                      TableImporter, TableRowAnnotatorHelper, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
-from gws_core.config.config_types import ConfigSpecs
-from gws_core.io.io_spec_helper import InputSpecs, OutputSpecs
-from gws_core.resource.resource_set import ResourceSet
+                      TableImporter, TableAnnotatorHelper, Task, TaskInputs,
+                      TaskOutputs, task_decorator,  ResourceSet,
+                      ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..differential_analysis.qiime2_differential_analysis_result_folder import \
@@ -126,7 +124,7 @@ class Qiime2DifferentialAnalysis(Task):
             path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
             metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
 
-            table_annotated = TableRowAnnotatorHelper.annotate(table, metadata_table)
+            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table)
             table_annotated.name = key
             resource_table_set.add_resource(table_annotated)
 
