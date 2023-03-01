@@ -34,8 +34,8 @@
           {
               "source": "https://$GWS_GIT_LOGIN:$GWS_GIT_PWD@gitlab.com/gencovery/core",
               "packages":[
-                  {"name": "gws_core", "version": "0.3.18", "is_brick": true},
-                  {"name": "gws_omix", "version": "0.2.5", "is_brick": true}
+                  {"name": "gws_core", "version": "0.4.7", "is_brick": true},
+                  {"name": "gws_omix", "version": "0.2.6", "is_brick": true}
               ]
           }
       ],
