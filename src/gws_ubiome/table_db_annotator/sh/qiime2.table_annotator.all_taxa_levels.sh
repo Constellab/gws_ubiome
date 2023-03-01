@@ -12,21 +12,34 @@
 annotationDb=$1
 rawTaxTable=$2
 perlScript=$3
-taxDbType=$4
-taxLevel=$5
+ratioCalc=$4
+taxDbType=$5
+taxLevel=$6
 
+cat $rawTaxTable | perl $ratioCalc - > relative_abundace_file.tsv ;
 
 # create metadata files and manifest file compatible with qiime2 env and gencovery env
 
 perl $perlScript $annotationDb $rawTaxTable $taxDbType $taxLevel > taxa_found.header_with_tag.tsv ;
 
+perl $perlScript $annotationDb relative_abundace_file.tsv $taxDbType $taxLevel > taxa_found.header_with_tag.relative.tsv ;
+
+
 cat taxa_found.header_with_tag.tsv  | sed 's/#tag:[^\t]*//g' | sed 's/^index\t/sample_id\t/' | perl -ne 'chomp; $cpt++; if($cpt==1){ @t=split/\t/; foreach(@t){ if($_=~/sample_id/){ print $_;} else{ $_=~s/[^\w]+/_/g; $_=~s/\-+/_/g; print "\t".$_;  }  } print "\n"; } else{print $_,"\n";}' > taxa_found.tsv ;
 
-cat taxa_found.tsv ;
+cat taxa_found.header_with_tag.relative.tsv  | sed 's/#tag:[^\t]*//g' | sed 's/^index\t/sample_id\t/' | perl -ne 'chomp; $cpt++; if($cpt==1){ @t=split/\t/; foreach(@t){ if($_=~/sample_id/){ print $_;} else{ $_=~s/[^\w]+/_/g; $_=~s/\-+/_/g; print "\t".$_;  }  } print "\n"; } else{print $_,"\n";}' > taxa_found.relative.tsv ;
+
+#cat taxa_found.tsv ;
 
 #echo -e "\n\n#####\n" ;
 
 #head -1 taxa_found.header_with_tag.tsv  | sed 's/^index\t/sample_id\t/' | tr '\t' '\n' | sed -e 's/#tag:/\t/' -e 's/forward-absolute-filepath//' -e 's/reverse-absolute-filepath//' -e 's/absolute-filepath//' | sed '1d' | sort -u | awk 'BEGIN{ print "sample_id\tinfo"}{print $0}'
 
-head -1 taxa_found.header_with_tag.tsv | sed 's/^index\t/sample_id\t/' | tr '\t' '\n' | sed -e 's/#tag:/\t/' -e 's/forward-absolute-filepath//' -e 's/reverse-absolute-filepath//' -e 's/absolute-filepath//' | sed '1d' | sort -u | perl -ne 'chomp; @t=split/\t/; foreach(@t){ $_=~s/[^\w]+/_/g; $_=~s/\-+/_/g; print "\t".$_;  } print "\n"; ' | awk 'BEGIN{ print "sample_id\tinfo"}{print $0}' > taxa_found.for_tags.tsv ;
-# 's/#tag:/\t/'
+colId=$(head -1 taxa_found.header_with_tag.tsv | cut -f2 )
+
+
+head -1 taxa_found.header_with_tag.tsv | sed 's/^index\t/sample_id\t/' | tr '\t' '\n' | sed -e 's/#tag:/\t/' -e 's/forward-absolute-filepath//' -e 's/reverse-absolute-filepath//' -e 's/absolute-filepath//' | sed '1d' | sort -u | perl -ne 'chomp; @t=split/\t/; foreach(@t){ $_=~s/[^\w]+/_/g; $_=~s/\-+/_/g; print "\t".$_;  } print "\n"; ' | awk -v ide=$colId 'BEGIN{ print "sample_id\tinfo"}{print $0}' > taxa_found.for_tags.tsv ;
+
+colId=$(head -1 taxa_found.header_with_tag.relative.tsv | cut -f2 )
+
+head -1 taxa_found.header_with_tag.relative.tsv | sed 's/^index\t/sample_id\t/' | tr '\t' '\n' | sed -e 's/#tag:/\t/' -e 's/forward-absolute-filepath//' -e 's/reverse-absolute-filepath//' -e 's/absolute-filepath//' | sed '1d' | sort -u | perl -ne 'chomp; @t=split/\t/; foreach(@t){ $_=~s/[^\w]+/_/g; $_=~s/\-+/_/g; print "\t".$_;  } print "\n"; ' | awk -v ide=$colId 'BEGIN{ print "sample_id\tinfo"}{print $0}' > taxa_found.for_tags.relative.tsv ;

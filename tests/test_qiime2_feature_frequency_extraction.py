@@ -3,15 +3,14 @@ import os
 
 import pandas
 from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import (Qiime2FeatureFrequencyFolder,
-                        Qiime2FeatureTableExtractorPE,
+from gws_ubiome import (Qiime2FeatureTableExtractorPE,
                         Qiime2QualityCheckResultFolder)
 
 
 class TestQiime2SampleFrequencies(BaseTestCase):
 
     async def test_importer(self):
-        settings = Settings.retrieve()
+        settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         quality_check_folder = Qiime2QualityCheckResultFolder(path=os.path.join(large_testdata_dir, "quality_check"))
         tester = TaskRunner(

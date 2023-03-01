@@ -4,12 +4,8 @@
 
 import json
 
-import numpy
-from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
-                      IntParam, LinePlot2DView, MultiViews, StackedBarPlotView,
-                      StrParam, StrRField, Table, TableImporter,
-                      resource_decorator, view)
-from gws_core.extra import TableBoxPlotView, TableView
+from gws_core import (File, Folder, StrRField, Table, TableImporter,
+                      resource_decorator)
 
 
 @resource_decorator("Qiime2RarefactionAnalysisResultFolder",
@@ -46,56 +42,7 @@ class Qiime2RarefactionAnalysisResultFolder(Folder):
         data.columns = column_names
 
         table = Table(data=data)
-        table.set_column_tags(column_tags)
+        table.set_all_columns_tags(column_tags)  # set_column_tags
 
         return table
-
-    @view(view_type=TableView, human_name='Rarefaction table',
-          short_description='Rarefaction table',
-          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    def view_as_table(self, params: ConfigParams) -> TableView:
-        type_ = params["type"]
-        table: Table = self._load_table(type_=type_)
-        table_view = TableView(table=table)
-        return table_view
-
-    @view(view_type=BoxPlotView, human_name='Rarefaction boxplot',
-          short_description='Boxplot of the rarefaction table',
-          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
-        type_ = params["type"]
-        table: Table = self._load_table(type_=type_)
-
-        bx_view = BoxPlotView()
-        data = table.get_data()
-        bx_view.add_data(data=data)
-        bx_view.x_label = "depth"
-        bx_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
-        return bx_view
-
-    @view(view_type=LinePlot2DView, human_name='Rarefaction lineplot',
-          short_description='Lineplot of the rarefaction table',
-          specs={"type": StrParam(allowed_values=["rarefaction_shannon", "rarefaction_observed"])})
-    def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
-        type_ = params["type"]
-        table: Table = self._load_table(type_=type_)
-        table = table.select_numeric_columns(drop_na='all')
-
-        lp_view = LinePlot2DView()
-        #data = table.get_data()
-        column_tags = table.get_column_tags()
-        all_sample_ids = list(set([tag["sample-id"] for tag in column_tags]))
-
-        for sample_id in all_sample_ids:
-            sample_table = table.select_by_column_tags([{"sample-id": sample_id}])
-            sample_column_tags = sample_table.get_column_tags()
-            positions = [float(tag["depth"]) for tag in sample_column_tags]
-
-            sample_data = sample_table.get_data()
-            quantile = numpy.nanquantile(sample_data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
-            median = quantile[1, :].tolist()
-            lp_view.add_series(x=positions, y=median, tags=sample_column_tags)
-
-        lp_view.x_label = "depth"
-        lp_view.y_label = "shannon index" if type_ == "rarefaction_shannon" else "observed features value"
-        return lp_view
+        

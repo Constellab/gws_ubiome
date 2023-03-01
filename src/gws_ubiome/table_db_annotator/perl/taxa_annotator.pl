@@ -31,7 +31,7 @@ while(<Db>){
 	my@tax=split/\t/;
 	# get information for variable information
 	if($tax[1]=~/.*Variable;([^\s]+)/){
-		$hAnnotationTable{$tax[0]}=$1;
+		$hAnnotationTable{$tax[0]}="_".$1;
 	}
 	# get tag name
 	elsif($_=~/^#[^\t]+\t([^\t])/){
@@ -39,7 +39,7 @@ while(<Db>){
 	}
 	else{
 		if($tax[1]=~/^([^\s]+)/){
-			$hAnnotationTable{$tax[0]}=$1;
+			$hAnnotationTable{$tax[0]}="_".$1;
 		}
 	}
 }
@@ -67,20 +67,20 @@ while(<File>){
 						$header.="\t".$1."#tag:".$hAnnotationTable{$1};
 					}
 					else{
-						$header.="\t".$1."#tag:NA";
+						$header.="\t".$1."#tag:_nan";
 					}
 				}
 				elsif($_=~/.*$taxLevel\_\_;.*$/){
-					$header.="\t".$_."#tag:NA";
+					$header.="\t".$_."#tag:_nan";
 				}
 				elsif($_=~/.*$taxLevel\_\_$/){
-					$header.="\t".$_."#tag:NA";
+					$header.="\t".$_."#tag:_nan";
 				}
 				elsif($_=~/.*\_\_$/){
-					$header.="\t".$_."#tag:NA";
+					$header.="\t".$_."#tag:_nan";
 				}
 				elsif($_=~/([^$taxLevel]\_\_.+)$/){
-					$header.="\t".$1."#tag:NA";
+					$header.="\t".$1."#tag:_nan";
 				}
 				else{
 					$header.=$_;

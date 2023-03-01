@@ -1,0 +1,4 @@
+sample-id	input	filtered	percentage of input passed filter	denoised	non-chimeric	percentage of input non-chimeric
+341F-785R-P01-A09-P17	162934	138564	85.04	136360	37277	22.88
+341F-785R-P01-E04-P26	248703	204231	82.12	201556	28245	11.36
+341F-785R-P01-G07-P20	133484	117133	87.75	114211	26755	20.04

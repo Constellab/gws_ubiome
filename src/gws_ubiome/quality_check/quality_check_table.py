@@ -16,20 +16,6 @@ class QualityCheckTable(Table):
     QualityCheckTable class
     """
 
-    # def check_resource(self) -> Union[str, None]:
-    #     """You can redefine this method to define custom logic to check this resource.
-    #     If there is a problem with the resource, return a string that define the error, otherwise return None
-    #     This method is called on output resources of a task. If there is an error returned, the task will be set to error and next proceses will not be run.
-    #     It is also call when uploading a resource (usually for files or folder), if there is an error returned, the resource will not be uploaded
-    #     """
-
-    #     from gws_core import Table, TableExporter, TableImporter
-    #     try:
-    #         _: Table = QualityTableImporter.call(self)
-    #         return None
-    #     except Exception as err:
-    #         return f" The table file is not valid. Error: {err}"
-
     @view(view_type=BoxPlotView, human_name='Sequencing quality boxplot',
           short_description='Boxplot of the reads sequencing quality',
           specs={},
@@ -95,8 +81,3 @@ class QualityCheckTable(Table):
 class QualityTableImporter(TableImporter):
     pass
 
-
-# @exporter_decorator(unique_name="Qiime2MetadataTableExporter", human_name="Qiime2 metadata table exporter",
-#                     source_type=QualityCheckTable, target_type=QualityCheckTable)
-# class QualityTableExporter(TableExporter):
-#     pass

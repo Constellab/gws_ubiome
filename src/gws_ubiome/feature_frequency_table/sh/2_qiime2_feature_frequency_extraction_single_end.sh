@@ -12,9 +12,10 @@ threads=$2
 trcL=$3
 
 qiime dada2 denoise-single \
+  --i-demultiplexed-seqs $qiime_dir/demux.qza \
   --p-trunc-len $trcL \
-  --i-demultiplexed-seqs $qiime_dir/single-end-demux.qza \
   --p-n-threads $threads \
+  --p-n-reads-learn 1000 \
   --o-table table.qza \
   --o-representative-sequences rep-seqs.qza \
   --o-denoising-stats denoising-stats.qza
@@ -32,11 +33,14 @@ cat tmp_dir/*/data/sample-frequency-detail.csv | tr ',' '\t' > ./sample_freq_det
 unzip denoising-stats.qza -d tmp_dir_2
 cat tmp_dir_2/*/data/stats.tsv | grep -v "^#" > ./sample_freq_details/denoising-stats.tsv ;
 
+unzip rep-seqs.qza -d tmp_dir_3
+cat tmp_dir_3/*/data/dna-sequences.fasta > ./sample_freq_details/ASV-sequences.fasta ;
 
 
 mv rep-seqs.qza ./sample_freq_details ;
 mv table.qza ./sample_freq_details ;
 cp $qiime_dir/demux.qza ./sample_freq_details ;
+cp feature-table.qzv ./sample_freq_details ;
 
 cp $qiime_dir/qiime2_manifest.csv ./sample_freq_details ;
 cp $qiime_dir/gws_metadata.csv  ./sample_freq_details ;

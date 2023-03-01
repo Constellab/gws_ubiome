@@ -14,7 +14,7 @@ from gws_ubiome import Qiime2MetadataTableMaker
 class TestQiime2MetadataMaker(BaseTestCase):
 
     async def test_importer(self):
-        settings = Settings.retrieve()
+        settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
         tester = TaskRunner(

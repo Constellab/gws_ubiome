@@ -7,27 +7,27 @@ import os
 import shutil
 
 import pandas
-from gws_core import (BaseTestCase, File, MetadataTable, MetadataTableImporter,
+from gws_core import (BaseTestCase, File,
                       Settings, TaskRunner)
 from gws_ubiome import Qiime2QualityCheck
 from gws_omix import FastqFolder
 
+
+# gws_ubiome/test_qiime2_quality_check
 class TestQiime2QualityCheck(BaseTestCase):
 
     async def test_quality_check(self):
-        settings = Settings.retrieve()
+        settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
 
-        metadata_table: MetadataTable = MetadataTableImporter.call(
-            File(path=os.path.join(testdata_dir, "gws_metadata.csv"))
-        )
+        metadata_file: File = File(path=os.path.join(testdata_dir, "gws_metadata.csv"))
 
         tester = TaskRunner(
             params={'sequencing_type': 'paired-end'},
             inputs={
                 'fastq_folder': FastqFolder(path=os.path.join(large_testdata_dir,  "fastq_dir")),
-                'metadata_table': metadata_table
+                'metadata_table': metadata_file
             },
             task_type=Qiime2QualityCheck
         )

@@ -9,7 +9,7 @@ from gws_ubiome import Qiime2FeatureFrequencyFolder, Qiime2RarefactionAnalysis
 class TestQiime2RarefactionAnalysis(BaseTestCase):
 
     async def test_importer(self):
-        settings = Settings.retrieve()
+        settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         tester = TaskRunner(
             params={

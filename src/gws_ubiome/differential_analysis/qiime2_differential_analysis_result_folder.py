@@ -2,11 +2,7 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-from gws_core import (BarPlotView, BoxPlotView, ConfigParams, File, Folder,
-                      IntParam, LinePlot2DView, MultiViews, StackedBarPlotView,
-                      StrParam, StrRField, Table, TableImporter,
-                      resource_decorator, view)
-from gws_core.extra import TableBoxPlotView, TableView
+from gws_core import Folder, resource_decorator
 
 
 @resource_decorator("Qiime2DifferentialAnalysisResultFolder",
@@ -15,60 +11,6 @@ from gws_core.extra import TableBoxPlotView, TableView
 class Qiime2DifferentialAnalysisResultFolder(Folder):
     ''' Qiime2DifferentialAnalysisResultFolder Folder file class '''
 
-    data_table_path: str = StrRField()  # ''
-    ancom_stat_table_path: str = StrRField()  # ''
-    volcano_plot_path: str = StrRField()  # ''
-
-    @view(view_type=TableView,
-          human_name='Diff analysis table 1',
-          short_description='Table of differential analysis',
-          default_view=False
-          )
-    def view_as_table_1(self, params: ConfigParams) -> TableView:
-        table: Table
-        file_path = self.get_sub_path("data.tsv")
-        table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
-        table_view = TableView(table=table)
-        table_view.set_title("Sample frequency values")
-        # data = table.get_data()
-        # median = data.median(axis=0).iat[0]
-        # average = data.mean(axis=0).iat[0]
-        # table_view.set_caption(
-        #     f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
-        return table_view
-
-    @view(view_type=TableView,
-          human_name='Diff analysis table 2',
-          short_description='Table of differential analysis',
-          default_view=False
-          )
-    def view_as_table_2(self, params: ConfigParams) -> TableView:
-        table: Table
-        file_path = self.get_sub_path("ancom.tsv")
-        table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
-        table_view = TableView(table=table)
-        table_view.set_title("Sample frequency values")
-        # data = table.get_data()
-        # median = data.median(axis=0).iat[0]
-        # average = data.mean(axis=0).iat[0]
-        # view.set_caption(
-        #     f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
-        return table_view
-
-    @view(view_type=TableView,
-          human_name='Diff analysis table 3',
-          short_description='Table of differential analysis',
-          default_view=False
-          )
-    def view_as_table_3(self, params: ConfigParams) -> TableView:
-        table: Table
-        file_path = self.get_sub_path("percent-abundances.tsv")
-        table = TableImporter.call(File(path=file_path), {'delimiter': 'tab', "index_column": 0})
-        view = TableView(table=table)
-        view.set_title("Sample frequency values")
-#        data = table.get_data()
-#        median = data.median(axis=0).iat[0]
-#        average = data.mean(axis=0).iat[0]
-#        view.set_caption(
-#            f"Allowed to XXXXX. For the following step, using close to median value is advised (ref).\nMedian: {median}, average: {average} ")
-        return view
+    # data_table_path: str = StrRField()  # ''
+    # ancom_stat_table_path: str = StrRField()  # ''
+    # volcano_plot_path: str = StrRField()  # ''

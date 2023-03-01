@@ -5,8 +5,7 @@
 
 import os
 
-from gws_core import (ConfigParams, IntParam, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import IntParam, TaskInputs, TaskOutputs, task_decorator, ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
 from ..quality_check.qiime2_quality_check_result_folder import \
@@ -26,13 +25,13 @@ class Qiime2SampleFrequenciesSE(Qiime2EnvTask):
 
     """
 
-    input_specs = {
-        'quality_check_result_folder': (Qiime2QualityCheckResultFolder,),
+    input_specs: InputSpecs = {
+        'quality_check_result_folder': InputSpec(Qiime2QualityCheckResultFolder,),
     }
-    output_specs = {
-        'result_folder': (Qiime2SampleFrequenciesFolder,)
+    output_specs: OutputSpecs = {
+        'result_folder': OutputSpec(Qiime2SampleFrequenciesFolder,)
     }
-    config_specs = {
+    config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=4, min_value=2, short_description="Number of threads"),
         "truncated_reads_size": IntParam(
             min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
