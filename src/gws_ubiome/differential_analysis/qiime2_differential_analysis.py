@@ -150,7 +150,7 @@ class Qiime2DifferentialAnalysis(Task):
             data = data.apply(pd.to_numeric, errors='coerce')
 
             table = Table(data=data)
-            table.set_all_columns_tags(column_tags)  # set_column_tags
+            table.set_all_column_tags(column_tags)  # set_column_tags
 
             table.name = key
             resource_table_set.add_resource(table)

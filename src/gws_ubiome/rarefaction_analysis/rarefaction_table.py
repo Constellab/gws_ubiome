@@ -62,5 +62,5 @@ class RarefactionTableImporter(TableImporter):
                 tags = {}
             column_tags.append(tags)
 
-        rarefaction_table.set_all_columns_tags(column_tags)
+        rarefaction_table.set_all_column_tags(column_tags)
         return rarefaction_table

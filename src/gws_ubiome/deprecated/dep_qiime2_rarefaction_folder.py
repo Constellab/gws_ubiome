@@ -44,7 +44,7 @@ class Qiime2RarefactionFolder(Folder):
         data.columns = column_names
 
         table = Table(data=data)
-        table.set_all_columns_tags(column_tags)
+        table.set_all_column_tags(column_tags)
 
         return table
 
