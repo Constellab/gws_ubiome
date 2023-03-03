@@ -5,10 +5,10 @@
 
 import os
 
-from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      Table, TableImporter, TableAnnotatorHelper, Task,
-                      TaskInputs, TaskOutputs, task_decorator, 
-                      ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      Table, TableAnnotatorHelper, TableImporter, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import \
@@ -64,7 +64,7 @@ class old_Qiime2FeatureTableExtractorSE(Task):
         "truncated_reads_size": IntParam(
             min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step")}
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["quality_check_folder"]
         qiime2_folder_path = qiime2_folder.path
         thrds = params["threads"]

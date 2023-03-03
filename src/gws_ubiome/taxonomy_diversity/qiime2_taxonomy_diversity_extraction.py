@@ -5,11 +5,11 @@
 
 import os
 
-from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      StrParam,
-                      TableImporter, TableAnnotatorHelper, Task, TaskInputs,
-                      TaskOutputs, task_decorator, ResourceSet,
-                      ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      ResourceSet, StrParam, TableAnnotatorHelper,
+                      TableImporter, Task, TaskInputs, TaskOutputs,
+                      task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -87,7 +87,7 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         db_taxo = params["taxonomic_affiliation_database"]

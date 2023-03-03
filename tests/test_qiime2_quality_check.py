@@ -4,19 +4,17 @@
 # About us: https://gencovery.com
 
 import os
-import shutil
 
 import pandas
-from gws_core import (BaseTestCase, File,
-                      Settings, TaskRunner)
-from gws_ubiome import Qiime2QualityCheck
+from gws_core import BaseTestCase, File, Settings, TaskRunner
 from gws_omix import FastqFolder
+from gws_ubiome import Qiime2QualityCheck
 
 
 # gws_ubiome/test_qiime2_quality_check
 class TestQiime2QualityCheck(BaseTestCase):
 
-    async def test_quality_check(self):
+    def test_quality_check(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
@@ -31,7 +29,7 @@ class TestQiime2QualityCheck(BaseTestCase):
             },
             task_type=Qiime2QualityCheck
         )
-        outputs = await tester.run()
+        outputs = tester.run()
         result_dir = outputs['result_folder']
 
         boxplot_csv_file_path = os.path.join(result_dir.path, "forward_boxplot.csv")

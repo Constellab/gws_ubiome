@@ -3,13 +3,13 @@ import os
 
 import pandas
 from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import (Qiime2TaxonomyDiversityExtractor,
-                        Qiime2FeatureFrequencyFolder)
+from gws_ubiome import (Qiime2FeatureFrequencyFolder,
+                        Qiime2TaxonomyDiversityExtractor)
 
 
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
 
-    async def test_importer(self):
+    def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         tester = TaskRunner(
@@ -24,7 +24,7 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
             task_type=Qiime2TaxonomyDiversityExtractor
         )
         # Qiime2FeatureFrequencyFolder Qiime2RarefactionAnalysisResultFolder
-        outputs = await tester.run()
+        outputs = tester.run()
         result_dir = outputs['result_folder']
 
         boxplot_csv_file_path = os.path.join(result_dir.path, "table_files",
@@ -35,7 +35,7 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
         result_content = boxplot_csv.read()
 
         # Get the expected file output
-        #expected_file_path = os.path.join(large_testdata_dir, "diversity", "table_files", "level-1.tsv")
+        # expected_file_path = os.path.join(large_testdata_dir, "diversity", "table_files", "level-1.tsv")
         expected_file_path = "/lab/user/bricks/gws_ubiome/tests/testdata/level-1.tsv"
         expected_in_file = open(expected_file_path, 'r', encoding="utf-8")
         expected_first_line = expected_in_file.readline()

@@ -49,8 +49,8 @@ class RarefactionTable(Table):
                     target_type=RarefactionTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
 class RarefactionTableImporter(TableImporter):
 
-    async def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Resource:
-        rarefaction_table: RarefactionTable = await super().import_from_path(source, params, target_type)
+    def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Resource:
+        rarefaction_table: RarefactionTable = super().import_from_path(source, params, target_type)
 
         dataframe: DataFrame = rarefaction_table.get_data()
 

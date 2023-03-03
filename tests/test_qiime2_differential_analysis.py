@@ -9,7 +9,7 @@ from gws_ubiome import (Qiime2DifferentialAnalysis,
 
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
 
-    async def test_importer(self):
+    def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         taxonomy_result_folder = Qiime2TaxonomyDiversityFolder(path=os.path.join(large_testdata_dir, "diversity"))
@@ -23,7 +23,7 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
             },
             task_type=Qiime2DifferentialAnalysis
         )
-        outputs = await tester.run()
+        outputs = tester.run()
         result_dir = outputs['result_folder']
 
         boxplot_csv_file_path = os.path.join(result_dir.path, "percent-abundances.tsv")

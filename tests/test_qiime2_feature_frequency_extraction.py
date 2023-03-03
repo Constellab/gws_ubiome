@@ -9,7 +9,7 @@ from gws_ubiome import (Qiime2FeatureTableExtractorPE,
 
 class TestQiime2SampleFrequencies(BaseTestCase):
 
-    async def test_importer(self):
+    def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         quality_check_folder = Qiime2QualityCheckResultFolder(path=os.path.join(large_testdata_dir, "quality_check"))
@@ -24,7 +24,7 @@ class TestQiime2SampleFrequencies(BaseTestCase):
             },
             task_type=Qiime2FeatureTableExtractorPE
         )
-        outputs = await tester.run()
+        outputs = tester.run()
 
         result_dir = outputs['result_folder']
         print(result_dir)

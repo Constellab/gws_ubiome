@@ -5,10 +5,10 @@
 
 import os
 
-from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      Table, TableImporter, TableAnnotatorHelper, Task,
-                      TaskInputs, TaskOutputs, task_decorator,
-                      ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      Table, TableAnnotatorHelper, TableImporter, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
@@ -63,7 +63,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime")
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["quality_check_folder"]
         qiime2_folder_path = qiime2_folder.path
         thrd = params["threads"]

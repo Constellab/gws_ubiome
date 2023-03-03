@@ -6,12 +6,11 @@
 
 import os
 
-import pandas as pd
-from gws_core import (ConfigParams, File, InputSpec, IntParam,
-                      MetadataTableImporter, OutputSpec, StrParam, Table,
-                      TableImporter, TableAnnotatorHelper, Task, TaskInputs,
-                      TaskOutputs, task_decorator,  ResourceSet,
-                      ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      ResourceSet, StrParam, Table, TableAnnotatorHelper,
+                      TableImporter, Task, TaskInputs, TaskOutputs,
+                      task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..differential_analysis.qiime2_differential_analysis_result_folder import \
@@ -68,7 +67,7 @@ class Qiime2DifferentialAnalysis(Task):
             short_description="Column on which the differential analysis will be performed"),
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")}
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
 
         # get options, I/O variables
         qiime2_folder = inputs["taxonomy_diversity_folder"]

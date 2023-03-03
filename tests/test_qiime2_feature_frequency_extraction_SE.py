@@ -9,12 +9,12 @@ from gws_ubiome import (Qiime2FeatureTableExtractorSE,
 
 class TestQiime2SampleFrequenciesSE(BaseTestCase):
 
-    async def test_importer(self):
+    def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         test_folder_path = "/lab/user/bricks/gws_ubiome/tests/testdata/quality_check_2"
         quality_check_folder = Qiime2QualityCheckResultFolder(path=test_folder_path)
-        #Qiime2QualityCheckResultFolder(path=os.path.join(large_testdata_dir, "quality_check"))
+        # Qiime2QualityCheckResultFolder(path=os.path.join(large_testdata_dir, "quality_check"))
         tester = TaskRunner(
             params={
                 'threads': 2,
@@ -25,7 +25,7 @@ class TestQiime2SampleFrequenciesSE(BaseTestCase):
             },
             task_type=Qiime2FeatureTableExtractorSE
         )
-        outputs = await tester.run()
+        outputs = tester.run()
 
         result_dir = outputs['result_folder']
         print(result_dir)
@@ -42,7 +42,7 @@ class TestQiime2SampleFrequenciesSE(BaseTestCase):
         result_content = boxplot_csv.read()
 
         # get the expected output
-        #expected_file_path = os.path.join(large_testdata_dir, "sample_freq_details", "sample-frequency-detail.tsv")
+        # expected_file_path = os.path.join(large_testdata_dir, "sample_freq_details", "sample-frequency-detail.tsv")
         expected_file_path = "/lab/user/bricks/gws_ubiome/tests/testdata/sample_freq_details_2/sample-frequency-detail.tsv"
         print(expected_file_path)
         expected_result_file = File(path=expected_file_path)

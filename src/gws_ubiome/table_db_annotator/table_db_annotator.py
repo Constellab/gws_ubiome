@@ -5,10 +5,10 @@
 
 import os
 
-from gws_core import (ConfigParams, File, MetadataTableImporter,
-                      TableAnnotatorHelper,
-                      Task, TaskInputs, TaskOutputs, task_decorator, 
-                      InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, File, InputSpec, InputSpecs,
+                      MetadataTableImporter, OutputSpec, OutputSpecs,
+                      TableAnnotatorHelper, Task, TaskInputs, TaskOutputs,
+                      task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
@@ -59,7 +59,7 @@ class Qiime2TableDbAnnotator(Task):
 
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         # get options, I/O variables
         diversity_input_folder = inputs["diversity_folder"]
         metadata_table = inputs["annotation_table"]

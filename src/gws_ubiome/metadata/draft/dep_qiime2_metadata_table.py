@@ -51,10 +51,11 @@ class Qiime2MetadataTable(Table):
                     hide=True)
 class Qiime2MetadataTableImporter(TableImporter):
 
-    async def import_from_path(self, file: File, params: ConfigParams, target_type: Type[Qiime2MetadataTable]) -> Qiime2MetadataTable:
+    def import_from_path(
+            self, file: File, params: ConfigParams, target_type: Type[Qiime2MetadataTable]) -> Qiime2MetadataTable:
         params["header"] = 0  # -> force parameter
         params["index_column"] = None  # -> force parameter
-        csv_table: Qiime2MetadataTable = await super().import_from_path(file, params, target_type)
+        csv_table: Qiime2MetadataTable = super().import_from_path(file, params, target_type)
         data = csv_table.get_data()
 
         is_categorical = data.iloc[0, 1] == target_type.ALLOWED_COLUMN_TYPE_CATEGORICAL

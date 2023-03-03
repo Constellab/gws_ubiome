@@ -5,9 +5,9 @@
 
 import os
 
-from gws_core import (ConfigParams, File, IntParam, Task, TaskInputs,
-                      TaskOutputs, task_decorator, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs,
-                      ResourceSet)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      IntParam, OutputSpec, OutputSpecs, ResourceSet, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -48,7 +48,7 @@ class Qiime2RarefactionAnalysis(Task):
 
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         feature_frequency_folder = inputs["feature_frequency_folder"]
         feature_frequency_folder_path = feature_frequency_folder.path
         min_depth = params["min_coverage"]

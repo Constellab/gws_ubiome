@@ -8,7 +8,7 @@ from gws_ubiome import Qiime2FeatureFrequencyFolder, Qiime2RarefactionAnalysis
 
 class TestQiime2RarefactionAnalysis(BaseTestCase):
 
-    async def test_importer(self):
+    def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         tester = TaskRunner(
@@ -22,7 +22,7 @@ class TestQiime2RarefactionAnalysis(BaseTestCase):
             },
             task_type=Qiime2RarefactionAnalysis
         )
-        outputs = await tester.run()
+        outputs = tester.run()
         result_dir = outputs['result_folder']
 
         boxplot_csv_file_path = os.path.join(result_dir.path, "shannon.for_boxplot.tsv")

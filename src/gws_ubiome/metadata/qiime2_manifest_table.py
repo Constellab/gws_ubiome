@@ -71,11 +71,12 @@ class Qiime2ManifestTable(Table):
                     supported_extensions=Table.ALLOWED_FILE_FORMATS)
 class Qiime2ManifestTableImporter(TableImporter):
 
-    async def import_from_path(self, file: File, params: ConfigParams, target_type: Type[Qiime2ManifestTable]) -> Qiime2ManifestTable:
+    def import_from_path(
+            self, file: File, params: ConfigParams, target_type: Type[Qiime2ManifestTable]) -> Qiime2ManifestTable:
         params["header"] = 0  # -> force parameter
         params["index_columns"] = []  # -> force parameter
 
-        csv_table: Qiime2ManifestTable = await super().import_from_path(file, params, target_type)
+        csv_table: Qiime2ManifestTable = super().import_from_path(file, params, target_type)
 
         if not csv_table.column_exists(target_type.SAMPLE_COLUMN_ID):
             raise BadRequestException(

@@ -5,16 +5,17 @@
 
 import os
 
-from gws_core import (ConfigParams, File, MetadataTableImporter, StrParam,
-                      TableAnnotatorHelper, Task, TaskInputs, TaskOutputs,
-                      task_decorator, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs,
-                      ResourceSet)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      MetadataTableImporter, OutputSpec, OutputSpecs,
+                      ResourceSet, StrParam, TableAnnotatorHelper, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..deprecated.v024.dep_fastq_folder import FastqFolder as DepFastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
+
 
 @task_decorator("Qiime2QualityCheck", human_name="Q2QualityCheck",
                 short_description="Performs a sequencing quality check analysis with Qiime2")
@@ -73,7 +74,7 @@ class Qiime2QualityCheck(Task):
             short_description="Type of sequencing. Defaults to paired-end")
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         fastq_folder = inputs["fastq_folder"]
         metadata_table = inputs["metadata_table"]
         seq = params["sequencing_type"]

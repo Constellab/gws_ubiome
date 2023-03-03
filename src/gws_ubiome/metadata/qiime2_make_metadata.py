@@ -5,13 +5,12 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, StrParam,
-                      Task, TaskInputs, TaskOutputs, task_decorator, 
-                      ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      OutputSpec, OutputSpecs, StrParam, Task, TaskInputs,
+                      TaskOutputs, task_decorator)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-
 
 
 @task_decorator("Qiime2MetadataTableMaker", human_name="Qiime2 metadata table maker",
@@ -72,7 +71,7 @@ class Qiime2MetadataTableMaker(Task):
 
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         fastq_folder = inputs["fastq_folder"]
         seq = params["sequencing_type"]
         output_name = params["metadata_file_name"]

@@ -13,7 +13,7 @@ from gws_ubiome import Qiime2MetadataTableMaker
 
 class TestQiime2MetadataMaker(BaseTestCase):
 
-    async def test_importer(self):
+    def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         testdata_dir = settings.get_variable("gws_ubiome:testdata_dir")
@@ -23,7 +23,7 @@ class TestQiime2MetadataMaker(BaseTestCase):
             },
             task_type=Qiime2MetadataTableMaker
         )
-        outputs = await tester.run()
+        outputs = tester.run()
         result = outputs['metadata_table']
         metadata_table_file = TableExporter.call(result, params={'delimiter': "tab", 'write_index': False})
         result_path = metadata_table_file.path

@@ -5,11 +5,11 @@
 
 import os
 
-from gws_core import (ConfigParams, File, IntParam, MetadataTableImporter,
-                      StrParam, TableAnnotatorHelper, TableImporter,
-                      TableAnnotatorHelper, Task, TaskFileDownloader,
-                      TaskInputs, TaskOutputs, task_decorator, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs,
-                      ResourceSet)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      ResourceSet, StrParam, TableAnnotatorHelper,
+                      TableImporter, Task, TaskFileDownloader, TaskInputs,
+                      TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -17,6 +17,7 @@ from ..feature_frequency_table.qiime2_feature_frequency_folder import \
 from .feature_table import FeatureTableImporter
 from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
+
 
 @task_decorator("Qiime2TaxonomyDiversitySilvaExtractor", human_name="Q2SilvaDiversity",
                 short_description="Computing various diversity index and taxonomy assessement of ASVs using Silva", hide=True)
@@ -30,7 +31,6 @@ class Qiime2TaxonomyDiversitySilvaExtractor(Task):
 
     **About Silva:**
     SILVA provides comprehensive, quality checked and regularly updated datasets of aligned small Ribosomal RNA sequences. """
-
 
     DB_SILVA_LOCATION = "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/silva-138-99-nb-classifier.qza"
     DB_SILVA_DESTINATION = "silva-138-99-nb-classifier.qza"
@@ -87,7 +87,7 @@ class Qiime2TaxonomyDiversitySilvaExtractor(Task):
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
-    async def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+    def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         db_taxo = params["taxonomic_affiliation_database"]
