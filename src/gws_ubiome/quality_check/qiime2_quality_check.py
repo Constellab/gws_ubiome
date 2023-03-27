@@ -6,7 +6,7 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      MetadataTableImporter, OutputSpec, OutputSpecs,
+                      TableImporter, OutputSpec, OutputSpecs, Table,
                       ResourceSet, StrParam, TableAnnotatorHelper, Task,
                       TaskInputs, TaskOutputs, task_decorator)
 from gws_omix import FastqFolder
@@ -151,7 +151,7 @@ class Qiime2QualityCheck(Task):
 
         # Create annotated feature table
         path = os.path.join(result_folder.path, "gws_metadata.csv")
-        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
         frwd_path = os.path.join(shell_proxy.working_dir, "quality_check", self.FORWARD_READ_FILE_PATH)
         rvrs_path = os.path.join(shell_proxy.working_dir, "quality_check", self.REVERSE_READ_FILE_PATH)
 
@@ -200,7 +200,7 @@ class Qiime2QualityCheck(Task):
         # create annotated feature table
 
         path = os.path.join(result_folder.path, "gws_metadata.csv")
-        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
         resource_table: ResourceSet = ResourceSet()
         qual_path = os.path.join(shell_proxy.working_dir, "quality_check", self.READS_FILE_PATH)
