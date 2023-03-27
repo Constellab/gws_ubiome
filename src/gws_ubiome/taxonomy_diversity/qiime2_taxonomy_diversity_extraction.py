@@ -6,7 +6,7 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      IntParam, OutputSpec, OutputSpecs,
                       ResourceSet, StrParam, TableAnnotatorHelper,
                       TableImporter, Task, TaskInputs, TaskOutputs,
                       task_decorator)
@@ -195,7 +195,8 @@ class Qiime2TaxonomyDiversityExtractor(Task):
 
         #  Importing Metadata table
         path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
-        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()

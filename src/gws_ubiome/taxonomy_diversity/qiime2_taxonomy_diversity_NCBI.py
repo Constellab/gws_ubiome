@@ -6,7 +6,7 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      IntParam,  OutputSpec, OutputSpecs,
                       ResourceSet, StrParam, TableAnnotatorHelper,
                       TableImporter, Task, TaskInputs, TaskOutputs,
                       task_decorator)
@@ -205,7 +205,8 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
 
         #  Importing Metadata table
         path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
-        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
@@ -231,7 +232,9 @@ class Qiime2TaxonomyDiversityNCBIExtractor(Task):
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
             path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            asv_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+            # asv_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+            asv_metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
             asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             t_asv = asv_table.transpose()

@@ -7,7 +7,7 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      IntParam, OutputSpec, OutputSpecs,
                       ResourceSet, StrParam, Table, TableAnnotatorHelper,
                       TableImporter, Task, TaskInputs, TaskOutputs,
                       task_decorator)
@@ -121,7 +121,8 @@ class Qiime2DifferentialAnalysis(Task):
 
             # Metadata table
             path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+            # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+            metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
             table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table)
             table_annotated.name = key

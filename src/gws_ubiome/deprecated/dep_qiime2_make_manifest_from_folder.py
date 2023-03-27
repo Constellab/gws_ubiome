@@ -5,7 +5,7 @@
 
 import os
 
-from gws_core import (File, MetadataTable, MetadataTableImporter,
+from gws_core import (File, TableImporter,
                       StrParam, TaskInputs, TaskOutputs, task_decorator,
                       ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
 from gws_omix import FastqFolder
@@ -70,7 +70,8 @@ class Qiime2MakeManifest(Qiime2EnvTask):
     def gather_outputs(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         path = os.path.join(self.working_dir, self.DEFAULT_METADATA_FILE_NAME)
         result_file = File(path=path)
-        metadata_table = MetadataTableImporter.call(result_file)
+        # metadata_table = MetadataTableImporter.call(result_file)
+        metadata_table = TableImporter.call(result_file)
         return {"metadata_table": metadata_table}
 
     def build_command(self, params: ConfigParams, inputs: TaskInputs) -> list:

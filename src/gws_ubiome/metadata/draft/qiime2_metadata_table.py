@@ -2,13 +2,8 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-import os
-from typing import List, Type
 
-from gws_core import (BadRequestException, ConfigParams, File, MetadataTable,
-                      MetadataTableImporter, Table, TableExporter,
-                      TableImporter, exporter_decorator, importer_decorator,
-                      resource_decorator)
+from gws_core import (File, TableImporter, resource_decorator)
 
 
 @resource_decorator("Qiime2MetadataFile", human_name="Qiime2 metadata file",
@@ -23,8 +18,7 @@ class Qiime2MetadataFile(File):
         This method is called on output resources of a task. If there is an error returned, the task will be set to error and next proceses will not be run.
         It is also call when uploading a resource (usually for files or folder), if there is an error returned, the resource will not be uploaded
         """
-        metadata_table = MetadataTableImporter.call(File(self.path), {'delimiter': 'tab'})
+        # metadata_table = MetadataTableImporter.call(File(self.path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(File(self.path), {'delimiter': 'tab'})
 
         return metadata_table
-
-
