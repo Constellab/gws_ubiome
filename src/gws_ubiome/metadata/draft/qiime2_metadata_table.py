@@ -18,7 +18,6 @@ class Qiime2MetadataFile(File):
         This method is called on output resources of a task. If there is an error returned, the task will be set to error and next proceses will not be run.
         It is also call when uploading a resource (usually for files or folder), if there is an error returned, the resource will not be uploaded
         """
-        # metadata_table = MetadataTableImporter.call(File(self.path), {'delimiter': 'tab'})
         metadata_table = TableImporter.call(File(self.path), {'delimiter': 'tab'})
 
         return metadata_table

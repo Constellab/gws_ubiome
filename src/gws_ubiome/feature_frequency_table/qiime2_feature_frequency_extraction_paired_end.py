@@ -192,7 +192,6 @@ class Qiime2FeatureTableExtractorPE(Task):
         stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "gws_metadata.csv")
-        # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
         metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
         feature_table = TableAnnotatorHelper.annotate_rows(feature_table, metadata_table)
         feature_table.name = "Denoising Metrics Boxplots"

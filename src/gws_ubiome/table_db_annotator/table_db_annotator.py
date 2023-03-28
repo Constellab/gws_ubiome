@@ -97,18 +97,15 @@ class Qiime2TableDbAnnotator(Task):
         shell_proxy.run(cmd)
 
         path = os.path.join(diversity_input_folder.path, "raw_files", "gws_metadata.csv")
-        # sample_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
         sample_metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
         #  Dictionary table containing corresponding taxa in both files
         annotated_tables_set: ResourceSet = ResourceSet()
         annotated_tables_set.name = "Set of tables"  # taxa_merged_files.relative.tsv
 
         tag_file_path = os.path.join(shell_proxy.working_dir, "taxa_found.for_tags.tsv")
-        # metadata_table = MetadataTableImporter.call(File(path=tag_file_path), {'delimiter': 'tab'})
         metadata_table = TableImporter.call(File(path=tag_file_path), {'delimiter': 'tab'})
 
         tag_file_relative_path = os.path.join(shell_proxy.working_dir, "taxa_found.for_tags.relative.tsv")
-        # metadata_relative_table = MetadataTableImporter.call(File(path=tag_file_relative_path), {'delimiter': 'tab'})
         metadata_relative_table = TableImporter.call(File(path=tag_file_relative_path), {'delimiter': 'tab'})
 
         taxa_dict_path = os.path.join(shell_proxy.working_dir, "taxa_found.tsv")

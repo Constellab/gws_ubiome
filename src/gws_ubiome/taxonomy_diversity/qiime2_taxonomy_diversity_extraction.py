@@ -195,7 +195,6 @@ class Qiime2TaxonomyDiversityExtractor(Task):
 
         #  Importing Metadata table
         path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
-        # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
         metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
         # Create ressource set containing diversity tables
@@ -222,7 +221,7 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
             path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            asv_metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+            asv_metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
             asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             t_asv = asv_table.transpose()

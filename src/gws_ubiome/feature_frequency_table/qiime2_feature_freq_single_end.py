@@ -6,7 +6,7 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, MetadataTableImporter, OutputSpec, OutputSpecs,
+                      IntParam, OutputSpec, OutputSpecs,
                       Table, TableAnnotatorHelper, TableImporter, Task,
                       TaskInputs, TaskOutputs, task_decorator)
 
@@ -184,7 +184,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "gws_metadata.csv")
-        metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
         feature_table = TableAnnotatorHelper.annotate_rows(feature_table, metadata_table)
         stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table)
 

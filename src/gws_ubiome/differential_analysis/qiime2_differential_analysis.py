@@ -121,7 +121,6 @@ class Qiime2DifferentialAnalysis(Task):
 
             # Metadata table
             path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            # metadata_table = MetadataTableImporter.call(File(path=path), {'delimiter': 'tab'})
             metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
             table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table)
