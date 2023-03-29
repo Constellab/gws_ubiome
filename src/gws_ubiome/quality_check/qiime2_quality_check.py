@@ -6,9 +6,9 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      TableImporter, OutputSpec, OutputSpecs, Table,
-                      ResourceSet, StrParam, TableAnnotatorHelper, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
+                      OutputSpec, OutputSpecs, ResourceSet, StrParam, Table,
+                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
+                      TaskOutputs, task_decorator)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
@@ -159,14 +159,16 @@ class Qiime2QualityCheck(Task):
         quality_table_forward = QualityTableImporter.call(
             File(path=frwd_path),
             {'delimiter': 'tab', "index_column": 0})
-        quality_table_fwd_annotated = TableAnnotatorHelper.annotate_rows(quality_table_forward, metadata_table)
+        quality_table_fwd_annotated = TableAnnotatorHelper.annotate_rows(
+            quality_table_forward, metadata_table, use_table_row_names_as_ref=True)
         quality_table_fwd_annotated.name = "Quality check table - Forward"
 
         # Quality table rvs
         quality_table_reverse = QualityTableImporter.call(
             File(path=rvrs_path),
             {'delimiter': 'tab', "index_column": 0})
-        quality_table_rvs_annotated = TableAnnotatorHelper.annotate_rows(quality_table_reverse, metadata_table)
+        quality_table_rvs_annotated = TableAnnotatorHelper.annotate_rows(
+            quality_table_reverse, metadata_table, use_table_row_names_as_ref=True)
         quality_table_rvs_annotated.name = "Quality check table - Reverse"
 
         # Resource set
@@ -207,7 +209,8 @@ class Qiime2QualityCheck(Task):
         quality_table_single_end = QualityTableImporter.call(
             File(path=qual_path),
             {'delimiter': 'tab', "index_column": 0})
-        quality_table = TableAnnotatorHelper.annotate_rows(quality_table_single_end, metadata_table)
+        quality_table = TableAnnotatorHelper.annotate_rows(
+            quality_table_single_end, metadata_table, use_table_row_names_as_ref=True)
 
         resource_table.name = "Quality table - Single end files"
         # Resource set

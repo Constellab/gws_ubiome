@@ -6,9 +6,9 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs,
-                      Table, TableAnnotatorHelper, TableImporter, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
+                      IntParam, OutputSpec, OutputSpecs, Table,
+                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
+                      TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
@@ -185,8 +185,9 @@ class Qiime2FeatureTableExtractorSE(Task):
 
         path = os.path.join(result_file.path, "gws_metadata.csv")
         metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
-        feature_table = TableAnnotatorHelper.annotate_rows(feature_table, metadata_table)
-        stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table)
+        feature_table = TableAnnotatorHelper.annotate_rows(
+            feature_table, metadata_table, use_table_row_names_as_ref=True)
+        stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table, use_table_row_names_as_ref=True)
 
         return {
             "result_folder": result_file,

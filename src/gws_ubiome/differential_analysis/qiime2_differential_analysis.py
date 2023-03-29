@@ -5,20 +5,18 @@
 
 
 import os
-import pandas as pd
 
+import pandas as pd
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs,
-                      ResourceSet, StrParam, Table, TableAnnotatorHelper,
-                      TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      IntParam, OutputSpec, OutputSpecs, ResourceSet, StrParam,
+                      Table, TableAnnotatorHelper, TableImporter, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..differential_analysis.qiime2_differential_analysis_result_folder import \
     Qiime2DifferentialAnalysisResultFolder
 from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
     Qiime2TaxonomyDiversityFolder
-
 
 
 @task_decorator("Qiime2DifferentialAnalysis", human_name="Qiime2 ANCOM differential analysis",
@@ -125,7 +123,7 @@ class Qiime2DifferentialAnalysis(Task):
             path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
             metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
-            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table)
+            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
             resource_table_set.add_resource(table_annotated)
 
