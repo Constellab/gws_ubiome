@@ -5,6 +5,7 @@
 
 
 import os
+import pandas as pd
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
                       IntParam, OutputSpec, OutputSpecs,
@@ -17,6 +18,7 @@ from ..differential_analysis.qiime2_differential_analysis_result_folder import \
     Qiime2DifferentialAnalysisResultFolder
 from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
     Qiime2TaxonomyDiversityFolder
+
 
 
 @task_decorator("Qiime2DifferentialAnalysis", human_name="Qiime2 ANCOM differential analysis",
