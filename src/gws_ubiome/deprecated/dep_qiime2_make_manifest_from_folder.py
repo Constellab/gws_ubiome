@@ -5,9 +5,9 @@
 
 import os
 
-from gws_core import (File, TableImporter,
-                      StrParam, TaskInputs, TaskOutputs, task_decorator,
-                      ConfigParams, ConfigSpecs, InputSpec, OutputSpec, InputSpecs, OutputSpecs)
+from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
+                      OutputSpec, OutputSpecs, StrParam, Table, TableImporter,
+                      TaskInputs, TaskOutputs, task_decorator)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
@@ -52,7 +52,7 @@ class Qiime2MakeManifest(Qiime2EnvTask):
     DEFAULT_METADATA_FILE_NAME = "metadata.csv"
 
     input_specs: InputSpecs = {'fastq_folder': InputSpec(FastqFolder,)}
-    output_specs: OutputSpecs = {'metadata_table': OutputSpec(MetadataTable)}
+    output_specs: OutputSpecs = {'metadata_table': OutputSpec(Table)}
     config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(
