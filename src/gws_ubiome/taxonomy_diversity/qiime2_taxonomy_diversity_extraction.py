@@ -7,8 +7,9 @@ import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
                       IntParam, OutputSpec, OutputSpecs, ResourceSet, StrParam,
-                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+                      TableAnnotatorHelper, TableImporter, Task,
+                      TaskFileDownloader, TaskInputs, TaskOutputs,
+                      task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.qiime2_feature_frequency_folder import \
@@ -32,7 +33,8 @@ class Qiime2TaxonomyDiversityExtractor(Task):
     The GreenGenes database is no longer being maintained. The last version is version 13.8 (2013). We suggest to use the task ```Qiime2 RDP & diversity``` or ```Qiime2 NCBI & diversity``` or  ```Qiime2 Silva & diversity``` instead.
     """
 
-    DB_GREENGENES = "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza"
+    DB_GREENGENES_LOCATION = "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/gg-13-8-99-nb-classifier.qza"
+    DB_GREENGENES_DESTINATION = "gg-13-8-99-nb-classifier.qza"
 
     # Diversity output files
     DIVERSITY_PATHS = {
@@ -93,13 +95,24 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(
+            self.message_dispatcher)
+
+        # download the database
+        # create the file_downloader from a task.
+        file_downloader = TaskFileDownloader(
+            Qiime2TaxonomyDiversityExtractor.get_brick_name(),
+            self.message_dispatcher)
+        # download a file
+        db_file_path = file_downloader.download_file_if_missing(
+            self.DB_GREENGENES_LOCATION, self.DB_GREENGENES_DESTINATION)
+
         if db_taxo == "GreenGenes-v13.8":
             outputs = self.run_cmd_lines(shell_proxy,
                                          script_file_dir,
                                          qiime2_folder_path,
                                          plateau_val,
-                                         self.DB_GREENGENES
+                                         db_file_path
                                          )
         return outputs
 
@@ -112,25 +125,29 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         # This script create Qiime2 core diversity metrics based on clustering
         cmd_1 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/1_qiime2_diversity_indexes.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/1_qiime2_diversity_indexes.sh"),
             qiime2_folder_path,
             plateau_val
         ]
         self.log_info_message("Creating Qiime2 core diversity indexes")
         res = shell_proxy.run(cmd_1)
         if res != 0:
-            raise Exception("Core diversity indexes geenration did not finished")
+            raise Exception(
+                "Core diversity indexes geenration did not finished")
         self.update_progress_value(16, "Done")
 
         # This script perform Qiime2 taxonomix assignment using pre-trained taxonomic DB
 
         cmd_2 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/2_qiime2_taxonomic_assignment.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/2_qiime2_taxonomic_assignment.sh"),
             qiime2_folder_path,
             db_name
         ]
-        self.log_info_message("Performing Qiime2 taxonomic assignment with pre-trained model")
+        self.log_info_message(
+            "Performing Qiime2 taxonomic assignment with pre-trained model")
         res = shell_proxy.run(cmd_2)
         if res != 0:
             raise Exception("Taxonomic assignment step did not finished")
@@ -139,7 +156,8 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         # This script perform extra diversity assessment via qiime2
         cmd_3 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/3_qiime2_extra_diversity_indexes.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/3_qiime2_extra_diversity_indexes.sh"),
             qiime2_folder_path,
             shell_proxy.working_dir
         ]
@@ -151,12 +169,15 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         # Converting Qiime2 barplot output compatible with constellab front
         cmd_4 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/4_barplot_output_formating.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/4_barplot_output_formating.sh"),
             qiime2_folder_path,
-            os.path.join(script_file_dir, "./perl/4_parse_qiime2_taxa_table.pl"),
+            os.path.join(script_file_dir,
+                         "./perl/4_parse_qiime2_taxa_table.pl"),
             shell_proxy.working_dir
         ]
-        self.log_info_message("Converting Qiime2 taxonomic barplot for visualisation")
+        self.log_info_message(
+            "Converting Qiime2 taxonomic barplot for visualisation")
         res = shell_proxy.run(cmd_4)
         if res != 0:
             raise Exception("Barplot convertion did not finished")
@@ -165,7 +186,8 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         # Getting Qiime2 ASV output files
         cmd_5 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/5_qiime2_ASV_output_files_generation.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/5_qiime2_ASV_output_files_generation.sh"),
             shell_proxy.working_dir
         ]
         self.log_info_message("Qiime2 ASV output file generation")
@@ -177,7 +199,8 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         # Saving output files in the final output result folder Qiime2TaxonomyDiversityFolder
         cmd_6 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/6_qiime2_save_extra_output_files.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/6_qiime2_save_extra_output_files.sh"),
             qiime2_folder_path,
             shell_proxy.working_dir
         ]
@@ -190,19 +213,25 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         # Output object creation and Table annotation
 
         result_folder = Qiime2TaxonomyDiversityFolder()
-        result_folder.path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity")
+        result_folder.path = os.path.join(
+            shell_proxy.working_dir, "taxonomy_and_diversity")
 
         #  Importing Metadata table
-        path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
-        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+        path = os.path.join(result_folder.path,
+                            "raw_files", "gws_metadata.csv")
+        metadata_table = TableImporter.call(
+            File(path=path), {'delimiter': 'tab'})
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
         diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table (ASVs or OTUs)"
         for key, value in self.DIVERSITY_PATHS.items():
-            path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
-            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
+            path = os.path.join(shell_proxy.working_dir,
+                                "taxonomy_and_diversity", "table_files", value)
+            table = TableImporter.call(
+                File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table_annotated = TableAnnotatorHelper.annotate_rows(
+                table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
             diversity_resource_table_set.add_resource(table_annotated)
 
@@ -211,20 +240,28 @@ class Qiime2TaxonomyDiversityExtractor(Task):
         taxo_resource_table_set: ResourceSet = ResourceSet()
         taxo_resource_table_set.name = "Set of taxonomic tables (7 levels)"
         for key, value in self.TAXO_PATHS.items():
-            path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
-            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
-            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
+            path = os.path.join(shell_proxy.working_dir,
+                                "taxonomy_and_diversity", "table_files", value)
+            table = TaxonomyTableImporter.call(
+                File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table_annotated = TableAnnotatorHelper.annotate_rows(
+                table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
             taxo_resource_table_set.add_resource(table_annotated)
 
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
-            path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            asv_metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
-            asv_table_path = os.path.join(result_folder.path, "table_files", value)
-            asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
+            path = os.path.join(result_folder.path,
+                                "raw_files", "asv_dict.csv")
+            asv_metadata_table = TableImporter.call(
+                File(path=path), {'delimiter': 'tab'})
+            asv_table_path = os.path.join(
+                result_folder.path, "table_files", value)
+            asv_table = FeatureTableImporter.call(File(path=asv_table_path), {
+                                                  'delimiter': 'tab', "index_column": 0})
             t_asv = asv_table.transpose()
-            table_annotated = TableAnnotatorHelper.annotate_rows(t_asv, metadata_table, use_table_row_names_as_ref=True)
+            table_annotated = TableAnnotatorHelper.annotate_rows(
+                t_asv, metadata_table, use_table_row_names_as_ref=True)
             table_annotated = TableAnnotatorHelper.annotate_columns(
                 t_asv, asv_metadata_table, use_table_column_names_as_ref=True)
             table_annotated.name = key

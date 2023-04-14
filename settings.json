@@ -1,48 +1,46 @@
 {
-    "name"          : "gws_ubiome",
-    "author"        : "Gencovery",
-    "author_email"  : "admin@gencovery.com",
-    "version"       : "0.5.0-beta.1",
-    "description"   : "Gencovery brick for microbiome analysis",
-    "variables": {
-        "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
-
-      "gws_ubiome:large_testdata_url": "https://storage.sbg.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/testdata/ubiome/qiime2/testdata.zip",
-      "gws_ubiome:large_testdata_dir": "/data/gws_ubiome/testdata",
-
-      "gws_ubiome:sepp_ref_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/sepp-refs-gg-13-8.qza",
-      "gws_ubiome:sepp_ref_file": "/data/gws_ubiome/opendata/sepp-refs-gg-13-8.qza",
-
-      "gws_ubiome:greengenes_classifier_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/gg-13-8-99-nb-classifier.qza",
-      "gws_ubiome:greengenes_classifier_file": "/data/gws_ubiome/opendata/gg-13-8-99-nb-classifier.qza",
-
-      "gws_ubiome:ncbi_16s_classifier_url": "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/ncbi-refseqs-classifier.16S_rRNA.20220712.qza",
-      "gws_ubiome:ncbi_16s_classifier_file": "/data/gws_ubiome/opendata/ncbi-refseqs-classifier.16S_rRNA.20220712.qza"
+  "name": "gws_ubiome",
+  "author": "Gencovery",
+  "author_email": "admin@gencovery.com",
+  "version": "0.5.0-beta.1",
+  "description": "Gencovery brick for microbiome analysis",
+  "variables": {
+    "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
+    "gws_ubiome:large_testdata_url": "https://storage.sbg.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/testdata/ubiome/qiime2/testdata.zip",
+    "gws_ubiome:large_testdata_dir": "/data/gws_ubiome/testdata"
   },
   "environment": {
-      "pip": [
+    "pip": [
+      {
+        "source": "https://pypi.python.org/simple",
+        "packages": []
+      },
+      {
+        "source": "https://$GWS_PIP_PACKAGE_TOKEN@gitlab.com/api/.../packages/pypi",
+        "packages": []
+      }
+    ],
+    "git": [
+      {
+        "source": "https://$GWS_GIT_LOGIN:$GWS_GIT_PWD@gitlab.com/gencovery/core",
+        "packages": [
           {
-              "source": "https://pypi.python.org/simple",
-              "packages": []
+            "name": "gws_core",
+            "version": "0.5.0-beta.1",
+            "is_brick": true
           },
           {
-              "source": "https://$GWS_PIP_PACKAGE_TOKEN@gitlab.com/api/.../packages/pypi",
-              "packages": []
+            "name": "gws_omix",
+            "version": "0.5.0-beta.1",
+            "is_brick": true
           }
-      ],
-      "git": [
-          {
-              "source": "https://$GWS_GIT_LOGIN:$GWS_GIT_PWD@gitlab.com/gencovery/core",
-              "packages":[
-                  {"name": "gws_core", "version": "0.5.0-beta.1", "is_brick": true},
-                  {"name": "gws_omix", "version": "0.5.0-beta.1", "is_brick": true}
-              ]
-          }
-      ],
-      "variables": {
-          "GWS_GIT_LOGIN": "",
-          "GWS_GIT_PWD": "",
-          "GWS_PIP_PACKAGE_TOKEN": ""
+        ]
       }
+    ],
+    "variables": {
+      "GWS_GIT_LOGIN": "",
+      "GWS_GIT_PWD": "",
+      "GWS_PIP_PACKAGE_TOKEN": ""
+    }
   }
 }

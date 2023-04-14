@@ -61,22 +61,6 @@ def call_hook():
     if unzip(dest_path + ".zip"):
         os.remove(dest_path + ".zip")
 
-    # # Pull Greengeens Ref data
-    # url = settings["variables"]["gws_ubiome:greengenes_ref_url"]
-    # dest_path = settings["variables"]["gws_ubiome:greengenes_ref_file"]
-    # download(url, dest_path)
-
-    # # Pull Greengeens Classifier
-    # url = settings["variables"]["gws_ubiome:greengenes_classifier_url"]
-    # dest_path = settings["variables"]["gws_ubiome:greengenes_classifier_file"]
-    # download(url, dest_path)
-
-    # # Pull NCBI-16s Classifier
-    # url = settings["variables"]["gws_ubiome:ncbi_16s_classifier_url"]
-    # dest_path = settings["variables"]["gws_ubiome:ncbi_16s_classifier_file"]
-    # download(url, dest_path)
-    # Other tasks ...
-
 
 if __name__ == "__main__":
     call_hook()
