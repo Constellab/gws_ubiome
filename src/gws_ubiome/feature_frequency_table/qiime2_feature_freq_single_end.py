@@ -46,17 +46,17 @@ class Qiime2FeatureTableExtractorSE(Task):
     Dada2 turns single-end sequences into merged, denoised, chimera-free, inferred sample sequences. The core denoising algorithm is built on a model of the errors in sequenced amplicon reads. For more information about Dada2, we suggest to read Benjamin J. Callahan *et al.*, 2016 (https://www.nature.com/articles/nmeth.3869)
 
     """
-    input_specs: InputSpecs = {
+    input_specs: InputSpecs = InputSpecs({
         'quality_check_folder': InputSpec(Qiime2QualityCheckResultFolder)
-    }
-    output_specs: OutputSpecs = {
+    })
+    output_specs: OutputSpecs = OutputSpecs({
         'feature_table': OutputSpec(FeatureFrequencyTable),
         'stats': OutputSpec(Table),
         'result_folder':
         OutputSpec(
             Qiime2FeatureFrequencyFolder,
             short_description="Rarefaction curves folder. Can be used with taxonomy task (!no rarefaction are done on counts!))",
-            human_name="Rarefaction_curves")}
+            human_name="Rarefaction_curves")})
     config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),

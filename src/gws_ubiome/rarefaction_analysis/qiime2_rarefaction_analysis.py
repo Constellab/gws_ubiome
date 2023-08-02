@@ -31,13 +31,13 @@ class Qiime2RarefactionAnalysis(Task):
     OBSERVED_FEATURE_FILE = "observed_features.for_boxplot.csv"
     SHANNON_INDEX_FILE = "shannon.for_boxplot.csv"
 
-    input_specs: InputSpecs = {
+    input_specs: InputSpecs = InputSpecs({
         'feature_frequency_folder': InputSpec([Qiime2TaxonomyDiversityFolder, Qiime2FeatureFrequencyFolder])
-    }
-    output_specs: OutputSpecs = {
+    })
+    output_specs: OutputSpecs = OutputSpecs({
         "rarefaction_table": OutputSpec(ResourceSet),
         'result_folder': OutputSpec(Qiime2RarefactionAnalysisResultFolder)
-    }
+    })
     config_specs: ConfigSpecs = {
         "min_coverage": IntParam(default_value=20, min_value=20, short_description="Minimum number of reads to test"),
         "max_coverage":

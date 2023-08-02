@@ -51,8 +51,8 @@ class Qiime2MakeManifest(Qiime2EnvTask):
 
     DEFAULT_METADATA_FILE_NAME = "metadata.csv"
 
-    input_specs: InputSpecs = {'fastq_folder': InputSpec(FastqFolder,)}
-    output_specs: OutputSpecs = {'metadata_table': OutputSpec(Table)}
+    input_specs: InputSpecs = InputSpecs({'fastq_folder': InputSpec(FastqFolder)})
+    output_specs: OutputSpecs = OutputSpecs({'metadata_table': OutputSpec(Table)})
     config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(

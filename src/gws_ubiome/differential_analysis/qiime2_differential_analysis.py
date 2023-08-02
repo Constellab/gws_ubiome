@@ -53,14 +53,14 @@ class Qiime2DifferentialAnalysis(Task):
         "Species - Percentile abundances": "7.percent-abundances.tsv"
     }
 
-    input_specs: InputSpecs = {
+    input_specs: InputSpecs = InputSpecs({
         'taxonomy_diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder),
         'metadata_file': InputSpec(File, short_description="Metadata file", human_name="Metadata_file")
-    }
-    output_specs: OutputSpecs = {
+    })
+    output_specs: OutputSpecs = OutputSpecs({
         'result_tables': OutputSpec(ResourceSet),
         'result_folder': OutputSpec(Qiime2DifferentialAnalysisResultFolder)
-    }
+    })
     config_specs: ConfigSpecs = {
         "metadata_column": StrParam(
             human_name="Metadata column",

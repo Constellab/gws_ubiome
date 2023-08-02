@@ -61,12 +61,12 @@ class Qiime2QualityCheck(Task):
     FORWARD_READ_FILE_PATH = "forward_boxplot.csv"
     REVERSE_READ_FILE_PATH = "reverse_boxplot.csv"
 
-    input_specs: InputSpecs = {'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)), 'metadata_table': InputSpec(
-        File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")}
-    output_specs: OutputSpecs = {
+    input_specs: InputSpecs = InputSpecs({'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)), 'metadata_table': InputSpec(
+        File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")})
+    output_specs: OutputSpecs = OutputSpecs({
         'result_folder': OutputSpec(Qiime2QualityCheckResultFolder),
         'quality_table': OutputSpec((ResourceSet, QualityCheckTable, ))
-    }
+    })
     config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(

@@ -47,10 +47,10 @@ class Qiime2MetadataTableMaker(Task):
                 sample-3    sample3.fastq.gz
 
     """
-    input_specs: InputSpecs = {'fastq_folder': InputSpec(
-        FastqFolder, short_description="FASTQ folder", human_name="Folder_folder")}
-    output_specs: OutputSpecs = {'metadata_table': OutputSpec(
-        File, short_description="Metadata file", human_name="Metadata_file")}
+    input_specs: InputSpecs = InputSpecs({'fastq_folder': InputSpec(
+        FastqFolder, short_description="FASTQ folder", human_name="Folder_folder")})
+    output_specs: OutputSpecs = OutputSpecs({'metadata_table': OutputSpec(
+        File, short_description="Metadata file", human_name="Metadata_file")})
     config_specs: ConfigSpecs = {
         "sequencing_type":
         StrParam(

@@ -50,14 +50,14 @@ class Qiime2TableDbAnnotator(Task):
         "g": "6",
         "s": "7",
     }
-    input_specs: InputSpecs = {
+    input_specs: InputSpecs = InputSpecs({
         'diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder, human_name="Diversity_qiime2_folder"),
-        'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")}
-    output_specs: OutputSpecs = {
+        'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")})
+    output_specs: OutputSpecs = OutputSpecs({
         'relative_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Relative_Abundance_Annotated_Table"),
         'absolute_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Absolute_Abundance_Annotated_Table"),
 
-    }
+    })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         # get options, I/O variables

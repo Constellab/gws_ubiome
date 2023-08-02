@@ -49,16 +49,16 @@ class old_Qiime2FeatureTableExtractorSE(Task):
 
 
     """
-    input_specs: InputSpecs = {
+    input_specs: InputSpecs = InputSpecs({
         'quality_check_folder': InputSpec(Qiime2QualityCheckResultFolder)
-    }
-    output_specs: OutputSpecs = {
+    })
+    output_specs: OutputSpecs = OutputSpecs({
         'feature_table': OutputSpec(FeatureFrequencyTable),
         'stats': OutputSpec(Table),
         'result_folder': OutputSpec(Qiime2FeatureFrequencyFolder,
                                     short_description="Rarefaction curves folder. Can be used with taxonomy task (!no rarefaction are done on counts!))",
                                     human_name="Rarefaction_curves")
-    }
+    })
     config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_reads_size": IntParam(

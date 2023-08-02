@@ -66,17 +66,17 @@ class Qiime2TaxonomyDiversityExtractor(Task):
     FEATURE_TABLES_PATH = {
         "ASV_features_count": "asv_table.csv"
     }
-    input_specs: InputSpecs = {
+    input_specs: InputSpecs = InputSpecs({
         'rarefaction_analysis_result_folder':
         InputSpec(
             Qiime2FeatureFrequencyFolder,
             short_description="Feature freq. folder",
-            human_name="feature_freq_folder")}
-    output_specs: OutputSpecs = {
+            human_name="feature_freq_folder")})
+    output_specs: OutputSpecs = OutputSpecs({
         'diversity_tables': OutputSpec(ResourceSet),
         'taxonomy_tables': OutputSpec(ResourceSet),
         'result_folder': OutputSpec(Qiime2TaxonomyDiversityFolder)
-    }
+    })
     config_specs: ConfigSpecs = {
         "rarefaction_plateau_value":
         IntParam(
