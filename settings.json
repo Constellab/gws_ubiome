@@ -2,7 +2,7 @@
   "name": "gws_ubiome",
   "author": "Gencovery",
   "author_email": "admin@gencovery.com",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Gencovery brick for microbiome analysis",
   "variables": {
     "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
@@ -13,7 +13,7 @@
     "bricks": [
       {
         "name": "gws_core",
-        "version": "0.5.8"
+        "version": "0.5.15"
       },
       {
         "name": "gws_omix",
@@ -27,11 +27,6 @@
       }
     ],
     "git": [
-    ],
-    "variables": {
-      "GWS_GIT_LOGIN": "",
-      "GWS_GIT_PWD": "",
-      "GWS_PIP_PACKAGE_TOKEN": ""
-    }
+    ]
   }
 }
