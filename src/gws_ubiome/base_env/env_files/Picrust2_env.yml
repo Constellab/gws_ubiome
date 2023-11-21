@@ -1,0 +1,6 @@
+name: .picrust2
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - picrust2=2.5.2
