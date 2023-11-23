@@ -30,13 +30,7 @@ from .rarefaction_analysis.rarefaction_table import RarefactionTable
 from .table.tax_table import TaxTable
 from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
 # > taxonomy/diversity
-from .taxonomy_diversity.qiime2_taxonomy_diversity_extraction import \
-    Qiime2TaxonomyDiversityExtractor
+from .taxonomy_diversity.qiime2_taxonomy_diversity import \
+    Qiime2TaxonomyDiversity
 from .taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
     Qiime2TaxonomyDiversityFolder
-from .taxonomy_diversity.qiime2_taxonomy_diversity_NCBI import \
-    Qiime2TaxonomyDiversityNCBIExtractor
-from .taxonomy_diversity.qiime2_taxonomy_diversity_RDP import \
-    Qiime2TaxonomyDiversityRDPExtractor
-from .taxonomy_diversity.qiime2_taxonomy_diversity_SILVA import \
-    Qiime2TaxonomyDiversitySilvaExtractor

@@ -6,13 +6,12 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      OutputSpec, OutputSpecs, ResourceSet, StrParam, Table,
-                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+                      OutputSpec, OutputSpecs, ResourceSet, ShellProxy,
+                      StrParam, TableAnnotatorHelper, TableImporter, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..deprecated.v024.dep_fastq_folder import FastqFolder as DepFastqFolder
 from .qiime2_quality_check_result_folder import Qiime2QualityCheckResultFolder
 from .quality_check_table import QualityCheckTable, QualityTableImporter
 
@@ -61,7 +60,7 @@ class Qiime2QualityCheck(Task):
     FORWARD_READ_FILE_PATH = "forward_boxplot.csv"
     REVERSE_READ_FILE_PATH = "reverse_boxplot.csv"
 
-    input_specs: InputSpecs = InputSpecs({'fastq_folder': InputSpec((FastqFolder, DepFastqFolder,)), 'metadata_table': InputSpec(
+    input_specs: InputSpecs = InputSpecs({'fastq_folder': InputSpec(FastqFolder), 'metadata_table': InputSpec(
         File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")})
     output_specs: OutputSpecs = OutputSpecs({
         'result_folder': OutputSpec(Qiime2QualityCheckResultFolder),
@@ -100,10 +99,10 @@ class Qiime2QualityCheck(Task):
 
         return outputs
 
-    def run_cmd_paired_end(self, shell_proxy: Qiime2ShellProxyHelper,
+    def run_cmd_paired_end(self, shell_proxy: ShellProxy,
                            script_file_dir: str,
                            fastq_folder_path: str,
-                           manifest_table_file_path: str) -> None:
+                           manifest_table_file_path: str) -> TaskOutputs:
 
         # This script create Qiime2 metadata file by modify initial gws metedata file
         cmd_1 = [
@@ -146,8 +145,6 @@ class Qiime2QualityCheck(Task):
 
         # Getting quality_check folder to perfom file/table annotations
         result_folder.path = os.path.join(shell_proxy.working_dir, "quality_check")
-        result_folder.forward_reads_file_path = self.FORWARD_READ_FILE_PATH
-        result_folder.reverse_reads_file_path = self.REVERSE_READ_FILE_PATH
 
         # Create annotated feature table
         path = os.path.join(result_folder.path, "gws_metadata.csv")
