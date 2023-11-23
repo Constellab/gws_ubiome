@@ -5,13 +5,11 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, InputSpec, InputSpecs,
+from gws_core import (ConfigParams, ConfigSpecs, Folder, InputSpec, InputSpecs,
                       IntParam, OutputSpec, OutputSpecs, TaskInputs,
                       TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2EnvTask
-from ..quality_check.qiime2_quality_check_result_folder import \
-    Qiime2QualityCheckResultFolder
 from .dep_qiime2_sample_frequencies_folder import Qiime2SampleFrequenciesFolder
 
 
@@ -28,7 +26,7 @@ class Qiime2SampleFrequenciesSE(Qiime2EnvTask):
     """
 
     input_specs: InputSpecs = InputSpecs({
-        'quality_check_result_folder': InputSpec(Qiime2QualityCheckResultFolder,),
+        'quality_check_result_folder': InputSpec(Folder),
     })
     output_specs: OutputSpecs = OutputSpecs({
         'result_folder': OutputSpec(Qiime2SampleFrequenciesFolder,)

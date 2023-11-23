@@ -5,17 +5,15 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs, ResourceSet,
-                      ShellProxy, StrParam, Table, TableAnnotatorHelper,
-                      TableImporter, Task, TaskFileDownloader, TaskInputs,
-                      TaskOutputs, task_decorator)
+from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
+                      ResourceSet, ShellProxy, StrParam, Table,
+                      TableAnnotatorHelper, TableImporter, Task,
+                      TaskFileDownloader, TaskInputs, TaskOutputs,
+                      task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..feature_frequency_table.qiime2_feature_frequency_folder import \
-    Qiime2FeatureFrequencyFolder
 from .feature_table import FeatureTableImporter
-from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
 
@@ -83,13 +81,13 @@ class Qiime2TaxonomyDiversity(Task):
     input_specs: InputSpecs = InputSpecs({
         'rarefaction_analysis_result_folder':
         InputSpec(
-            Qiime2FeatureFrequencyFolder,
+            Folder,
             short_description="Feature freq. folder",
             human_name="feature_freq_folder")})
     output_specs: OutputSpecs = OutputSpecs({
         'diversity_tables': OutputSpec(ResourceSet),
         'taxonomy_tables': OutputSpec(ResourceSet),
-        'result_folder': OutputSpec(Qiime2TaxonomyDiversityFolder)
+        'result_folder': OutputSpec(Folder)
     })
     config_specs: ConfigSpecs = {
         "rarefaction_plateau_value":
@@ -103,7 +101,7 @@ class Qiime2TaxonomyDiversity(Task):
     }
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        qiime2_folder: Qiime2FeatureFrequencyFolder = inputs["rarefaction_analysis_result_folder"]
+        qiime2_folder: Folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         db_taxo = params["taxonomic_affiliation_database"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))

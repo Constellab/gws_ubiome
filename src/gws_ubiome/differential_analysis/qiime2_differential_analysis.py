@@ -7,16 +7,14 @@
 import os
 
 import pandas as pd
-from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs, ResourceSet, StrParam,
-                      Table, TableAnnotatorHelper, TableImporter, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
+from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
+                      ResourceSet, ShellProxy, StrParam, Table,
+                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
+                      TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..differential_analysis.qiime2_differential_analysis_result_folder import \
-    Qiime2DifferentialAnalysisResultFolder
-from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
-    Qiime2TaxonomyDiversityFolder
+from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 
 
 @task_decorator("Qiime2DifferentialAnalysis", human_name="Qiime2 ANCOM differential analysis",
@@ -54,12 +52,12 @@ class Qiime2DifferentialAnalysis(Task):
     }
 
     input_specs: InputSpecs = InputSpecs({
-        'taxonomy_diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder),
+        'taxonomy_diversity_folder': InputSpec(Folder),
         'metadata_file': InputSpec(File, short_description="Metadata file", human_name="Metadata_file")
     })
     output_specs: OutputSpecs = OutputSpecs({
         'result_tables': OutputSpec(ResourceSet),
-        'result_folder': OutputSpec(Qiime2DifferentialAnalysisResultFolder)
+        'result_folder': OutputSpec(Folder)
     })
     config_specs: ConfigSpecs = {
         "metadata_column": StrParam(
@@ -70,7 +68,7 @@ class Qiime2DifferentialAnalysis(Task):
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
 
         # get options, I/O variables
-        qiime2_folder = inputs["taxonomy_diversity_folder"]
+        qiime2_folder: Folder = inputs["taxonomy_diversity_folder"]
         metadata_col = params["metadata_column"]
         metadata_f = inputs["metadata_file"]
         thrds = params["threads"]
@@ -92,12 +90,12 @@ class Qiime2DifferentialAnalysis(Task):
 
         return outputs
 
-    def run_cmd(self, shell_proxy: Qiime2ShellProxyHelper,  # shell_proxy: Qiime2_2022_11_ShellProxyHelper,
+    def run_cmd(self, shell_proxy: ShellProxy,  # shell_proxy: Qiime2_2022_11_ShellProxyHelper,
                 qiime2_folder: str,
                 metadata_col: str,
                 metadata_f: str,
                 thrds: int,
-                script_file_dir: str) -> None:
+                script_file_dir: str) -> TaskOutputs:
 
         cmd = [
             " bash ", os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.all_taxa_levels.sh"),
@@ -109,8 +107,7 @@ class Qiime2DifferentialAnalysis(Task):
 
         shell_proxy.run(cmd)
 
-        result_folder = Qiime2DifferentialAnalysisResultFolder()
-        result_folder.path = os.path.join(shell_proxy.working_dir, "differential_analysis")
+        result_folder = Folder(os.path.join(shell_proxy.working_dir, "differential_analysis"))
 
         resource_table_set: ResourceSet = ResourceSet()
         resource_table_set.name = "Set of differential analysis tables"
