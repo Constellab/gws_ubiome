@@ -5,10 +5,9 @@
 import copy
 
 import numpy as np
-import pandas as pd
 from gws_core import (BoolParam, BoxPlotView, ConfigParams, StackedBarPlotView,
                       StrParam, Table, TableImporter, TableUnfolderHelper,
-                      TableView, importer_decorator, resource_decorator, view)
+                      importer_decorator, resource_decorator, view)
 
 
 @resource_decorator(unique_name="TaxonomyTable", hide=True)

@@ -7,6 +7,8 @@ from gws_core import Folder, resource_decorator
 
 @resource_decorator("Qiime2TaxonomyDiversityFolder",
                     human_name="Qiime2 taxonomy diversity folder",
-                    short_description="Folder containing all extracted Qiime2 taxonomy diversity tables", hide=True)
+                    short_description="Folder containing all extracted Qiime2 taxonomy diversity tables", hide=True,
+                    deprecated_since='0.2.5',
+                    deprecated_message='Use Folder instead')
 class Qiime2TaxonomyDiversityFolder(Folder):
     ''' Qiime2TaxonomyDiversityFolder Folder file class '''

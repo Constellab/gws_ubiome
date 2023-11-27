@@ -5,17 +5,12 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs, ResourceSet, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
+from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
+                      ResourceSet, ShellProxy, Task, TaskInputs, TaskOutputs,
+                      task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..feature_frequency_table.qiime2_feature_frequency_folder import \
-    Qiime2FeatureFrequencyFolder
-from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
-    Qiime2TaxonomyDiversityFolder
-from .qiime2_rarefaction_analysis_result_folder import \
-    Qiime2RarefactionAnalysisResultFolder
 from .rarefaction_table import RarefactionTableImporter
 
 
@@ -32,11 +27,11 @@ class Qiime2RarefactionAnalysis(Task):
     SHANNON_INDEX_FILE = "shannon.for_boxplot.csv"
 
     input_specs: InputSpecs = InputSpecs({
-        'feature_frequency_folder': InputSpec([Qiime2TaxonomyDiversityFolder, Qiime2FeatureFrequencyFolder])
+        'feature_frequency_folder': InputSpec(Folder)
     })
     output_specs: OutputSpecs = OutputSpecs({
         "rarefaction_table": OutputSpec(ResourceSet),
-        'result_folder': OutputSpec(Qiime2RarefactionAnalysisResultFolder)
+        'result_folder': OutputSpec(Folder)
     })
     config_specs: ConfigSpecs = {
         "min_coverage": IntParam(default_value=20, min_value=20, short_description="Minimum number of reads to test"),
@@ -72,13 +67,13 @@ class Qiime2RarefactionAnalysis(Task):
 
         return annotated_outputs
 
-    def run_cmd_lines(self, shell_proxy: Qiime2ShellProxyHelper,
+    def run_cmd_lines(self, shell_proxy: ShellProxy,
                       script_file_dir: str,
                       feature_frequency_folder_path: str,
                       min_depth: int,
                       max_depth: int,
                       iteration_number: int
-                      ) -> None:
+                      ) -> str:
 
         cmd_1 = [
             " bash ",
@@ -110,7 +105,7 @@ class Qiime2RarefactionAnalysis(Task):
 
         return output_folder_path
 
-    def outputs_annotation(self, output_folder_path: str) -> None:
+    def outputs_annotation(self, output_folder_path: str) -> TaskOutputs:
 
         result_folder = Qiime2RarefactionAnalysisResultFolder()
         result_folder.path = output_folder_path

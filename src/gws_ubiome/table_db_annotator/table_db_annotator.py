@@ -5,14 +5,12 @@
 
 import os
 
-from gws_core import (ConfigParams, File, InputSpec, InputSpecs, OutputSpec,
-                      OutputSpecs, ResourceSet, TableAnnotatorHelper,
-                      TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import (ConfigParams, File, Folder, InputSpec, InputSpecs,
+                      OutputSpec, OutputSpecs, ResourceSet, ShellProxy,
+                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
+                      TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..taxonomy_diversity.qiime2_taxonomy_diversity_folder import \
-    Qiime2TaxonomyDiversityFolder
 from .tax_table_annotated_table import (TaxonomyTableTagged,
                                         TaxonomyTableTaggedImporter)
 
@@ -51,7 +49,7 @@ class Qiime2TableDbAnnotator(Task):
         "s": "7",
     }
     input_specs: InputSpecs = InputSpecs({
-        'diversity_folder': InputSpec(Qiime2TaxonomyDiversityFolder, human_name="Diversity_qiime2_folder"),
+        'diversity_folder': InputSpec(Folder, human_name="Diversity_qiime2_folder"),
         'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")})
     output_specs: OutputSpecs = OutputSpecs({
         'relative_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Relative_Abundance_Annotated_Table"),
@@ -61,7 +59,7 @@ class Qiime2TableDbAnnotator(Task):
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         # get options, I/O variables
-        diversity_input_folder = inputs["diversity_folder"]
+        diversity_input_folder: Folder = inputs["diversity_folder"]
         metadata_table = inputs["annotation_table"]
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -77,10 +75,10 @@ class Qiime2TableDbAnnotator(Task):
 
         return outputs
 
-    def run_cmd(self, shell_proxy: Qiime2ShellProxyHelper,
+    def run_cmd(self, shell_proxy: ShellProxy,
                 diversity_input_folder: str,
                 metadata_table: str,
-                script_file_dir: str) -> None:
+                script_file_dir: str) -> TaskOutputs:
 
         taxa_db_type = "GreenGenes"
         taxa_file_path = os.path.join(diversity_input_folder.path, "table_files")

@@ -3,8 +3,7 @@ import os
 
 import pandas
 from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import (Qiime2FeatureFrequencyFolder,
-                        Qiime2TaxonomyDiversityExtractor)
+from gws_ubiome import Qiime2FeatureFrequencyFolder, Qiime2TaxonomyDiversity
 
 
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
@@ -21,7 +20,7 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
                 'rarefaction_analysis_result_folder':
                     Qiime2FeatureFrequencyFolder(path=os.path.join(large_testdata_dir, "rarefaction"))
             },
-            task_type=Qiime2TaxonomyDiversityExtractor
+            task_type=Qiime2TaxonomyDiversity
         )
         # Qiime2FeatureFrequencyFolder Qiime2RarefactionAnalysisResultFolder
         outputs = tester.run()

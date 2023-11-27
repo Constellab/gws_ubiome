@@ -5,18 +5,14 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs, Table,
+from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs, Table,
                       TableAnnotatorHelper, TableImporter, Task, TaskInputs,
                       TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
     FeatureFrequencyTable, FeatureFrequencyTableImporter)
-from ..feature_frequency_table.qiime2_feature_frequency_folder import \
-    Qiime2FeatureFrequencyFolder
-from ..quality_check.qiime2_quality_check_result_folder import \
-    Qiime2QualityCheckResultFolder
 
 
 @task_decorator("Qiime2FeatureTableExtractorSE",  human_name="Q2FeatureInferenceSE",
@@ -47,14 +43,14 @@ class Qiime2FeatureTableExtractorSE(Task):
 
     """
     input_specs: InputSpecs = InputSpecs({
-        'quality_check_folder': InputSpec(Qiime2QualityCheckResultFolder)
+        'quality_check_folder': InputSpec(Folder)
     })
     output_specs: OutputSpecs = OutputSpecs({
         'feature_table': OutputSpec(FeatureFrequencyTable),
         'stats': OutputSpec(Table),
         'result_folder':
         OutputSpec(
-            Qiime2FeatureFrequencyFolder,
+            Folder,
             short_description="Rarefaction curves folder. Can be used with taxonomy task (!no rarefaction are done on counts!))",
             human_name="Rarefaction_curves")})
     config_specs: ConfigSpecs = {
@@ -100,7 +96,7 @@ class Qiime2FeatureTableExtractorSE(Task):
                            qiime2_folder_path: str,
                            trct_forward: int,
                            thrd: int
-                           ) -> None:
+                           ) -> str:
 
         cmd_1 = [
             " bash ",
@@ -138,7 +134,7 @@ class Qiime2FeatureTableExtractorSE(Task):
                                      trct_forward: int,
                                      thrd: int,
                                      hard_trim: int
-                                     ) -> None:
+                                     ) -> TaskOutputs:
 
         cmd_1 = [
             " bash ",
@@ -173,8 +169,7 @@ class Qiime2FeatureTableExtractorSE(Task):
 
     def outputs_annotation(self, output_folder_path: str) -> None:
 
-        result_file = Qiime2FeatureFrequencyFolder()
-        result_file.path = output_folder_path
+        result_file = Folder(output_folder_path)
 
         # create annotated feature table
         path = os.path.join(result_file.path, "denoising-stats.tsv")

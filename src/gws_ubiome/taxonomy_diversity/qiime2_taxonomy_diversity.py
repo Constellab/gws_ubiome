@@ -5,23 +5,21 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      IntParam, OutputSpec, OutputSpecs, ResourceSet, StrParam,
+from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
+                      ResourceSet, ShellProxy, StrParam, Table,
                       TableAnnotatorHelper, TableImporter, Task,
                       TaskFileDownloader, TaskInputs, TaskOutputs,
                       task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..feature_frequency_table.qiime2_feature_frequency_folder import \
-    Qiime2FeatureFrequencyFolder
 from .feature_table import FeatureTableImporter
-from .qiime2_taxonomy_diversity_folder import Qiime2TaxonomyDiversityFolder
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
 
-@task_decorator("Qiime2TaxonomyDiversityRDPExtractor", human_name="Q2RDPDiversity",
-                short_description="Computing various diversity index and taxonomy assessement of ASVs using RDP")
-class Qiime2TaxonomyDiversityRDPExtractor(Task):
+@task_decorator("Qiime2TaxonomyDiversity", human_name="Q2Diversity",
+                short_description="Computing various diversity index and taxonomy assessement of ASVs")
+class Qiime2TaxonomyDiversity(Task):
     """
     Qiime2TaxonomyDiversityRDPExtractor class.
 
@@ -32,6 +30,20 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     **About RDP:**
     Ribosomal Database Project (RDP; http://rdp.cme.msu.edu/) provides the research community with aligned and annotated rRNA gene sequence data.
     """
+
+    DB_LOCATIONS = {
+        'RDP-v18.202208':  "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza",
+        'Silva-v13.8': "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/silva-138-99-nb-classifier.qza",
+        'NCBI-16S_rRNA.20220712': "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/ncbi-refseqs-classifier.16S_rRNA.20220712.qza",
+        'GreenGenes-v13.8': "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/gg-13-8-99-nb-classifier.qza"
+    }
+
+    DB_DESTINATIONS = {
+        'RDP-v18.202208': "RDP_OTUs_classifier.taxa_no_space.v18.202208.qza",
+        'Silva-v13.8': "silva-138-99-nb-classifier.qza",
+        'NCBI-16S_rRNA.20220712': "ncbi-refseqs-classifier.16S_rRNA.20220712.qza",
+        'GreenGenes-v13.8': "gg-13-8-99-nb-classifier.qza"
+    }
 
     DB_RDP_LOCATION = "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
     DB_RDP_DESTINATION = "RDP_OTUs_classifier.taxa_no_space.v18.202208.qza"
@@ -69,13 +81,13 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
     input_specs: InputSpecs = InputSpecs({
         'rarefaction_analysis_result_folder':
         InputSpec(
-            Qiime2FeatureFrequencyFolder,
+            Folder,
             short_description="Feature freq. folder",
             human_name="feature_freq_folder")})
     output_specs: OutputSpecs = OutputSpecs({
         'diversity_tables': OutputSpec(ResourceSet),
         'taxonomy_tables': OutputSpec(ResourceSet),
-        'result_folder': OutputSpec(Qiime2TaxonomyDiversityFolder)
+        'result_folder': OutputSpec(Folder)
     })
     config_specs: ConfigSpecs = {
         "rarefaction_plateau_value":
@@ -83,41 +95,42 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["RDP-v18.202208"], default_value="RDP-v18.202208",
+        StrParam(allowed_values=["RDP-v18.202208", "Silva-v13.8", "NCBI-16S_rRNA.20220712", "GreenGenes-v13.8"], default_value="RDP-v18.202208",
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     }
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        qiime2_folder = inputs["rarefaction_analysis_result_folder"]
+        qiime2_folder: Folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
         db_taxo = params["taxonomic_affiliation_database"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         qiime2_folder_path = qiime2_folder.path
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
-        if db_taxo == "RDP-v18.202208":
-            # create the file_downloader from a task.
-            file_downloader = TaskFileDownloader(
-                Qiime2TaxonomyDiversityRDPExtractor.get_brick_name(),
-                self.message_dispatcher)
 
-            # download a file
-            file_path = file_downloader.download_file_if_missing(
-                self.DB_RDP_LOCATION, self.DB_RDP_DESTINATION)
-            outputs = self.run_cmd_lines(shell_proxy,
-                                         script_file_dir,
-                                         qiime2_folder_path,
-                                         plateau_val,
-                                         file_path
-                                         )
-        return outputs
+        if not db_taxo in self.DB_LOCATIONS or not db_taxo in self.DB_DESTINATIONS:
+            raise Exception("Unknown taxonomic affiliation database")
 
-    def run_cmd_lines(self, shell_proxy: Qiime2ShellProxyHelper,
+        # create the file_downloader from a task.
+        file_downloader = TaskFileDownloader(
+            Qiime2TaxonomyDiversity.get_brick_name(),
+            self.message_dispatcher)
+
+        # download a file
+        file_path = file_downloader.download_file_if_missing(self.DB_LOCATIONS[db_taxo], self.DB_DESTINATIONS[db_taxo])
+        return self.run_cmd_lines(shell_proxy,
+                                  script_file_dir,
+                                  qiime2_folder_path,
+                                  plateau_val,
+                                  file_path
+                                  )
+
+    def run_cmd_lines(self, shell_proxy: ShellProxy,
                       script_file_dir: str,
                       qiime2_folder_path: str,
                       plateau_val: int,
-                      db_name: str) -> None:
+                      db_name: str) -> TaskOutputs:
 
         # This script create Qiime2 core diversity metrics based on clustering
         cmd_1 = [
@@ -203,14 +216,14 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
 
         #  Importing Metadata table
         path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
-        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
         diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table (ASVs or OTUs)"
         for key, value in self.DIVERSITY_PATHS.items():
             path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
-            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
             diversity_resource_table_set.add_resource(table_annotated)
@@ -229,7 +242,7 @@ class Qiime2TaxonomyDiversityRDPExtractor(Task):
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
             path = os.path.join(result_folder.path, "raw_files", "asv_dict.csv")
-            asv_metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+            asv_metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
             asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
