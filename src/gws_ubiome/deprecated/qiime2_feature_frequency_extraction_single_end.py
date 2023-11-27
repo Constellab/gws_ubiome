@@ -16,7 +16,8 @@ from ..feature_frequency_table.feature_frequency_table import \
 
 
 @task_decorator("old_Qiime2FeatureTableExtractorSE", human_name="old_Q2FeatureInferenceSE",
-                short_description="Inference of ASVs from single-end sequencing (Depreceated)")
+                short_description="Inference of ASVs from single-end sequencing (Depreceated)",
+                deprecated_since="0.5.3", deprecated_message="USe Q2FeatureInferenceSE instead")
 class old_Qiime2FeatureTableExtractorSE(Task):
     """
     old_Qiime2FeatureTableExtractorSE class.

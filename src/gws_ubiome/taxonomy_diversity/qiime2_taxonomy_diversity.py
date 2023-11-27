@@ -17,7 +17,7 @@ from .feature_table import FeatureTableImporter
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
 
-@task_decorator("Qiime2TaxonomyDiversity", human_name="Q2 Taxonomy",
+@task_decorator("Qiime2TaxonomyDiversity", human_name="Q2 Taxonomy Diversity",
                 short_description="Computing various diversity index and taxonomy assessement of ASVs")
 class Qiime2TaxonomyDiversity(Task):
     """
