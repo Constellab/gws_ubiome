@@ -15,7 +15,7 @@ from ..base_env.Ggpicrust2_env import Ggpicrust2ShellProxyHelper
 
 
 @task_decorator("Ggpicrust2FunctionalAnalysisVisualization", human_name="ggPicrust2 Functional Analysis visualization",
-                short_description="this task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data", hide=True)
+                short_description="This task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data", hide=True)
 class Ggpicrust2FunctionalAnalysis(Task):
     """
     - ggPicrust2 (paper can be found <a href="https://academic.oup.com/bioinformatics/article/39/8/btad470/7234609?login=false">here</a>)  is an R package developed explicitly for PICRUSt2 predicted functional profile.
