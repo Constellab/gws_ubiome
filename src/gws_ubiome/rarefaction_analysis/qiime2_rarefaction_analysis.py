@@ -107,8 +107,7 @@ class Qiime2RarefactionAnalysis(Task):
 
     def outputs_annotation(self, output_folder_path: str) -> TaskOutputs:
 
-        result_folder = Qiime2RarefactionAnalysisResultFolder()
-        result_folder.path = output_folder_path
+        result_folder = Folder(output_folder_path)
 
         observed_path = os.path.join(result_folder.path, self.OBSERVED_FEATURE_FILE)
         shannon_path = os.path.join(result_folder.path, self.SHANNON_INDEX_FILE)

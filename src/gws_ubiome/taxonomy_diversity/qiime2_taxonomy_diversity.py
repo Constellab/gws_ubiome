@@ -17,7 +17,7 @@ from .feature_table import FeatureTableImporter
 from .taxonomy_stacked_table import TaxonomyTableImporter
 
 
-@task_decorator("Qiime2TaxonomyDiversity", human_name="Q2Diversity",
+@task_decorator("Qiime2TaxonomyDiversity", human_name="Q2 Taxonomy",
                 short_description="Computing various diversity index and taxonomy assessement of ASVs")
 class Qiime2TaxonomyDiversity(Task):
     """
@@ -196,7 +196,7 @@ class Qiime2TaxonomyDiversity(Task):
             raise Exception("ASV output file generation did not finished")
         self.update_progress_value(84, "Done")
 
-        # Saving output files in the final output result folder Qiime2TaxonomyDiversityFolder
+        # Saving output files in the final output result folder Folder
         cmd_6 = [
             "bash",
             os.path.join(script_file_dir, "./sh/6_qiime2_save_extra_output_files.sh"),
@@ -211,8 +211,7 @@ class Qiime2TaxonomyDiversity(Task):
 
         # Output object creation and Table annotation
 
-        result_folder = Qiime2TaxonomyDiversityFolder()
-        result_folder.path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity")
+        result_folder = Folder(os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity"))
 
         #  Importing Metadata table
         path = os.path.join(result_folder.path, "raw_files", "gws_metadata.csv")
