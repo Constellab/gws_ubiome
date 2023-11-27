@@ -57,6 +57,9 @@ class Ggpicrust2FunctionalAnalysis(Task):
         "Round_digit": BoolParam(
             default_value=False, human_name="Round Digit",
             short_description="Remember to click on this button whenever you observe p-adjust values higher than 0.05 in order to ensure accurate and appropriately formatted results."),
+        "PCA_component": BoolParam(
+            default_value=False, human_name="PCA Component",
+            short_description="Perform 3D PCA if True, 2D PCA if False."),
     }
 
     r_file_path = os.path.join(
@@ -74,12 +77,13 @@ class Ggpicrust2FunctionalAnalysis(Task):
         Reference_column = params["Reference_column"]
         Reference_group = params["Reference_group"]
         Round_digit = params["Round_digit"]
+        PCA_component = params["PCA_component"]
 
         # retrieve the factor param value
         shell_proxy: ShellProxy = Ggpicrust2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # call python file
-        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit}"
+        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component}"
         shell_proxy.run(cmd, shell_mode=True)
 
         # if result != 0:
@@ -124,36 +128,50 @@ class Ggpicrust2FunctionalAnalysis(Task):
         data = pd.read_csv(pca_file_path)
         proportion_data = pd.read_csv(pca_proportion_file_path)
 
-        # Extract the values for PC1 and PC2
-        pc1_value = proportion_data.iloc[0, 0]
-        pc2_value = proportion_data.iloc[1, 0]
+        # Extract the values for principal components
+        num_components = data.shape[1] - 2
 
         # Create a scatter plot
-        fig = px.scatter(data, x="PC1", y="PC2", color=Reference_column)
+        if num_components == 2:
+            fig = px.scatter(data, x=data.columns[0], y=data.columns[1], color=Reference_column)
+        elif num_components == 3:
+            fig = px.scatter_3d(data, x=data.columns[0], y=data.columns[1], z=data.columns[2], color=Reference_column)
+            # Customize the 3D plot layout
+            fig.update_layout(
+                scene=dict(
+                    xaxis_title=f"PC1 ({proportion_data.iloc[0, 0]:.2f}%)",
+                    yaxis_title=f"PC2 ({proportion_data.iloc[1, 0]:.2f}%)",
+                    zaxis_title=f"PC3 ({proportion_data.iloc[2, 0]:.2f}%)"
+                ),
+                width=800,
+                height=600
+            )
+        else:
+            raise ValueError("Number of principal components must be 2 or 3")
 
-        # Customize the plot layout
+        # Customize the plot layout for both 2D and 3D
         fig.update_layout(
-            xaxis_title=f"PC1 ({pc1_value:.2f}%)",
-            yaxis_title=f"PC2 ({pc2_value:.2f}%)",
+            xaxis_title=f"{data.columns[0]} ({proportion_data.iloc[0, 0]:.2f}%)",
+            yaxis_title=f"{data.columns[1]} ({proportion_data.iloc[1, 0]:.2f}%)",
             xaxis=dict(
-                showline=True,           # Show the x-axis line
-                linecolor='black',       # Line color
-                mirror=True,             # Show the line on both sides
-                showticklabels=True      # Show tick labels on the x-axis
+                showline=True,
+                linecolor='black',
+                mirror=True,
+                showticklabels=True
             ),
             yaxis=dict(
-                showline=True,           # Show the y-axis line
-                linecolor='black',       # Line color
-                mirror=True,             # Show the line on both sides
-                showticklabels=True      # Show tick labels on the y-axis
+                showline=True,
+                linecolor='black',
+                mirror=True,
+                showticklabels=True
             )
         )
 
         # Add dashed lines for the axes covering the whole plot
         fig.add_shape(
             type="line",
-            x0=min(data['PC1'])-5,
-            x1=max(data['PC1'])+5,
+            x0=min(data[data.columns[0]]) - 5,
+            x1=max(data[data.columns[0]]) + 5,
             y0=0,
             y1=0,
             line=dict(dash="dash", color="black", width=0.5)
@@ -163,9 +181,19 @@ class Ggpicrust2FunctionalAnalysis(Task):
             type="line",
             x0=0,
             x1=0,
-            y0=min(data['PC2'])-5,
-            y1=max(data['PC2'])+5,
+            y0=min(data[data.columns[1]]) - 5,
+            y1=max(data[data.columns[1]]) + 5,
             line=dict(dash="dash", color="black", width=0.5)
         )
+
+        if num_components == 3:
+            fig.add_shape(
+                type="line",
+                x0=0,
+                x1=0,
+                y0=0,
+                y1=0,
+                line=dict(dash="dash", color="black", width=0.5)
+            )
 
         return PlotlyResource(fig)

@@ -9,6 +9,7 @@ library(ggh4x)
 library(ggplot2)
 library(dplyr)
 library(plotly)
+library(R.utils)
 
 
 # Check if 'MicrobiomeStat' package is installed, and install if not
@@ -37,6 +38,7 @@ Samples_column_name <- args[4]
 Reference_column <- args[5]
 Reference_group <- args[6]
 Round_digit <- as.logical(args[7])  # Convert to logical
+PCA_component <- as.logical(args[8])  # Convert to logical
 
 
 # Read the metadata file
@@ -63,7 +65,12 @@ if (file.exists(ko_abundance_file)) {
 }
 
 # If you want to analyze KEGG pathway abundance instead of KO within the pathway, turn ko_to_kegg to TRUE.
-daa_results_df <- pathway_daa(abundance = kegg_abundance, metadata = metadata, group = Reference_column, daa_method = DA_method, select = NULL, reference = Reference_group)
+# Handle both cases (Reference_group < 3 and Reference_group >= 3)
+if (length(unique(metadata[[Reference_column]])) >= 3) {
+  daa_results_df <- pathway_daa(abundance = kegg_abundance, metadata = metadata, group = Reference_column, daa_method = DA_method, select = NULL, reference = Reference_group)
+} else {
+  daa_results_df <- pathway_daa(abundance = kegg_abundance, metadata = metadata, group = Reference_column, daa_method = DA_method, select = NULL, reference = NULL)
+}
 
 
 # Get unique groups in 'group1'
@@ -89,9 +96,17 @@ for (selected_group in unique_groups_group1) {
     daa_annotated_results_df$p_adjust[daa_annotated_results_df$p_adjust == 0] <- 0.001
   }
   
-  sub_kegg_abundance <- kegg_abundance[,metadata[metadata[[Reference_column]] %in% c(Reference_group,selected_group),][[Samples_column_name]]]
+  # Handle both cases (length of distinct elements in Reference_column < 3 and >= 3)
+
+  if (length(unique(metadata[[Reference_column]])) >= 3) {
+    sub_kegg_abundance <- kegg_abundance[,metadata[metadata[[Reference_column]] %in% c(Reference_group,selected_group),][[Samples_column_name]]]
+    sub_metadata <- metadata[metadata[[Reference_column]] %in% c(Reference_group,selected_group),]
+  } else {
+    sub_kegg_abundance <- kegg_abundance[, metadata[[Samples_column_name]]]
+    sub_metadata <- metadata
+  }
+
   sub_kegg_abundance <- sub_kegg_abundance[rowSums(sub_kegg_abundance) != 0,]
-  sub_metadata <- metadata[metadata[[Reference_column]] %in% c(Reference_group,selected_group),]
   # output 1 : Generate daa_annotated_file
   write.csv(daa_annotated_results_df, file = paste0("daa_annotated_results_", selected_group, ".csv"), row.names = FALSE)
 
@@ -112,12 +127,17 @@ for (selected_group in unique_groups_group1) {
 
 # Load the PCA script
 # Define the pathway_pca function
-pathway_pca <- function(abundance, metadata, group) {
-  # Perform PCA on the abundance data, keeping the first two principal components
-  pca_axis <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$x[, 1:2]
-
-  # Calculate the proportion of total variation explained by each PC
-  pca_proportion <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev[1:2] / sum(stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev) * 100
+pathway_pca <- function(abundance, metadata, group, PCA_component) {
+  # Perform PCA on the abundance data
+  if (PCA_component) {
+    # 3D PCA
+    pca_axis <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$x[, 1:3]
+    pca_proportion <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev[1:3] / sum(stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev) * 100
+  } else {
+    # 2D PCA
+    pca_axis <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$x[, 1:2]
+    pca_proportion <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev[1:2] / sum(stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev) * 100
+  }
 
   # Combine the PCA results with the metadata information
   pca <- cbind(pca_axis, metadata %>% select(all_of(group)))
@@ -128,7 +148,7 @@ pathway_pca <- function(abundance, metadata, group) {
 }
 
 # Perform PCA analysis
-pca_results <- pathway_pca(abundance = kegg_abundance, metadata = metadata, group = Reference_column)
+pca_results <- pathway_pca(abundance = kegg_abundance, metadata = metadata, group = Reference_column, PCA_component = PCA_component)
 
 
 utils::globalVariables(c("rowname","Sample","Value","quantile","facet_nested","strip_nested","elem_list_rect"))
