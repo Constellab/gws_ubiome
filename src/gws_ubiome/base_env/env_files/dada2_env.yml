@@ -1,8 +1,0 @@
-name: .venv
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - bioconductor-dada2
-  - bioconductor-phyloseq
-  - conda-forge r-vegan

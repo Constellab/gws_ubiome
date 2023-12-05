@@ -21,7 +21,7 @@ grep -v "^#" gws_metadata.csv | cut -f1-2  | perl -sane 'chomp; @t=split/\t/; $c
 
 qiime tools import \
   --type 'SampleData[SequencesWithQuality]' \
-  --input-path qiime2_manifest.csv \
+  --input-path IJ \
   --output-path demux.qza \
   --input-format SingleEndFastqManifestPhred33V2
 

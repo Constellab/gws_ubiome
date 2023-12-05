@@ -14,7 +14,6 @@ from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       TaskOutputs, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 
 
 @task_decorator("Qiime2DifferentialAnalysis", human_name="Qiime2 ANCOM differential analysis",
@@ -69,8 +68,8 @@ class Qiime2DifferentialAnalysis(Task):
 
         # get options, I/O variables
         qiime2_folder: Folder = inputs["taxonomy_diversity_folder"]
+        metadata_f: File = inputs["metadata_file"]
         metadata_col = params["metadata_column"]
-        metadata_f = inputs["metadata_file"]
         thrds = params["threads"]
 
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -91,9 +90,9 @@ class Qiime2DifferentialAnalysis(Task):
         return outputs
 
     def run_cmd(self, shell_proxy: ShellProxy,  # shell_proxy: Qiime2_2022_11_ShellProxyHelper,
-                qiime2_folder: str,
+                qiime2_folder: Folder,
                 metadata_col: str,
-                metadata_f: str,
+                metadata_f: File,
                 thrds: int,
                 script_file_dir: str) -> TaskOutputs:
 
@@ -107,18 +106,19 @@ class Qiime2DifferentialAnalysis(Task):
 
         shell_proxy.run(cmd)
 
-        result_folder = Folder(os.path.join(shell_proxy.working_dir, "differential_analysis"))
+        result_folder = Folder()
+        result_folder.path = os.path.join(shell_proxy.working_dir, "differential_analysis")
 
         resource_table_set: ResourceSet = ResourceSet()
         resource_table_set.name = "Set of differential analysis tables"
         for key, value in self.OUTPUT_FILES.items():
             path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table.name = key
 
             # Metadata table
             path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+            metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
             table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key

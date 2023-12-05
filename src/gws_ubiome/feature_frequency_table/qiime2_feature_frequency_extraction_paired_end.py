@@ -141,7 +141,7 @@ class Qiime2FeatureTableExtractorPE(Task):
                                      trct_reverse: int,
                                      thrd: int,
                                      hard_trim: int
-                                     ) -> None:
+                                     ) -> str:
 
         cmd_1 = [
             " bash ",
@@ -181,13 +181,14 @@ class Qiime2FeatureTableExtractorPE(Task):
 
         # create annotated feature table
         path = os.path.join(result_file.path, "denoising-stats.tsv")
-        feature_table = FeatureFrequencyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        feature_table: Table = FeatureFrequencyTableImporter.call(
+            File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "denoising-stats.tsv")
-        stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        stats_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "gws_metadata.csv")
-        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
         feature_table = TableAnnotatorHelper.annotate_rows(
             feature_table, metadata_table, use_table_row_names_as_ref=True)
         feature_table.name = "Denoising Metrics Boxplots"

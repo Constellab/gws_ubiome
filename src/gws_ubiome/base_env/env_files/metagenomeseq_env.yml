@@ -1,7 +1,0 @@
-name: .venv
-channels:
-  - bioconda
-  - conda-forge
-  - defaults
-dependencies:
-  - bioconductor-metagenomeseq=1.22.0

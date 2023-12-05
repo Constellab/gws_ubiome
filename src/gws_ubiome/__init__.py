@@ -1,8 +1,6 @@
 # > base_env
 # > fastq
-from gws_omix import FastqFolder
 
-from .base_env.qiime2_env_task import Qiime2EnvTask
 # > differential analysis
 from .differential_analysis.qiime2_differential_analysis import \
     Qiime2DifferentialAnalysis
