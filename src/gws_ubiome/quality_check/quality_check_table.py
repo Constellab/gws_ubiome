@@ -3,9 +3,8 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-from gws_core import (BoxPlotView, ConfigParams, File, IntParam,
-                      LinePlot2DView, Table, TableExporter, TableImporter,
-                      exporter_decorator, importer_decorator,
+from gws_core import (BoxPlotView, ConfigParams, IntParam, LinePlot2DView,
+                      Table, TableImporter, importer_decorator,
                       resource_decorator, view)
 
 
@@ -80,4 +79,3 @@ class QualityCheckTable(Table):
                     target_type=QualityCheckTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
 class QualityTableImporter(TableImporter):
     pass
-

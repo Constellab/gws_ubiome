@@ -6,11 +6,8 @@ import os
 from typing import List, Type
 
 from gws_core import (BadRequestException, ConfigParams, File, Table,
-                      TableExporter, TableImporter, exporter_decorator,
-                      importer_decorator, resource_decorator)
+                      TableImporter, importer_decorator, resource_decorator)
 from pandas import DataFrame
-
-from .qiime2_manifest_table_file import Qiime2ManifestTableFile
 
 
 @resource_decorator("Qiime2ManifestTable", human_name="Qiime2 manifest table",
@@ -67,7 +64,7 @@ class Qiime2ManifestTable(Table):
 
 
 @importer_decorator(unique_name="Qiime2ManifestTableImporter", human_name="Qiime2 manifest table importer",
-                    source_type=Qiime2ManifestTableFile, target_type=Qiime2ManifestTable, hide=True,
+                    source_type=File, target_type=Qiime2ManifestTable, hide=True,
                     supported_extensions=Table.ALLOWED_FILE_FORMATS)
 class Qiime2ManifestTableImporter(TableImporter):
 
@@ -95,15 +92,3 @@ class Qiime2ManifestTableImporter(TableImporter):
                 "Invalid manifest file. Either a single-end or paired-end file is expected. Check column names.")
 
         return csv_table
-
-
-# ####################################################################
-#
-# Exporter class
-#
-# ####################################################################
-
-@exporter_decorator(unique_name="Qiime2ManifestTableExporter", human_name="Qiime2 manifest table exporter",
-                    source_type=Qiime2ManifestTable, target_type=Qiime2ManifestTableFile)
-class Qiime2ManifestTableExporter(TableExporter):
-    pass

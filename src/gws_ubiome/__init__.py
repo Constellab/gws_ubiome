@@ -17,7 +17,6 @@ from .quality_check.qiime2_quality_check import Qiime2QualityCheck
 from .rarefaction_analysis.qiime2_rarefaction_analysis import \
     Qiime2RarefactionAnalysis
 from .rarefaction_analysis.rarefaction_table import RarefactionTable
-from .table.tax_table import TaxTable
 from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
 # > taxonomy/diversity
 from .taxonomy_diversity.qiime2_taxonomy_diversity import \

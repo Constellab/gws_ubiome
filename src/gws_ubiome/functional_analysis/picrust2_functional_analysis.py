@@ -4,12 +4,10 @@
 # About us: https://gencovery.com
 
 import os
-from gws_core import (ConfigParams,  InputSpec, InputSpecs, IntParam, OutputSpec, OutputSpecs, Folder,
-                      Task, TaskInputs, TaskOutputs, task_decorator, File, )
 
-from gws_core.config.config_types import ConfigSpecs
-from gws_omix import FastaFile
-from gws_core import ShellProxy
+from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs, Task,
+                      TaskInputs, TaskOutputs, task_decorator)
 
 from ..base_env.Picrust2_env import Picrust2ShellProxyHelper
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
@@ -36,7 +34,7 @@ class Picrust2FunctionalAnalysis(Task):
             short_description="File containing the abundance of each ASV across each sample"),
         'FASTA_of_asv':
         InputSpec(
-            FastaFile, human_name="FASTA_of_amplicon_sequences_variants",
+            File, human_name="FASTA_of_amplicon_sequences_variants",
             short_description="This file contain FASTA of amplicon sequences variants")
     })
 

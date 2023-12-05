@@ -6,9 +6,8 @@
 import os
 from gws_core import (
     ConfigParams, InputSpec, InputSpecs, OutputSpec, OutputSpecs, ShellProxy, Task, TaskInputs, TaskOutputs,
-    task_decorator, File, StrParam, PlotlyResource, TableImporter, Table, ResourceSet, BoolParam, IntParam)
+    task_decorator, File, StrParam, PlotlyResource, TableImporter, ResourceSet, BoolParam, IntParam, ConfigSpecs)
 
-from gws_core.config.config_types import ConfigSpecs
 import pandas as pd
 import plotly.express as px
 from ..base_env.Ggpicrust2_env import Ggpicrust2ShellProxyHelper
