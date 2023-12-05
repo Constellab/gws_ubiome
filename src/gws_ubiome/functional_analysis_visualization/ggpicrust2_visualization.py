@@ -84,10 +84,10 @@ class Ggpicrust2FunctionalAnalysis(Task):
 
         # call python file
         cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component}"
-        shell_proxy.run(cmd, shell_mode=True)
+        result = shell_proxy.run(cmd, shell_mode=True)
 
-        # if result != 0:
-        #    raise Exception("An error occured during the execution of the script")
+        if result != 0:
+            raise Exception("An error occured during the execution of the script. No statistically significant biomarkers found. Statistically significant biomarkers refer to those biomarkers that demonstrate a significant difference in expression between different groups, as determined by a statistical test (p_adjust < 0.05 in this case")
 
         # table_file_path = os.path.join(shell_proxy.working_dir, "daa_annotated_sub_method_results_df1.csv")
         # pathway_errorbar = os.path.join(shell_proxy.working_dir, "pathway_errorbar.png")

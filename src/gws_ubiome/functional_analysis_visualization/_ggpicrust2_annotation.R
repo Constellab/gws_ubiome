@@ -1,3 +1,4 @@
+
 # Load required libraries
 library(readr)
 library(tibble)
@@ -88,7 +89,14 @@ for (selected_group in unique_groups_group1) {
   filtered_slice <- current_group_results %>% filter(p_adjust < 0.05) %>% arrange(p_adjust) %>% slice(1:29)
   
   # Annotate pathway results using KO to KEGG conversion
-  daa_annotated_results_df <- pathway_annotation(pathway = "KO", daa_results_df = filtered_slice, ko_to_kegg = TRUE)
+  tryCatch(
+    {
+        daa_annotated_results_df <- pathway_annotation(pathway = "KO", daa_results_df = filtered_slice, ko_to_kegg = TRUE)
+    },
+    error=function(e){
+      stop('No statistically significant biomarkers found. Statistically significant biomarkers refer to those biomarkers that demonstrate a significant difference in expression between different groups, as determined by a statistical test (p_adjust < 0.05 in this case).', e)
+    }
+  )
 
   # Round data if Round_digit is TRUE
   if (Round_digit) {

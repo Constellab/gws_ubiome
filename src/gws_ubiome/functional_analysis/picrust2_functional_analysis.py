@@ -9,9 +9,10 @@ from gws_core import (ConfigParams,  InputSpec, InputSpecs, IntParam, OutputSpec
 
 from gws_core.config.config_types import ConfigSpecs
 from gws_omix import FastaFile
-# from gws_core import ShellProxy
+from gws_core import ShellProxy
 
 from ..base_env.Picrust2_env import Picrust2ShellProxyHelper
+from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 
 
 @task_decorator("Picrust2FunctionalAnalysis", human_name="Picrust2 Functional Analysis",
@@ -19,7 +20,7 @@ from ..base_env.Picrust2_env import Picrust2ShellProxyHelper
 class Picrust2FunctionalAnalysis(Task):
     """
     This task uses PICRUSt2 : Phylogenetic Investigation of Communities by Reconstruction of Unobserved States(paper can be found <a href="https://www.nature.com/articles/s41587-020-0548-6">here</a>).It wraps a number of tools to generate functional predictions based on 16S rRNA gene sequencing data.
-    The input files should be a FASTA of amplicon sequences variants (ASVs; i.e. your representative sequences, not your raw reads, which is <b> ASV-sequences.fasta </b> generated using Q2FeatureInference task) and a CSV table of the abundance of each ASV across each sample which is <b> asv_table.csv </b> (generated using Taxonomy_Diversity task ).
+    The input files should be a FASTA of amplicon sequences variants (ASVs; i.e. your representative sequences, not your raw reads, which is <b> ASV-sequences.fasta </b> generated using Q2FeatureInference task) and a qza table of the abundance of each ASV across each sample which is <b> table.qza </b> (generated using the same previous task ).
     The key output files are:
     - <b style="margin-left: 2.5em"> EC_metagenome_out </b> : Folder containing unstratified EC number metagenome predictions.
       (pred_metagenome_unstrat.tsv.gz), sequence table normalized by predicted 16S copy number abundances.
@@ -63,24 +64,25 @@ class Picrust2FunctionalAnalysis(Task):
         seq_file_path: File = inputs['FASTA_of_asv']
         num_processes = params["num_processes"]
 
-        # retrieve the factor param value
-        # shell_proxy = ShellProxy(message_dispatcher=self.message_dispatcher)
-        # Define the command to run
-        # cmd = f"conda run -n picrust2 python3 {self.python_file_path} {input_file.path} {seq_file_path.path} {num_processes}"
         # Execute the command
-        # shell_proxy.run(cmd, shell_mode=True)
+        shell_proxy_qiime2 = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
-        ######################################
-        # retrieve the factor param value
-        shell_proxy = Picrust2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        # Define the command to run Qiime2 export
 
-        # call python file
-        cmd = f"python3 {self.python_file_path} {input_file.path} {seq_file_path.path} {num_processes}"
-        shell_proxy.run(cmd, shell_mode=True)
+        cmd_qiime2_export = f'qiime tools export --input-path {input_file.path} --output-path {shell_proxy_qiime2.working_dir}'
+        res = shell_proxy_qiime2.run(cmd_qiime2_export, shell_mode=True)
+        if res != 0:
+            raise Exception("One error occured when formating output files")
 
-       #############################
+        converted_qza_file = os.path.join(shell_proxy_qiime2.working_dir, "feature-table.biom")
 
-        combined_results = os.path.join(shell_proxy.working_dir, "picrust2_out_pipeline")
+        # Now, retrieve the factor param value for Picrust2
+        shell_proxy_picrust2 = Picrust2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        # Call the Picrust2 Python file
+        cmd_picrust2 = f"python3 {self.python_file_path} {converted_qza_file} {seq_file_path.path} {num_processes}"
+        shell_proxy_picrust2.run(cmd_picrust2, shell_mode=True)
+
+        combined_results = os.path.join(shell_proxy_picrust2.working_dir, "picrust2_out_pipeline")
 
         # return the output table
         return {
