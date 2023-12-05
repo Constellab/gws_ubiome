@@ -6,7 +6,7 @@
 import os
 from gws_core import (
     ConfigParams, InputSpec, InputSpecs, OutputSpec, OutputSpecs, ShellProxy, Task, TaskInputs, TaskOutputs,
-    task_decorator, File, StrParam, PlotlyResource, TableImporter, Table, ResourceSet, BoolParam)
+    task_decorator, File, StrParam, PlotlyResource, TableImporter, Table, ResourceSet, BoolParam, IntParam)
 
 from gws_core.config.config_types import ConfigSpecs
 import pandas as pd
@@ -60,6 +60,10 @@ class Ggpicrust2FunctionalAnalysis(Task):
         "PCA_component": BoolParam(
             default_value=False, human_name="PCA Component",
             short_description="Perform 3D PCA if True, 2D PCA if False."),
+
+        "Slice_start": IntParam(
+            default_value=1 , min_value=1 , human_name="Slice start", visibility=IntParam.PROTECTED_VISIBILITY ,
+            short_description="You can modify the slice window of the errorbar and the heatmap by modifying the slice start in order to focus on a subset of the results"),
     }
 
     r_file_path = os.path.join(
@@ -78,12 +82,13 @@ class Ggpicrust2FunctionalAnalysis(Task):
         Reference_group = params["Reference_group"]
         Round_digit = params["Round_digit"]
         PCA_component = params["PCA_component"]
+        Slice_start = params["Slice_start"]
 
         # retrieve the factor param value
         shell_proxy: ShellProxy = Ggpicrust2ShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # call python file
-        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component}"
+        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component} {Slice_start}"
         result = shell_proxy.run(cmd, shell_mode=True)
 
         if result != 0:

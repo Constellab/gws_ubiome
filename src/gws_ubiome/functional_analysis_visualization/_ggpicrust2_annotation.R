@@ -40,6 +40,10 @@ Reference_column <- args[5]
 Reference_group <- args[6]
 Round_digit <- as.logical(args[7])  # Convert to logical
 PCA_component <- as.logical(args[8])  # Convert to logical
+Slice_start <- as.numeric(args[9])  # New argument for slice start index
+
+# Calculate the end index
+Slice_end <- Slice_start + 28
 
 
 # Read the metadata file
@@ -86,7 +90,7 @@ for (selected_group in unique_groups_group1) {
   current_group_results <- daa_results_df %>% filter(group1 == selected_group)
   
   # Filter based on p_adjust and slice
-  filtered_slice <- current_group_results %>% filter(p_adjust < 0.05) %>% arrange(p_adjust) %>% slice(1:29)
+  filtered_slice <- current_group_results %>% filter(p_adjust < 0.05) %>% arrange(p_adjust) %>% slice(Slice_start:Slice_end)
   
   # Annotate pathway results using KO to KEGG conversion
   tryCatch(
