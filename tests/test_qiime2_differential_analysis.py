@@ -1,10 +1,13 @@
+# LICENSE
+# This software is the exclusive property of Gencovery SAS.
+# The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
+# About us: https://gencovery.com
 
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import (Qiime2DifferentialAnalysis,
-                        Qiime2TaxonomyDiversityFolder)
+from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
+from gws_ubiome import Qiime2DifferentialAnalysis
 
 
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
@@ -12,7 +15,7 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
     def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
-        taxonomy_result_folder = Qiime2TaxonomyDiversityFolder(path=os.path.join(large_testdata_dir, "diversity"))
+        taxonomy_result_folder = Folder(path=os.path.join(large_testdata_dir, "diversity"))
         tester = TaskRunner(
             params={
                 'taxonomic_level': 6,

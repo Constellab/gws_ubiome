@@ -2,8 +2,8 @@
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import Qiime2FeatureFrequencyFolder, Qiime2RarefactionAnalysis
+from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
+from gws_ubiome import Qiime2RarefactionAnalysis
 
 
 class TestQiime2RarefactionAnalysis(BaseTestCase):
@@ -17,7 +17,7 @@ class TestQiime2RarefactionAnalysis(BaseTestCase):
                 'max_coverage': 5000
             },
             inputs={
-                'feature_frequency_folder':   Qiime2FeatureFrequencyFolder(
+                'feature_frequency_folder':   Folder(
                     path=os.path.join(large_testdata_dir, "sample_freq_details"))
             },
             task_type=Qiime2RarefactionAnalysis

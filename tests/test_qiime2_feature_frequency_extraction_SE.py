@@ -1,20 +1,22 @@
+# LICENSE
+# This software is the exclusive property of Gencovery SAS.
+# The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
+# About us: https://gencovery.com
 
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import (Qiime2FeatureTableExtractorSE,
-                        Qiime2QualityCheckResultFolder)
+from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
+from gws_ubiome import Qiime2FeatureTableExtractorSE
 
 
 class TestQiime2SampleFrequenciesSE(BaseTestCase):
 
     def test_importer(self):
         settings = Settings.get_instance()
-        large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
         test_folder_path = "/lab/user/bricks/gws_ubiome/tests/testdata/quality_check_2"
-        quality_check_folder = Qiime2QualityCheckResultFolder(path=test_folder_path)
-        # Qiime2QualityCheckResultFolder(path=os.path.join(large_testdata_dir, "quality_check"))
+        quality_check_folder = Folder(path=test_folder_path)
+        # Folder(path=os.path.join(large_testdata_dir, "quality_check"))
         tester = TaskRunner(
             params={
                 'threads': 2,

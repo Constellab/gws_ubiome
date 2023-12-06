@@ -1,9 +1,13 @@
+# LICENSE
+# This software is the exclusive property of Gencovery SAS.
+# The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
+# About us: https://gencovery.com
 
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Settings, TaskRunner
-from gws_ubiome import Qiime2FeatureFrequencyFolder, Qiime2TaxonomyDiversity
+from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
+from gws_ubiome import Qiime2TaxonomyDiversity
 
 
 class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
@@ -18,11 +22,11 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
             },
             inputs={
                 'rarefaction_analysis_result_folder':
-                    Qiime2FeatureFrequencyFolder(path=os.path.join(large_testdata_dir, "rarefaction"))
+                    Folder(path=os.path.join(large_testdata_dir, "rarefaction"))
             },
             task_type=Qiime2TaxonomyDiversity
         )
-        # Qiime2FeatureFrequencyFolder Qiime2RarefactionAnalysisResultFolder
+        # Folder Folder
         outputs = tester.run()
         result_dir = outputs['result_folder']
 
