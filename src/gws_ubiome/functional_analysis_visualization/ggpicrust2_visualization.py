@@ -4,17 +4,20 @@
 # About us: https://gencovery.com
 
 import os
-from gws_core import (
-    ConfigParams, InputSpec, InputSpecs, OutputSpec, OutputSpecs, ShellProxy, Task, TaskInputs, TaskOutputs,
-    task_decorator, File, StrParam, PlotlyResource, TableImporter, ResourceSet, BoolParam, IntParam, ConfigSpecs)
 
 import pandas as pd
 import plotly.express as px
+from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, InputSpec,
+                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
+                      PlotlyResource, ResourceSet, ShellProxy, StrParam,
+                      TableImporter, Task, TaskInputs, TaskOutputs,
+                      task_decorator)
+
 from ..base_env.Ggpicrust2_env import Ggpicrust2ShellProxyHelper
 
 
 @task_decorator("Ggpicrust2FunctionalAnalysisVisualization", human_name="ggPicrust2 Functional Analysis visualization",
-                short_description="This task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data", hide=True)
+                short_description="This task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data")
 class Ggpicrust2FunctionalAnalysis(Task):
     """
     - ggPicrust2 (paper can be found <a href="https://academic.oup.com/bioinformatics/article/39/8/btad470/7234609?login=false">here</a>)  is an R package developed explicitly for PICRUSt2 predicted functional profile.
@@ -61,7 +64,7 @@ class Ggpicrust2FunctionalAnalysis(Task):
             short_description="Perform 3D PCA if True, 2D PCA if False."),
 
         "Slice_start": IntParam(
-            default_value=1 , min_value=1 , human_name="Slice start", visibility=IntParam.PROTECTED_VISIBILITY ,
+            default_value=1, min_value=1, human_name="Slice start", visibility=IntParam.PROTECTED_VISIBILITY,
             short_description="You can modify the slice window of the errorbar and the heatmap by modifying the slice start in order to focus on a subset of the results"),
     }
 
