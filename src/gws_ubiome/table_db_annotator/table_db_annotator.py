@@ -76,8 +76,8 @@ class Qiime2TableDbAnnotator(Task):
         return outputs
 
     def run_cmd(self, shell_proxy: ShellProxy,
-                diversity_input_folder: str,
-                metadata_table: str,
+                diversity_input_folder: Folder,
+                metadata_table: File,
                 script_file_dir: str) -> TaskOutputs:
 
         taxa_db_type = "GreenGenes"

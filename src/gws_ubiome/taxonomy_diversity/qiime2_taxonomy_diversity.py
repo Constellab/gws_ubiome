@@ -21,7 +21,7 @@ from .taxonomy_stacked_table import TaxonomyTableImporter
                 short_description="Computing various diversity index and taxonomy assessement of ASVs")
 class Qiime2TaxonomyDiversity(Task):
     """
-    Qiime2TaxonomyDiversityRDPExtractor class.
+    Qiime2TaxonomyDiversity class.
 
     This task classifies reads by taxon using a pre-fitted sklearn-based taxonomy classifier. By default, we suggest a pre-fitted Naive Bayes classifier for the database RDP (in version 18).
 
