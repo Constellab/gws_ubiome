@@ -36,6 +36,7 @@ class Qiime2TaxonomyDiversity(Task):
         'Silva-v13.8': "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/silva-138-99-nb-classifier.qza",
         'NCBI-16S_rRNA.20220712': "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/ncbi-refseqs-classifier.16S_rRNA.20220712.qza",
         'GreenGenes-v13.8': "https://storage.gra.cloud.ovh.net/v1/AUTH_a0286631d7b24afba3f3cdebed2992aa/opendata/ubiome/qiime2/gg-13-8-99-nb-classifier.qza"
+
     }
 
     DB_DESTINATIONS = {

@@ -16,7 +16,7 @@ from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, InputSpec,
 from ..base_env.Ggpicrust2_env import Ggpicrust2ShellProxyHelper
 
 
-@task_decorator("Ggpicrust2FunctionalAnalysisVisualization", human_name="ggPicrust2 Functional Analysis visualization",
+@task_decorator("Ggpicrust2FunctionalAnalysisVisualization", human_name="16s Functional Analysis Prediction Visualization",
                 short_description="This task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data")
 class Ggpicrust2FunctionalAnalysis(Task):
     """

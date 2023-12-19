@@ -13,7 +13,7 @@ from ..base_env.Picrust2_env import Picrust2ShellProxyHelper
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 
 
-@task_decorator("Picrust2FunctionalAnalysis", human_name="Picrust2 Functional Analysis",
+@task_decorator("Picrust2FunctionalAnalysis", human_name="16s Functional Analysis Prediction",
                 short_description="this task permit to predict functional analysis of 16s rRNA data")
 class Picrust2FunctionalAnalysis(Task):
     """
