@@ -67,22 +67,30 @@ class Picrust2FunctionalAnalysis(Task):
 
         # Define the command to run Qiime2 export
 
-        cmd_qiime2_export = f'qiime tools export --input-path {input_file.path} --output-path {shell_proxy_qiime2.working_dir}'
-        res = shell_proxy_qiime2.run(cmd_qiime2_export, shell_mode=True)
-        if res != 0:
-            raise Exception("One error occured when formating output files")
-
-        converted_qza_file = os.path.join(shell_proxy_qiime2.working_dir, "feature-table.biom")
+        # Check the file extension
+        if input_file.path.lower().endswith(".qza"):
+            # If the input is a .qza file, export it using QIIME2
+            shell_proxy_qiime2 = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+            cmd_qiime2_export = f'qiime tools export --input-path {input_file.path} --output-path {shell_proxy_qiime2.working_dir}'
+            res = shell_proxy_qiime2.run(cmd_qiime2_export, shell_mode=True)
+            if res != 0:
+                raise Exception("Error occurred when formatting output files")
+            converted_file = os.path.join(shell_proxy_qiime2.working_dir, "feature-table.biom")
+        elif input_file.path.lower().endswith(".tsv"):
+            # If the input is a .tsv file, use it directly
+            converted_file = input_file.path
+        else:
+            raise ValueError("Unsupported file format. Supported formats: .qza, .tsv")
 
         # Now, retrieve the factor param value for Picrust2
         shell_proxy_picrust2 = Picrust2ShellProxyHelper.create_proxy(self.message_dispatcher)
+
         # Call the Picrust2 Python file
-        cmd_picrust2 = f"python3 {self.python_file_path} {converted_qza_file} {seq_file_path.path} {num_processes}"
+        cmd_picrust2 = f"python3 {self.python_file_path} {converted_file} {seq_file_path.path} {num_processes}"
         shell_proxy_picrust2.run(cmd_picrust2, shell_mode=True)
 
         combined_results = os.path.join(shell_proxy_picrust2.working_dir, "picrust2_out_pipeline")
 
-        # return the output table
         return {
             'Folder_result': Folder(combined_results),
         }
