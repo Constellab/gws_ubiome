@@ -134,7 +134,7 @@ theme(
     
   # output3 : Perform heatmap analysis
   pathway_heatmap <- pathway_heatmap(abundance = sub_kegg_abundance %>% rownames_to_column("feature") %>% filter(feature %in% daa_annotated_results_df$feature) %>% column_to_rownames("feature"), metadata = metadata, group = Reference_column)+ ggtitle("Pathway differential abundance comparison")+ theme(plot.title = element_text(size = 40, face = "bold",hjust = 0.5),
-    axis.text.x = element_text(size = 15),  # Adjust the size of x-axis labels (samples name)
+    axis.text.x = element_text(size = 11, angle = 90, vjust = 0.5),  # Rotate x-axis labels vertically
     axis.text.y = element_text(size = 25))   # Adjust the size of y-axis labels les KO05856
 
 
