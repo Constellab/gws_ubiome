@@ -121,11 +121,22 @@ for (selected_group in unique_groups_group1) {
   sub_kegg_abundance <- sub_kegg_abundance[rowSums(sub_kegg_abundance) != 0,]
   # output 1 : Generate daa_annotated_file
   write.csv(daa_annotated_results_df, file = paste0("daa_annotated_results_", selected_group, ".csv"), row.names = FALSE)
-
-  pathway_errorbar <- pathway_errorbar(abundance = sub_kegg_abundance, daa_results_df = daa_annotated_results_df, Group = sub_metadata[[Reference_column]], p_values_threshold = 0.05, order = "pathway_class", select = NULL, ko_to_kegg = TRUE, p_value_bar = TRUE, colors = NULL, x_lab = "pathway_name")
+  
+  # output 2 : pathway errorbar
+  pathway_errorbar <- pathway_errorbar(abundance = sub_kegg_abundance, daa_results_df = daa_annotated_results_df, Group = sub_metadata[[Reference_column]], p_values_threshold = 0.05, order = "pathway_class", select = NULL, ko_to_kegg = TRUE, p_value_bar = TRUE, colors = NULL, x_lab = "pathway_name") +
+labs(
+  title = "Pathway differential abundance comparison",
+) +
+theme(
+  plot.title = element_text(hjust = 7,size = 15),  # Adjust title alignment to the middle
+  axis.text.x = element_text(size = 30)
+)
     
-  # Perform heatmap analysis
-  pathway_heatmap <- pathway_heatmap(abundance = sub_kegg_abundance %>% rownames_to_column("feature") %>% filter(feature %in% daa_annotated_results_df$feature) %>% column_to_rownames("feature"), metadata = metadata, group = Reference_column)
+  # output3 : Perform heatmap analysis
+  pathway_heatmap <- pathway_heatmap(abundance = sub_kegg_abundance %>% rownames_to_column("feature") %>% filter(feature %in% daa_annotated_results_df$feature) %>% column_to_rownames("feature"), metadata = metadata, group = Reference_column)+ ggtitle("Pathway differential abundance comparison")+ theme(plot.title = element_text(size = 40, face = "bold",hjust = 0.5),
+    axis.text.x = element_text(size = 15),  # Adjust the size of x-axis labels (samples name)
+    axis.text.y = element_text(size = 25))   # Adjust the size of y-axis labels les KO05856
+
 
  # Save the plots to PNG files
   # output 2 : errorbar
@@ -164,105 +175,6 @@ pca_results <- pathway_pca(abundance = kegg_abundance, metadata = metadata, grou
 
 
 utils::globalVariables(c("rowname","Sample","Value","quantile","facet_nested","strip_nested","elem_list_rect"))
-pathway_heatmap <- function(abundance, metadata, group) {
-
-  # Check that 'group' is a column in 'metadata'
-  if (!group %in% colnames(metadata)) {
-    stop(paste("group:", group, "must be a column in metadata"))
-  }
-
-  # Find the column in metadata that matches the column names of abundance
-  sample_name_col <- colnames(metadata)[sapply(colnames(metadata), function(x) all(colnames(abundance) %in% metadata[[x]]))]
-  metadata$sample_name <- metadata %>% select(all_of(c(sample_name_col))) %>% pull()
-
-  if (!all(colnames(abundance) %in% metadata$sample_name)) {
-    stop("Samples in abundance and metadata must match")
-  }
-
-  # Now sample_name_col contains the column name in metadata that stores the sample names
-
-  z_abundance <- t(apply(abundance, 1, scale))
-  colnames(z_abundance) <- colnames(abundance)
-
-  # Convert the abundance matrix to a data frame
-  z_df <- as.data.frame(z_abundance)
-
-  metadata <- metadata %>% as.data.frame()
-
-  # Order the samples based on the environment information
-  ordered_metadata <- metadata[order(metadata[, group]),]
-  ordered_sample_names <- ordered_metadata$sample_name
-  order <- ordered_metadata$sample_name
-  ordered_group_levels <- ordered_metadata %>% select(all_of(c(group))) %>% pull()
-
-
-  # Convert the abundance data frame to a long format
-  long_df <- z_df %>%
-    tibble::rownames_to_column() %>%
-    tidyr::pivot_longer(cols = -rowname,
-                        names_to = "Sample",
-                        values_to = "Value") %>% left_join(metadata %>% select(all_of(c("sample_name",group))), by = c("Sample" = "sample_name"))
-
-  # Set the order of the samples in the heatmap
-  long_df$Sample <- factor(long_df$Sample, levels = order)
-
-  # Compute breaks from the data
-  breaks <- range(long_df$Value, na.rm = TRUE)
-
-  colors <- c("#d93c3e", "#3685bc", "#6faa3e", "#e8a825", "#c973e6", "#ee6b3d", "#2db0a7", "#f25292")
-
-  # Create the heatmap using ggplot
-  p <-
-    ggplot2::ggplot(data = long_df,
-                    mapping = ggplot2::aes(x = Sample, y = rowname, fill = Value)) +
-    ggplot2::geom_tile() +
-    ggplot2::scale_fill_gradient2(low = "#0571b0", mid = "white", high = "#ca0020", midpoint = 0) +
-    ggplot2::labs(x = NULL, y = NULL) +
-    ggplot2::scale_y_discrete(expand = c(0, 0), position = "left") +
-    ggplot2::scale_x_discrete(expand = c(0, 0)) +
-    # Customize the appearance of the heatmap
-    ggplot2::theme(
-      axis.text.x = ggplot2::element_blank(),
-      axis.text.y = ggplot2::element_text(size = 30, color = "black", face = "bold"),
-      axis.ticks = ggplot2::element_blank(),
-      axis.text = ggplot2::element_text(
-        color = "black",
-        size = 10,
-        face = "bold"
-      ),
-      panel.spacing = unit(0, "lines"),
-      legend.title = ggplot2::element_text(size = 22, color = "black",face = "bold"),  #Z-score
-      legend.text = ggplot2::element_text(size = 22, color = "black",face = "bold"),  # numbers under Z-score
-      panel.background = ggplot2::element_blank(),
-      legend.margin = ggplot2::margin(l = 0, unit = "cm"),
-      strip.text = element_text(size = 30, face = "bold")  # noms des echantillons 
-    ) +
-    # Add a color bar to the heatmap
-    ggplot2::guides(
-      fill = ggplot2::guide_colorbar(
-        direction = "vertical",
-        reverse = F,
-        barwidth = unit(0.6, "cm"),
-        barheight = unit(9, "cm"),
-        title = "Z Score",
-        title.position = "top",
-        title.hjust = -1,
-        ticks = TRUE,
-        label = TRUE
-      )
-    ) + ggh4x::facet_nested(cols = vars(!!sym(group)), space = "free", scale = "free", switch = "x", strip =strip_nested(background_x = elem_list_rect(fill = colors)))
-
-  # Print the ordered sample names and group levels
-  cat("The Sample Names in order from left to right are:\n")
-  cat(ordered_sample_names, sep = ", ")
-  cat("\n")
-
-  cat("The Group Levels in order from left to right are:\n")
-  cat(ordered_group_levels, sep = ", ")
-  cat("\n")
-
-  return(p)
-}
 
 
 # Save pca_proportion and pca variables in separate CSV files
