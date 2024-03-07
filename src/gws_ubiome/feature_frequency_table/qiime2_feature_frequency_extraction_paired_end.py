@@ -8,7 +8,7 @@ import os
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       InputSpecs, IntParam, OutputSpec, OutputSpecs,
                       ShellProxy, Table, TableAnnotatorHelper, TableImporter,
-                      Task, TaskInputs, TaskOutputs, task_decorator)
+                      Task, TaskInputs, TaskOutputs, task_decorator,PlotlyResource)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
@@ -46,7 +46,7 @@ class Qiime2FeatureTableExtractorPE(Task):
         'quality_check_folder': InputSpec(Folder)
     })
     output_specs: OutputSpecs = OutputSpecs({
-        'feature_table': OutputSpec(FeatureFrequencyTable),
+        'boxplot': OutputSpec(PlotlyResource),
         'stats': OutputSpec(Table),
         'result_folder':
         OutputSpec(
@@ -191,12 +191,15 @@ class Qiime2FeatureTableExtractorPE(Task):
         metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
         feature_table = TableAnnotatorHelper.annotate_rows(
             feature_table, metadata_table, use_table_row_names_as_ref=True)
-        feature_table.name = "Denoising Metrics Boxplots"
+
         stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table, use_table_row_names_as_ref=True)
         stats_table.name = "Denoising Metrics Table"
+
+        boxplot = feature_table.view_as_boxplot(feature_table , path)
 
         return {
             "result_folder": result_file,
             "stats": stats_table,
-            "feature_table": feature_table
+            "boxplot": boxplot
         }
+

@@ -8,14 +8,14 @@ import os
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       InputSpecs, IntParam, OutputSpec, OutputSpecs,
                       ShellProxy, Table, TableAnnotatorHelper, TableImporter,
-                      Task, TaskInputs, TaskOutputs, task_decorator)
+                      Task, TaskInputs, TaskOutputs, task_decorator ,PlotlyResource)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from ..feature_frequency_table.feature_frequency_table import (
-    FeatureFrequencyTable, FeatureFrequencyTableImporter)
+    FeatureFrequencyTableSe, FeatureFrequencyTableSeImporter)
 
 
-@task_decorator("Qiime2FeatureTableExtractorSE",  human_name="Q2FeatureInferenceSE",
+@task_decorator("Qiime2FeatureTableExtractorSE", human_name="Q2FeatureInferenceSE",
                 short_description="Inference of ASVs from single-end sequencing")
 class Qiime2FeatureTableExtractorSE(Task):
     """
@@ -39,20 +39,21 @@ class Qiime2FeatureTableExtractorSE(Task):
 
     **About Dada2:**
 
-    Dada2 turns single-end sequences into merged, denoised, chimera-free, inferred sample sequences. The core denoising algorithm is built on a model of the errors in sequenced amplicon reads. For more information about Dada2, we suggest to read Benjamin J. Callahan *et al.*, 2016 (https://www.nature.com/articles/nmeth.3869)
+    Dada2 turns single-end sequences into merged, denoised, chimera-free, inferred sample sequences. The core denoising algorithm is built on a model of the errors in sequenced amplicon reads. For more information about Dada2, we suggest reading Benjamin J. Callahan *et al.*, 2016 (https://www.nature.com/articles/nmeth.3869)
 
     """
     input_specs: InputSpecs = InputSpecs({
         'quality_check_folder': InputSpec(Folder)
     })
     output_specs: OutputSpecs = OutputSpecs({
-        'feature_table': OutputSpec(FeatureFrequencyTable),
+        'boxplot': OutputSpec(PlotlyResource),
         'stats': OutputSpec(Table),
         'result_folder':
         OutputSpec(
             Folder,
             short_description="Rarefaction curves folder. Can be used with taxonomy task (!no rarefaction are done on counts!))",
-            human_name="Rarefaction_curves")})
+            human_name="Rarefaction_curves")
+    })
     config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
@@ -85,7 +86,7 @@ class Qiime2FeatureTableExtractorSE(Task):
                                                         hard_trim
                                                         )
 
-        # Output formating and annotation
+        # Output formatting and annotation
 
         annotated_outputs = self.outputs_annotation(outputs)
 
@@ -99,29 +100,29 @@ class Qiime2FeatureTableExtractorSE(Task):
                            ) -> str:
 
         cmd_1 = [
-            " bash ",
+            "bash",
             os.path.join(script_file_dir, "./sh/1_qiime2_feature_freq_extraction_SE.sh"),
             qiime2_folder_path,
-            trct_forward,
-            thrd
+            str(trct_forward),
+            str(thrd)
         ]
         self.log_info_message("[Step-1] : Qiime2 features inference")
         res = shell_proxy.run(cmd_1)
         if res != 0:
-            raise Exception("First step did not finished")
+            raise Exception("First step did not finish")
         self.update_progress_value(90, "[Step-1] : Done")
 
-        # This script perform Qiime2 demux , quality assessment
+        # This script performs Qiime2 demux, quality assessment
         cmd_2 = [
             "bash",
             os.path.join(script_file_dir, "./sh/2_qiime2_outputs_formating.sh"),
             qiime2_folder_path,
             shell_proxy.working_dir
         ]
-        self.log_info_message("[Step-2] : Formating output files for data visualisation")
+        self.log_info_message("[Step-2] : Formatting output files for data visualization")
         res = shell_proxy.run(cmd_2)
         if res != 0:
-            raise Exception("Second step did not finished")
+            raise Exception("Second step did not finish")
         self.update_progress_value(100, "[Step-2] : Done")
 
         output_folder_path = os.path.join(shell_proxy.working_dir, "sample_freq_details")
@@ -137,30 +138,30 @@ class Qiime2FeatureTableExtractorSE(Task):
                                      ) -> str:
 
         cmd_1 = [
-            " bash ",
+            "bash",
             os.path.join(script_file_dir, "./sh/1_qiime2_feature_freq_extraction_SE.hard_trim.sh"),
             qiime2_folder_path,
-            trct_forward,
-            thrd,
-            hard_trim
+            str(trct_forward),
+            str(thrd),
+            str(hard_trim)
         ]
         self.log_info_message("Qiime2 features inference + reads hard trimming")
         res = shell_proxy.run(cmd_1)
         if res != 0:
-            raise Exception("Qiime2 features inference did not finished")
+            raise Exception("Qiime2 features inference did not finish")
         self.update_progress_value(90, "Done")
 
-        # This script perform Qiime2 demux , quality assessment
+        # This script performs Qiime2 demux, quality assessment
         cmd_2 = [
             "bash",
             os.path.join(script_file_dir, "./sh/2_qiime2_outputs_formating.sh"),
             qiime2_folder_path,
             shell_proxy.working_dir
         ]
-        self.log_info_message("Formating output files for data visualisation")
+        self.log_info_message("Formatting output files for data visualization")
         res = shell_proxy.run(cmd_2)
         if res != 0:
-            raise Exception("One error occured when formating output files")
+            raise Exception("One error occurred when formatting output files")
         self.update_progress_value(100, "Done")
 
         output_folder_path = os.path.join(shell_proxy.working_dir, "sample_freq_details")
@@ -174,7 +175,7 @@ class Qiime2FeatureTableExtractorSE(Task):
 
         # create annotated feature table
         path = os.path.join(result_file.path, "denoising-stats.tsv")
-        feature_table = FeatureFrequencyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        feature_table = FeatureFrequencyTableSeImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "denoising-stats.tsv")
         stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
@@ -184,9 +185,13 @@ class Qiime2FeatureTableExtractorSE(Task):
         feature_table = TableAnnotatorHelper.annotate_rows(
             feature_table, metadata_table, use_table_row_names_as_ref=True)
         stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table, use_table_row_names_as_ref=True)
+        stats_table.name = "Denoising Metrics Table"
+
+        # Generate boxplot from the feature table
+        boxplot = feature_table.view_as_boxplot(feature_table , path)
 
         return {
             "result_folder": result_file,
             "stats": stats_table,
-            "feature_table": feature_table
+            "boxplot": boxplot
         }
