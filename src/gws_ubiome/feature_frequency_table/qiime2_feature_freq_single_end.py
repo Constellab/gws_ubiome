@@ -11,8 +11,8 @@ from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       Task, TaskInputs, TaskOutputs, task_decorator ,PlotlyResource)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from ..feature_frequency_table.feature_frequency_table import (
-    FeatureFrequencyTableSe, FeatureFrequencyTableSeImporter)
+import plotly.graph_objects as go
+
 
 
 @task_decorator("Qiime2FeatureTableExtractorSE", human_name="Q2FeatureInferenceSE",
@@ -175,7 +175,7 @@ class Qiime2FeatureTableExtractorSE(Task):
 
         # create annotated feature table
         path = os.path.join(result_file.path, "denoising-stats.tsv")
-        feature_table = FeatureFrequencyTableSeImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        feature_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "denoising-stats.tsv")
         stats_table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
@@ -188,10 +188,29 @@ class Qiime2FeatureTableExtractorSE(Task):
         stats_table.name = "Denoising Metrics Table"
 
         # Generate boxplot from the feature table
-        boxplot = feature_table.view_as_boxplot(feature_table , path)
+        boxplot = self.view_frequency_table_as_box_plot(feature_table)
 
         return {
             "result_folder": result_file,
             "stats": stats_table,
             "boxplot": boxplot
         }
+    def view_frequency_table_as_box_plot(self, table: Table) -> PlotlyResource:
+        fig = go.Figure()
+
+        my_column_passed_filter = table.get_column_data('percentage of input passed filter')
+        my_column_non_chimeric = table.get_column_data('percentage of input non-chimeric')
+
+        fig.add_trace(go.Box(y=my_column_passed_filter, name="1 - passed filter"))
+        fig.add_trace(go.Box(y=my_column_non_chimeric, name="2 - non-chimeric"))
+
+        fig.update_layout(
+            title='Denoising Metrics Boxplots',
+            xaxis_title='Metrics',
+            yaxis_title='Values (%)'
+        )
+
+        plotly_resource = PlotlyResource(fig)
+        plotly_resource.name = "Denoising Metrics Boxplots"
+
+        return plotly_resource
