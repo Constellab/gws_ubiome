@@ -1,13 +1,11 @@
 
 # Load required libraries
-library(readr)
 library(tibble)
 library(tidyverse)
 library(ggprism)
 library(patchwork)
 library(KEGGREST)
 library(ggh4x)
-library(ggplot2)
 library(dplyr)
 library(plotly)
 library(R.utils)
@@ -21,12 +19,32 @@ if (!"MicrobiomeStat" %in% installed.packages()) {
 library(MicrobiomeStat)
 
 
-# Check if 'ggpicrust2' package is installed, and install if not
+#Check if 'ggpicrust2' package is installed, and install if not
 if (!"ggpicrust2" %in% installed.packages()) {
   devtools::install_github('cafferychen777/ggpicrust2' , ref = 'ggpicrust2_1.7.1.tgz')   #version 1.7.1
 }
 
 library(ggpicrust2)
+
+library(remotes)
+# Specify the repository URL containing the package version you want
+# Replace 'repo_url' with the URL of the repository
+repo_url <- "https://cran.r-project.org/src/contrib/Archive/ggplot2/ggplot2_3.4.4.tar.gz"
+# Install the desired package version from the specified repository
+install_url(repo_url)
+library(ggplot2)
+
+if (!requireNamespace("remotes", quietly = TRUE)) {
+  install.packages("remotes")
+}
+remotes::install_cran("readr")
+library(readr)
+
+print("START")
+print(sessionInfo())
+print("end")
+packageVersion("ggplot2")
+print("ggplot2 versioooooon")
 
 # Retrieve command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -43,7 +61,7 @@ PCA_component <- as.logical(args[8])  # Convert to logical
 Slice_start <- as.numeric(args[9])  # New argument for slice start index
 
 # Calculate the end index
-Slice_end <- Slice_start + 28
+Slice_end <- Slice_start + 14
 
 
 # Read the metadata file
@@ -101,11 +119,11 @@ for (selected_group in unique_groups_group1) {
       stop('No statistically significant biomarkers found. Statistically significant biomarkers refer to those biomarkers that demonstrate a significant difference in expression between different groups, as determined by a statistical test (p_adjust < 0.05 in this case).', e)
     }
   )
-
   # Round data if Round_digit is TRUE
   if (Round_digit) {
-    daa_annotated_results_df$p_adjust <- round(daa_annotated_results_df$p_adjust, digits = 3)
-    daa_annotated_results_df$p_adjust[daa_annotated_results_df$p_adjust == 0] <- 0.001
+    daa_annotated_results_df$p_adjust <- sprintf("%.0e", daa_annotated_results_df$p_adjust)
+    daa_annotated_results_df$p_adjust <- as.numeric(daa_annotated_results_df$p_adjust)
+
   }
   
   # Handle both cases (length of distinct elements in Reference_column < 3 and >= 3)
@@ -119,6 +137,7 @@ for (selected_group in unique_groups_group1) {
   }
 
   sub_kegg_abundance <- sub_kegg_abundance[rowSums(sub_kegg_abundance) != 0,]
+
   # output 1 : Generate daa_annotated_file
   write.csv(daa_annotated_results_df, file = paste0("daa_annotated_results_", selected_group, ".csv"), row.names = FALSE)
   
@@ -127,11 +146,11 @@ for (selected_group in unique_groups_group1) {
 labs(
   title = "Pathway differential abundance comparison",
 ) +
-theme(
-  plot.title = element_text(hjust = 7,size = 15),  # Adjust title alignment to the middle
-  axis.text.x = element_text(size = 30)
-)
-    
+ggplot2::theme(
+  plot.title = element_text(hjust = 7, size = 15))  # Adjust title alignment to the middle and size
+
+
+
   # output3 : Perform heatmap analysis
   pathway_heatmap <- pathway_heatmap(abundance = sub_kegg_abundance %>% rownames_to_column("feature") %>% filter(feature %in% daa_annotated_results_df$feature) %>% column_to_rownames("feature"), metadata = metadata, group = Reference_column)+ ggtitle("Pathway differential abundance comparison")+ theme(plot.title = element_text(size = 40, face = "bold",hjust = 0.5),
     axis.text.x = element_text(size = 11, angle = 90, vjust = 0.5),  # Rotate x-axis labels vertically

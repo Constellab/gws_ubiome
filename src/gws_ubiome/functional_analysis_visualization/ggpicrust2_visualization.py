@@ -11,7 +11,7 @@ from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, InputSpec,
                       InputSpecs, IntParam, OutputSpec, OutputSpecs,
                       PlotlyResource, ResourceSet, ShellProxy, StrParam,
                       TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      task_decorator,FloatParam)
 
 from ..base_env.Ggpicrust2_env import Ggpicrust2ShellProxyHelper
 
