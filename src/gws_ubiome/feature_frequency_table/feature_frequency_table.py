@@ -3,7 +3,7 @@
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
-from gws_core import (BoxPlotView, ConfigParams, Table, TableImporter,
+from gws_core import (BoxPlotView, ConfigParams, Table, TableImporter, PlotlyView,
                       importer_decorator, resource_decorator, view , PlotlyResource)
 
 import plotly.graph_objects as go
@@ -14,11 +14,11 @@ class FeatureFrequencyTable(Table):
     FeatureFrequencyTable class
     """
 
-    @view(view_type=PlotlyResource, human_name='Feature Frequency metric boxplots',
+    @view(view_type=PlotlyView, human_name='Feature Frequency metric boxplots',
           short_description='Clustering metric boxplots for percentage of input : merged, passed filter and non-chimeric',
           specs={},
           default_view=True)
-    def view_as_boxplot(self, feature_table , path) -> PlotlyResource:
+    def view_as_boxplot(self, feature_table , path) -> PlotlyView:
         fig = go.Figure()
 
         my_column_passed_filter = self.get_column_data('percentage of input passed filter')
@@ -35,7 +35,7 @@ class FeatureFrequencyTable(Table):
             yaxis_title='Values (%)'
         )
 
-        plotly_resource = PlotlyResource(fig)
+        plotly_resource = PlotlyView(fig)
         plotly_resource.name = "Denoising Metrics Boxplots"
 
         return plotly_resource
@@ -53,11 +53,11 @@ class FeatureFrequencyTableSe(Table):
     FeatureFrequencyTableSe class
     """
 
-    @view(view_type=PlotlyResource, human_name='Feature Frequency metric boxplots',
+    @view(view_type=PlotlyView, human_name='Feature Frequency metric boxplots',
           short_description='Clustering metric boxplots for percentage of input : merged, passed filter and non-chimeric',
           specs={},
           default_view=True)
-    def view_as_boxplot(self, feature_table , path) -> PlotlyResource:
+    def view_as_boxplot(self, feature_table , path) -> PlotlyView:
         fig = go.Figure()
 
         my_column_passed_filter = self.get_column_data('percentage of input passed filter')
@@ -72,7 +72,7 @@ class FeatureFrequencyTableSe(Table):
             yaxis_title='Values (%)'
         )
 
-        plotly_resource = PlotlyResource(fig)
+        plotly_resource = PlotlyView(fig)
         plotly_resource.name = "Denoising Metrics Boxplots"
 
         return plotly_resource
