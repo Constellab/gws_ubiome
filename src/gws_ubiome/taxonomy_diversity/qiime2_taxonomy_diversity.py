@@ -220,12 +220,31 @@ class Qiime2TaxonomyDiversity(Task):
         # Create ressource set containing diversity tables
         diversity_resource_table_set: ResourceSet = ResourceSet()
         diversity_resource_table_set.name = "Set of diversity tables (alpha and beta diversity) compute from features count table (ASVs or OTUs)"
+
+        # Parcourir les éléments de DIVERSITY_PATHS
         for key, value in self.DIVERSITY_PATHS.items():
             path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
-            table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+
+            # Si la clé est égale à "Alpha Diversity - Faith pd", ajustez le traitement de la colonne Faith PD
+            if key == "Alpha Diversity - Faith pd":
+                # Lisez le contenu du fichier pour déterminer sa structure
+                with open(path, 'r') as file:
+                    first_line = file.readline().strip()  # Lire la première ligne du fichier
+                    if first_line.startswith('#SampleID'):  # Si la première ligne commence par '#SampleID', la structure est différente
+                        table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0 , 'header': -1 , 'comment': '#'})
+                        raw_table_columns = ["faith_pd"]
+                        table.set_all_column_names(raw_table_columns)
+                    else:
+                        table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            else:
+                table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+
             table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
+
+            # Ajouter le tableau à la ressource set
             diversity_resource_table_set.add_resource(table_annotated)
+
 
         # Create ressource set containing Taxonomy table with a forced customed view (TaxonomyTable; stacked barplot view)
 
