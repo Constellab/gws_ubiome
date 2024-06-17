@@ -3,13 +3,14 @@ from json import loads
 from typing import Type
 
 from gws_core import (ConfigParams, FSNode, LinePlot2DView, Resource, Table,
-                      TableImporter, importer_decorator, resource_decorator,
-                      view)
+                      TableImporter, TypingDeprecated, importer_decorator,
+                      resource_decorator, view)
 from numpy import nanquantile
 from pandas import DataFrame
 
 
-@resource_decorator(unique_name="RarefactionTable", hide=True)
+@resource_decorator(unique_name="RarefactionTable", hide=True,
+                    deprecated=TypingDeprecated(deprecated_since="0.7.0", deprecated_message="Use Table instead"))
 class RarefactionTable(Table):
 
     """
@@ -42,11 +43,11 @@ class RarefactionTable(Table):
 
 
 @importer_decorator(unique_name="RarefactionTableImporter", human_name="Rarefaction Table importer",
-                    target_type=RarefactionTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
+                    target_type=Table, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
 class RarefactionTableImporter(TableImporter):
 
-    def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Resource:
-        rarefaction_table: RarefactionTable = super().import_from_path(source, params, target_type)
+    def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Table:
+        rarefaction_table: Table = super().import_from_path(source, params, target_type)
 
         dataframe: DataFrame = rarefaction_table.get_data()
 

@@ -1,9 +1,10 @@
 
-from gws_core import (ConfigParams, StackedBarPlotView, Table, TableImporter,
-                      importer_decorator, resource_decorator, view)
+from gws_core import (ConfigParams, StackedBarPlotView, Table,
+                      TypingDeprecated, resource_decorator, view)
 
 
-@resource_decorator(unique_name="FeatureTable", hide=False)
+@resource_decorator(unique_name="FeatureTable", hide=False,
+                    deprecated=TypingDeprecated(deprecated_since="0.7.0", deprecated_message="Use Table instead"))
 class FeatureTable(Table):
     """
     FeatureTable class
@@ -24,9 +25,3 @@ class FeatureTable(Table):
         s_view.y_label = "Feature count"
         s_view.x_label = "Samples"
         return s_view
-
-
-@importer_decorator(unique_name="FeatureTableImporter", human_name="Feature Table importer",
-                    target_type=FeatureTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
-class FeatureTableImporter(TableImporter):
-    pass

@@ -3,12 +3,11 @@ import os
 
 from gws_core import (ConfigParams, File, Folder, InputSpec, InputSpecs,
                       OutputSpec, OutputSpecs, ResourceSet, ShellProxy,
-                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+                      StackedBarPlotView, Table, TableAnnotatorHelper,
+                      TableImporter, Task, TaskInputs, TaskOutputs,
+                      ViewResource, task_decorator)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from .tax_table_annotated_table import (TaxonomyTableTagged,
-                                        TaxonomyTableTaggedImporter)
 
 
 @task_decorator("Qiime2TableDbAnnotator", human_name="Qiime2 taxa composition annotator",
@@ -48,9 +47,10 @@ class Qiime2TableDbAnnotator(Task):
         'diversity_folder': InputSpec(Folder, human_name="Diversity_qiime2_folder"),
         'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")})
     output_specs: OutputSpecs = OutputSpecs({
-        'relative_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Relative_Abundance_Annotated_Table"),
-        'absolute_abundance_table': OutputSpec(TaxonomyTableTagged, human_name="Absolute_Abundance_Annotated_Table"),
-
+        'relative_abundance_table': OutputSpec(Table, human_name="Relative_Abundance_Annotated_Table"),
+        'relative_abundance_view': OutputSpec(ViewResource, human_name="Relative_Abundance_Annotated_View"),
+        'absolute_abundance_table': OutputSpec(Table, human_name="Absolute_Abundance_Annotated_Table"),
+        'absolute_abundance_view': OutputSpec(ViewResource, human_name="Absolute_Abundance_Annotated_View")
     })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -66,7 +66,8 @@ class Qiime2TableDbAnnotator(Task):
         outputs = self.run_cmd(shell_proxy,
                                diversity_input_folder,
                                metadata_table,
-                               script_file_dir
+                               script_file_dir,
+                               params
                                )
 
         return outputs
@@ -74,7 +75,8 @@ class Qiime2TableDbAnnotator(Task):
     def run_cmd(self, shell_proxy: ShellProxy,
                 diversity_input_folder: Folder,
                 metadata_table: File,
-                script_file_dir: str) -> TaskOutputs:
+                script_file_dir: str,
+                params: ConfigParams) -> TaskOutputs:
 
         taxa_db_type = "GreenGenes"
         taxa_file_path = os.path.join(diversity_input_folder.path, "table_files")
@@ -105,11 +107,11 @@ class Qiime2TableDbAnnotator(Task):
         taxa_dict_path = os.path.join(shell_proxy.working_dir, "taxa_found.tsv")
         taxa_relative_dict_path = os.path.join(shell_proxy.working_dir, "taxa_found.relative.tsv")
 
-        taxa_dict_table = TaxonomyTableTaggedImporter.call(
+        taxa_dict_table = TableImporter.call(
             File(path=taxa_dict_path),
             {'delimiter': 'tab', "index_column": 0})
 
-        taxa_relative_dict_table = TaxonomyTableTaggedImporter.call(
+        taxa_relative_dict_table = TableImporter.call(
             File(path=taxa_relative_dict_path),
             {'delimiter': 'tab', "index_column": 0})
 
@@ -127,8 +129,30 @@ class Qiime2TableDbAnnotator(Task):
         table_absolute_abundance_annotated.name = "Annotated taxa composition table (absolute count)"
         table_relative_abundance_annotated.name = "Annotated taxa composition table (relative count)"
 
+        table_absolute_abundance_view = ViewResource(self.view_as_grouped_stackedbarplot(
+            table_absolute_abundance_annotated, params).to_dto(params).to_json_dict())
+        table_relative_abundance_view = ViewResource(self.view_as_grouped_stackedbarplot(
+            table_relative_abundance_annotated, params).to_dto(params).to_json_dict())
+
         return {
             'relative_abundance_table': table_relative_abundance_annotated,
-            'absolute_abundance_table': table_absolute_abundance_annotated
-
+            'relative_abundance_view': table_relative_abundance_view,
+            'absolute_abundance_table': table_absolute_abundance_annotated,
+            'absolute_abundance_view': table_absolute_abundance_view
         }
+
+    def view_as_grouped_stackedbarplot(self, table: Table, params: ConfigParams) -> StackedBarPlotView:
+
+        s_view = StackedBarPlotView(normalize=True)
+        annotated_table: Table = None
+        annotated_table = table
+        initialdf = annotated_table.get_data()
+
+        for i in range(0, initialdf.shape[1]):
+            if isinstance(initialdf.iat[0, i], str):
+                continue
+            y = initialdf.iloc[:, i].values.tolist()
+            s_view.add_series(y=y, name=initialdf.columns[i])
+        s_view.x_tick_labels = initialdf.index.to_list()
+
+        return s_view

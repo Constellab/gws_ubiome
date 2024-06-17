@@ -3,6 +3,7 @@ import os
 
 import pandas
 from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
+
 from gws_ubiome import Qiime2RarefactionAnalysis
 
 
@@ -25,30 +26,13 @@ class TestQiime2RarefactionAnalysis(BaseTestCase):
         outputs = tester.run()
         result_dir = outputs['result_folder']
 
-        boxplot_csv_file_path = os.path.join(result_dir.path, "shannon.for_boxplot.tsv")
-        boxplot_csv = File(path=boxplot_csv_file_path)
+        boxplot_csv_file_path = os.path.join(result_dir.path, "shannon.for_boxplot.csv")
         result_in_file = open(boxplot_csv_file_path, 'r', encoding="utf-8")
         result_first_line = result_in_file.readline()
-        result_content = boxplot_csv.read()
 
         # Get the expected file output
-        expected_file_path = os.path.join(large_testdata_dir, "rarefaction", "shannon.for_boxplot.tsv")
-        expected_in_file = open(expected_file_path, 'r', encoding="utf-8")
-        expected_first_line = expected_in_file.readline()
 
-        expected_result_file = File(path=expected_file_path)
-        expected_result_content = expected_result_file.read()
-
-        print("----")
-        print(result_content)
-        print("----")
-        print(expected_result_content)
-        print("----")
+        expected_first_line = '\t{"depth": 20 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 20 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 20 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 573 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 573 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 573 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 1126 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 1126 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 1126 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 1680 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 1680 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 1680 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 2233 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 2233 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 2233 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 2786 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 2786 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 2786 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 3340 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 3340 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 3340 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 3893 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 3893 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 3893 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 4446 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 4446 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 4446 , "sample-id": "341F-785R-P01-G07-P20"}\t{"depth": 5000 , "sample-id": "341F-785R-P01-A09-P17"}\t{"depth": 5000 , "sample-id": "341F-785R-P01-E04-P26"}\t{"depth": 5000 , "sample-id": "341F-785R-P01-G07-P20"}\n'
 
         self.assertEqual(expected_first_line, result_first_line)
-
-        t1 = pandas.read_csv(boxplot_csv_file_path, delimiter="\t")
-        t2 = pandas.read_csv(expected_file_path, delimiter="\t")
-
-        self.assertEqual(t1.shape, t2.shape)
-#        self.assertEqual(t1.iloc[0,:].to_list(), t2.iloc[0,:].to_list())
+        self.assertEqual((10, 31), pandas.read_csv(boxplot_csv_file_path, delimiter="\t").shape)

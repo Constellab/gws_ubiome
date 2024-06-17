@@ -19,7 +19,6 @@ class Migration060(BrickMigration):
             'RESOURCE.gws_ubiome.Qiime2DifferentialAnalysisResultFolder': Folder._typing_name,
             'RESOURCE.gws_ubiome.Qiime2QualityCheckResultFolder': Folder._typing_name,
             'RESOURCE.gws_ubiome.Qiime2RarefactionAnalysisResultFolder': Folder._typing_name,
-            'RESOURCE.gws_ubiome.Qiime2ManifestTableFile': File._typing_name,
             'RESOURCE.gws_ubiome.Qiime2MetadataTableFile': File._typing_name,
             'RESOURCE.gws_ubiome.FastqFolder': FastqFolder._typing_name,
             'RESOURCE.gws_omix.FastaFile': File._typing_name

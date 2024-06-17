@@ -1,10 +1,11 @@
 
 from gws_core import (BoxPlotView, ConfigParams, IntParam, LinePlot2DView,
-                      Table, TableImporter, importer_decorator,
-                      resource_decorator, view)
+                      Table, TableImporter, TypingDeprecated,
+                      importer_decorator, resource_decorator, view)
 
 
-@resource_decorator(unique_name="QualityCheckTable", hide=True)
+@resource_decorator(unique_name="QualityCheckTable", hide=True,
+                    deprecated=TypingDeprecated(deprecated_since="0.7.0", deprecated_message="Use Table instead"))
 class QualityCheckTable(Table):
 
     """
@@ -72,6 +73,7 @@ class QualityCheckTable(Table):
 
 
 @importer_decorator(unique_name="QualityTableImporter", human_name="Quality Table importer",
+                    deprecated=TypingDeprecated(deprecated_since="0.7.0", deprecated_message="Use Table importer instead"),
                     target_type=QualityCheckTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
 class QualityTableImporter(TableImporter):
     pass

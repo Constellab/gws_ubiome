@@ -1,15 +1,15 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, OutputSpec, OutputSpecs, ResourceSet,
-                      ShellProxy, StrParam, TableAnnotatorHelper,
-                      TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import (BoxPlotView, ConfigParams, ConfigSpecs, File, Folder,
+                      InputSpec, InputSpecs, LinePlot2DView, OutputSpec,
+                      OutputSpecs, ResourceSet, ShellProxy, StrParam, Table,
+                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
+                      TaskOutputs, ViewResource, task_decorator)
 from gws_omix import FastqFolder
+from pandas import DataFrame
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from .quality_check_table import QualityCheckTable, QualityTableImporter
 
 
 @task_decorator("Qiime2QualityCheck", human_name="Q2QualityCheck",
@@ -60,7 +60,7 @@ class Qiime2QualityCheck(Task):
         File, short_description="A metadata file with at least sequencing file names", human_name="A metadata file")})
     output_specs: OutputSpecs = OutputSpecs({
         'result_folder': OutputSpec(Folder),
-        'quality_table': OutputSpec((ResourceSet, QualityCheckTable, ))
+        'quality_table': OutputSpec(ResourceSet)
     })
     config_specs: ConfigSpecs = {
         "sequencing_type":
@@ -84,7 +84,8 @@ class Qiime2QualityCheck(Task):
             outputs = self.run_cmd_paired_end(shell_proxy,
                                               script_file_dir,
                                               fastq_folder_path,
-                                              manifest_table_file_path
+                                              manifest_table_file_path,
+                                              params
                                               )
         else:
             outputs = self.run_cmd_single_end(shell_proxy,
@@ -98,7 +99,8 @@ class Qiime2QualityCheck(Task):
     def run_cmd_paired_end(self, shell_proxy: ShellProxy,
                            script_file_dir: str,
                            fastq_folder_path: str,
-                           manifest_table_file_path: str) -> TaskOutputs:
+                           manifest_table_file_path: str,
+                           params: ConfigParams) -> TaskOutputs:
 
         # This script create Qiime2 metadata file by modify initial gws metedata file
         cmd_1 = [
@@ -149,26 +151,42 @@ class Qiime2QualityCheck(Task):
         rvrs_path = os.path.join(shell_proxy.working_dir, "quality_check", self.REVERSE_READ_FILE_PATH)
 
         # Quality table fwd
-        quality_table_forward = QualityTableImporter.call(
+        quality_table_forward = TableImporter.call(
             File(path=frwd_path),
             {'delimiter': 'tab', "index_column": 0})
         quality_table_fwd_annotated = TableAnnotatorHelper.annotate_rows(
             quality_table_forward, metadata_table, use_table_row_names_as_ref=True)
         quality_table_fwd_annotated.name = "Quality check table - Forward"
+        quality_table_fwd_annotated_boxplot_view = ViewResource(
+            self.view_as_boxplot(quality_table_fwd_annotated.get_data()).to_dto(params).to_json_dict())
+        quality_table_fwd_annotated_boxplot_view.name = "Quality check boxplot - Forward"
+        quality_table_fwd_annotated_lineplot_view = ViewResource(
+            self.view_as_lineplot(quality_table_fwd_annotated.get_data(), params).to_dto(params).to_json_dict())
+        quality_table_fwd_annotated_lineplot_view.name = "Quality check lineplot - Forward"
 
         # Quality table rvs
-        quality_table_reverse = QualityTableImporter.call(
+        quality_table_reverse = TableImporter.call(
             File(path=rvrs_path),
             {'delimiter': 'tab', "index_column": 0})
         quality_table_rvs_annotated = TableAnnotatorHelper.annotate_rows(
             quality_table_reverse, metadata_table, use_table_row_names_as_ref=True)
         quality_table_rvs_annotated.name = "Quality check table - Reverse"
+        quality_table_rvs_annotated_boxplot_view = ViewResource(
+            self.view_as_boxplot(quality_table_rvs_annotated.get_data()).to_dto(params).to_json_dict())
+        quality_table_rvs_annotated_boxplot_view.name = "Quality check boxplot - Reverse"
+        quality_table_rvs_annotated_lineplot_view = ViewResource(
+            self.view_as_lineplot(quality_table_rvs_annotated.get_data(), params).to_dto(params).to_json_dict())
+        quality_table_rvs_annotated_lineplot_view.name = "Quality check lineplot - Reverse"
 
         # Resource set
         resource_table: ResourceSet = ResourceSet()
-        resource_table.name = "Quality check tables"
+        resource_table.name = "Quality check tables/views"
         resource_table.add_resource(quality_table_fwd_annotated)
+        resource_table.add_resource(quality_table_fwd_annotated_boxplot_view)
+        resource_table.add_resource(quality_table_fwd_annotated_lineplot_view)
         resource_table.add_resource(quality_table_rvs_annotated)
+        resource_table.add_resource(quality_table_rvs_annotated_boxplot_view)
+        resource_table.add_resource(quality_table_rvs_annotated_lineplot_view)
         return {
             "result_folder": result_folder,
             "quality_table": resource_table
@@ -177,7 +195,8 @@ class Qiime2QualityCheck(Task):
     def run_cmd_single_end(self, shell_proxy: ShellProxy,
                            script_file_dir: str,
                            fastq_folder_path: str,
-                           manifest_table_file_path: str
+                           manifest_table_file_path: str,
+                           params: ConfigParams
                            ) -> TaskOutputs:
         cmd = [
             "bash",
@@ -197,16 +216,78 @@ class Qiime2QualityCheck(Task):
 
         resource_table: ResourceSet = ResourceSet()
         qual_path = os.path.join(shell_proxy.working_dir, "quality_check", self.READS_FILE_PATH)
-        quality_table_single_end = QualityTableImporter.call(
+        quality_table_single_end = TableImporter.call(
             File(path=qual_path),
             {'delimiter': 'tab', "index_column": 0})
         quality_table = TableAnnotatorHelper.annotate_rows(
             quality_table_single_end, metadata_table, use_table_row_names_as_ref=True)
+        quality_table.name = "Quality check table"
+        quality_table_boxplot_view = ViewResource(
+            self.view_as_boxplot(quality_table.get_data()).to_dto(params).to_json_dict())
+        quality_table_boxplot_view.name = "Quality check boxplot"
+        quality_table_lineplot_view = ViewResource(
+            self.view_as_lineplot(quality_table.get_data(), params).to_dto(params).to_json_dict())
+        quality_table_lineplot_view.name = "Quality check lineplot"
 
         resource_table.name = "Quality table - Single end files"
+
         # Resource set
         resource_table.add_resource(quality_table)
+        resource_table.add_resource(quality_table_boxplot_view)
+        resource_table.add_resource(quality_table_lineplot_view)
         return {
             "result_folder": result_folder,
             "quality_table": resource_table
         }
+
+    def view_as_boxplot(self, data: DataFrame) -> BoxPlotView:
+        bx_view = BoxPlotView()
+
+        bx_view.add_series(
+            x=data.columns.values.tolist(),
+            median=data.iloc[2, :].values.tolist(),  # quality median
+            q1=data.iloc[1, :].values.tolist(),
+            q3=data.iloc[3, :].values.tolist(),
+            min=data.iloc[0, :].values.tolist(),
+            max=data.iloc[4, :].values.tolist(),
+            lower_whisker=data.iloc[0, :].values.tolist(),
+            upper_whisker=data.iloc[4, :].values.tolist()
+        )
+        bx_view.x_label = "Base position"
+        bx_view.y_label = "PHRED score"
+        return bx_view
+
+    def view_as_lineplot(self, data: DataFrame, params: ConfigParams) -> LinePlot2DView:
+        lp_view = LinePlot2DView()
+
+        # sliding windows
+        y = data.iloc[2, :]
+        q1 = data.iloc[1, :]
+        q3 = data.iloc[3, :]
+
+        if "window_size" not in params:
+            params["window_size"] = 15  # Proposed by copilot
+
+        mean_median = y.rolling(window=params["window_size"], min_periods=1).mean()
+        mean_q1 = q1.rolling(window=params["window_size"], min_periods=1).mean()
+        mean_q3 = q3.rolling(window=params["window_size"], min_periods=1).mean()
+        lp_view.add_series(
+            x=data.columns.values.tolist(),
+            y=mean_median.values.tolist(),  # quality median
+            name='Median'
+        )
+
+        lp_view.add_series(
+            x=data.columns.values.tolist(),
+            y=mean_q1.values.tolist(),  # quality q1
+            name='Q1'
+        )
+
+        lp_view.add_series(
+            x=data.columns.values.tolist(),
+            y=mean_q3.values.tolist(),  # quality q3
+            name='Q3'
+        )
+        lp_view.x_label = "Base position"
+        lp_view.y_label = "PHRED score"
+        return lp_view

@@ -2,9 +2,10 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      ResourceSet, ShellProxy, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      InputSpecs, IntParam, LinePlot2DView, OutputSpec,
+                      OutputSpecs, ResourceSet, ShellProxy, Table, Task,
+                      TaskInputs, TaskOutputs, ViewResource, task_decorator)
+from numpy import nanquantile
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from .rarefaction_table import RarefactionTableImporter
@@ -59,7 +60,7 @@ class Qiime2RarefactionAnalysis(Task):
 
         # Output formating and annotation
 
-        annotated_outputs = self.outputs_annotation(outputs)
+        annotated_outputs = self.outputs_annotation(outputs, params)
 
         return annotated_outputs
 
@@ -101,7 +102,7 @@ class Qiime2RarefactionAnalysis(Task):
 
         return output_folder_path
 
-    def outputs_annotation(self, output_folder_path: str) -> TaskOutputs:
+    def outputs_annotation(self, output_folder_path: str, params: ConfigParams) -> TaskOutputs:
 
         result_folder = Folder(output_folder_path)
 
@@ -117,10 +118,45 @@ class Qiime2RarefactionAnalysis(Task):
             File(path=shannon_path),
             {'delimiter': 'tab', "index_column": 0})
         shannon_index_table.name = "Shannon index"
+
+        observed_feature_table_lineplot: ViewResource = ViewResource(
+            self.view_as_lineplot(observed_feature_table).to_dto(params).to_json_dict())
+
+        observed_feature_table_lineplot.name = "Observed features Lineplot"
+
+        shannon_index_table_lineplot: ViewResource = ViewResource(
+            self.view_as_lineplot(shannon_index_table).to_dto(params).to_json_dict())
+
+        shannon_index_table_lineplot.name = "Shannon index Lineplot"
+
         resource_table: ResourceSet = ResourceSet()
         resource_table.name = "Rarefaction tables"
+
         resource_table.add_resource(observed_feature_table)
+        resource_table.add_resource(observed_feature_table_lineplot)
         resource_table.add_resource(shannon_index_table)
+        resource_table.add_resource(shannon_index_table_lineplot)
 
         return {"result_folder": result_folder,
                 "rarefaction_table": resource_table}
+
+    def view_as_lineplot(self, table: Table) -> LinePlot2DView:
+        lp_view = LinePlot2DView()
+        column_tags = table.get_column_tags()
+        all_sample_ids = list(set([tag["sample-id"] for tag in column_tags]))
+
+        for sample_id in all_sample_ids:
+            sample_table = table.select_by_column_tags([{"sample-id": sample_id}])
+            sample_column_tags = sample_table.get_column_tags()
+            positions = [float(tag["depth"]) for tag in sample_column_tags]
+
+            sample_data = sample_table.get_data()
+
+            quantile = nanquantile(sample_data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
+            median = quantile[1, :].tolist()
+            lp_view.add_series(x=positions, y=median, name=sample_id, tags=sample_column_tags)
+
+        lp_view.x_label = "Count depth"
+        lp_view.y_label = "Index value"
+
+        return lp_view

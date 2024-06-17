@@ -3,14 +3,13 @@ import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      ResourceSet, ShellProxy, StrParam, Table,
-                      TableAnnotatorHelper, TableImporter, Task,
+                      ResourceSet, ShellProxy, StackedBarPlotView, StrParam,
+                      Table, TableAnnotatorHelper, TableImporter, Task,
                       TaskFileDownloader, TaskInputs, TaskOutputs,
-                      task_decorator)
+                      ViewResource, task_decorator)
+from pandas import DataFrame
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-from .feature_table import FeatureTableImporter
-from .taxonomy_stacked_table import TaxonomyTableImporter
 
 
 @task_decorator("Qiime2TaxonomyDiversity", human_name="Q2 Taxonomy Diversity",
@@ -119,14 +118,16 @@ class Qiime2TaxonomyDiversity(Task):
                                   script_file_dir,
                                   qiime2_folder_path,
                                   plateau_val,
-                                  file_path
+                                  file_path,
+                                  params
                                   )
 
     def run_cmd_lines(self, shell_proxy: ShellProxy,
                       script_file_dir: str,
                       qiime2_folder_path: str,
                       plateau_val: int,
-                      db_name: str) -> TaskOutputs:
+                      db_name: str,
+                      params: ConfigParams) -> TaskOutputs:
 
         # This script create Qiime2 core diversity metrics based on clustering
         cmd_1 = [
@@ -226,8 +227,11 @@ class Qiime2TaxonomyDiversity(Task):
                 # Lisez le contenu du fichier pour déterminer sa structure
                 with open(path, 'r') as file:
                     first_line = file.readline().strip()  # Lire la première ligne du fichier
-                    if first_line.startswith('#SampleID'):  # Si la première ligne commence par '#SampleID', la structure est différente
-                        table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0 , 'header': -1 , 'comment': '#'})
+                    # Si la première ligne commence par '#SampleID', la structure est différente
+                    if first_line.startswith('#SampleID'):
+                        table: Table = TableImporter.call(
+                            File(path=path),
+                            {'delimiter': 'tab', "index_column": 0, 'header': -1, 'comment': '#'})
                         raw_table_columns = ["faith_pd"]
                         table.set_all_column_names(raw_table_columns)
                     else:
@@ -241,17 +245,21 @@ class Qiime2TaxonomyDiversity(Task):
             # Ajouter le tableau à la ressource set
             diversity_resource_table_set.add_resource(table_annotated)
 
-
         # Create ressource set containing Taxonomy table with a forced customed view (TaxonomyTable; stacked barplot view)
 
         taxo_resource_table_set: ResourceSet = ResourceSet()
         taxo_resource_table_set.name = "Set of taxonomic tables (7 levels)"
         for key, value in self.TAXO_PATHS.items():
             path = os.path.join(shell_proxy.working_dir, "taxonomy_and_diversity", "table_files", value)
-            table = TaxonomyTableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
             table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
+            table_annotated_bar_plot_view = ViewResource(
+                self.view_as_normalised_taxo_stacked_bar_plot(table_annotated).to_dto(params).to_json_dict())
+            table_annotated_bar_plot_view.name = key + "_stacked_barplot"
+
             taxo_resource_table_set.add_resource(table_annotated)
+            taxo_resource_table_set.add_resource(table_annotated_bar_plot_view)
 
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
@@ -259,7 +267,7 @@ class Qiime2TaxonomyDiversity(Task):
             asv_metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
 
             asv_table_path = os.path.join(result_folder.path, "table_files", value)
-            asv_table = FeatureTableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
+            asv_table = TableImporter.call(File(path=asv_table_path), {'delimiter': 'tab', "index_column": 0})
             t_asv = asv_table.transpose()
             table_annotated = TableAnnotatorHelper.annotate_rows(t_asv, metadata_table, use_table_row_names_as_ref=True)
             table_annotated = TableAnnotatorHelper.annotate_columns(
@@ -272,3 +280,17 @@ class Qiime2TaxonomyDiversity(Task):
             'diversity_tables': diversity_resource_table_set,
             'taxonomy_tables': taxo_resource_table_set
         }
+
+    def view_as_normalised_taxo_stacked_bar_plot(self, table: Table) -> StackedBarPlotView:
+        s_view = StackedBarPlotView(normalize=True)
+        table_data = table.transpose().get_data()
+        tdata = table_data.T
+        for i in range(0, tdata.shape[1]):
+            if isinstance(tdata.iat[0, i], str):
+                continue
+            y = tdata.iloc[:, i].values.tolist()
+            s_view.add_series(y=y, name=tdata.columns[i])
+        s_view.x_tick_labels = tdata.index.to_list()
+        s_view.y_label = "Feature count"
+        s_view.x_label = "Samples"
+        return s_view

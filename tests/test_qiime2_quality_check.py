@@ -4,6 +4,7 @@ import os
 import pandas
 from gws_core import BaseTestCase, File, Settings, TaskRunner
 from gws_omix import FastqFolder
+
 from gws_ubiome import Qiime2QualityCheck
 
 
@@ -37,15 +38,6 @@ class TestQiime2QualityCheck(BaseTestCase):
         expected_file_path = os.path.join(large_testdata_dir, "quality_check", "forward_boxplot.csv")
         expected_in_file = open(expected_file_path, 'r', encoding="utf-8")
         expected_first_line = expected_in_file.readline()
-
-        expected_result_file = File(path=expected_file_path)
-        expected_result_content = expected_result_file.read()
-
-        print("----")
-        print(result_content)
-        print("----")
-        print(expected_result_content)
-        print("----")
 
         self.assertEqual(expected_first_line, result_first_line)
 

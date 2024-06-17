@@ -2,11 +2,12 @@ import copy
 
 import numpy as np
 from gws_core import (BoolParam, BoxPlotView, ConfigParams, StackedBarPlotView,
-                      StrParam, Table, TableImporter, TableUnfolderHelper,
-                      importer_decorator, resource_decorator, view)
+                      StrParam, Table, TableUnfolderHelper, TypingDeprecated,
+                      resource_decorator, view)
 
 
-@resource_decorator(unique_name="TaxonomyTable", hide=True)
+@resource_decorator(unique_name="TaxonomyTable", hide=True,
+                    deprecated=TypingDeprecated(deprecated_since="0.7.0", deprecated_message="Use Table instead"))
 class TaxonomyTable(Table):
     """
     TaxonomyTable class
@@ -90,9 +91,3 @@ class TaxonomyTable(Table):
         lp_view.y_label = "Count values"
         lp_view.x_label = "Samples"
         return lp_view
-
-
-@importer_decorator(unique_name="TaxonomyTableImporter", human_name="Taxonomy Table importer",
-                    target_type=TaxonomyTable, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
-class TaxonomyTableImporter(TableImporter):
-    pass

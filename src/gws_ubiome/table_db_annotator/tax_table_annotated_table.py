@@ -1,10 +1,11 @@
 
 from gws_core import (ConfigParams, StackedBarPlotView, StrParam, Table,
-                      TableImporter, TableTagAggregatorHelper,
-                      importer_decorator, resource_decorator, view)
+                      TableTagAggregatorHelper, TypingDeprecated,
+                      resource_decorator, view)
 
 
-@resource_decorator(unique_name="TaxonomyTableTagged", hide=True)
+@resource_decorator(unique_name="TaxonomyTableTagged", hide=True,
+                    deprecated=TypingDeprecated(deprecated_since="0.7.0", deprecated_message="Use Table instead"))
 class TaxonomyTableTagged(Table):
 
     """
@@ -31,9 +32,3 @@ class TaxonomyTableTagged(Table):
         s_view.x_tick_labels = initialdf.index.to_list()
 
         return s_view
-
-
-@importer_decorator(unique_name="TaxonomyTableTaggedImporter", human_name="Taxonomy Table importer",
-                    target_type=TaxonomyTableTagged, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
-class TaxonomyTableTaggedImporter(TableImporter):
-    pass
