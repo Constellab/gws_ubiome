@@ -8,7 +8,7 @@
         {
             "args": ["--runserver"],
             "name": "Starts GWS server",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
             "console": "integratedTerminal"
@@ -17,7 +17,7 @@
         {
             "args": ["--runserver", "--log_level=DEBUG"],
             "name": "Starts GWS server - DEBUG log",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
             "console": "integratedTerminal"
@@ -26,7 +26,7 @@
         {
             "args": ["--test", "all"],
             "name": "Test all",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
             "console": "integratedTerminal"
@@ -35,27 +35,18 @@
         {
             "args": ["--test", "${input:testFileName}"],
             "name": "Test single",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/manage.py",
-            "console": "integratedTerminal",
-        },
-        // reset the dev env
-        {
-          "args": ["--runserver", "--reset_env"],
-          "name": "Reset dev env",
-          "type": "python",
-          "request": "launch",
-          "program": "${workspaceFolder}/manage.py ",
-          "console": "integratedTerminal",
-      }
+            "console": "integratedTerminal"
+        }
     ],
 
     "inputs": [
         {
             "id": "testFileName",
             "type": "promptString",
-            "description": "Name of the test files to run (separated with space)",
+            "description": "Name of the test files to run (separated with space)"
         }
     ]
 }
