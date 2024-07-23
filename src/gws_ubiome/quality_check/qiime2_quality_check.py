@@ -91,7 +91,8 @@ class Qiime2QualityCheck(Task):
             outputs = self.run_cmd_single_end(shell_proxy,
                                               script_file_dir,
                                               fastq_folder_path,
-                                              manifest_table_file_path
+                                              manifest_table_file_path,
+                                              params
                                               )
 
         return outputs
