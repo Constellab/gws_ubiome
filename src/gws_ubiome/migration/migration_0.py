@@ -14,14 +14,14 @@ class Migration060(BrickMigration):
     def migrate(cls, from_version: Version, to_version: Version) -> None:
 
         typing_dict = {
-            'RESOURCE.gws_ubiome.Qiime2TaxonomyDiversityFolder': Folder._typing_name,
-            'RESOURCE.gws_ubiome.Qiime2FeatureFrequencyFolder': Folder._typing_name,
-            'RESOURCE.gws_ubiome.Qiime2DifferentialAnalysisResultFolder': Folder._typing_name,
-            'RESOURCE.gws_ubiome.Qiime2QualityCheckResultFolder': Folder._typing_name,
-            'RESOURCE.gws_ubiome.Qiime2RarefactionAnalysisResultFolder': Folder._typing_name,
-            'RESOURCE.gws_ubiome.Qiime2MetadataTableFile': File._typing_name,
-            'RESOURCE.gws_ubiome.FastqFolder': FastqFolder._typing_name,
-            'RESOURCE.gws_omix.FastaFile': File._typing_name
+            'RESOURCE.gws_ubiome.Qiime2TaxonomyDiversityFolder': Folder.get_typing_name(),
+            'RESOURCE.gws_ubiome.Qiime2FeatureFrequencyFolder': Folder.get_typing_name(),
+            'RESOURCE.gws_ubiome.Qiime2DifferentialAnalysisResultFolder': Folder.get_typing_name(),
+            'RESOURCE.gws_ubiome.Qiime2QualityCheckResultFolder': Folder.get_typing_name(),
+            'RESOURCE.gws_ubiome.Qiime2RarefactionAnalysisResultFolder': Folder.get_typing_name(),
+            'RESOURCE.gws_ubiome.Qiime2MetadataTableFile': File.get_typing_name(),
+            'RESOURCE.gws_ubiome.FastqFolder': FastqFolder.get_typing_name(),
+            'RESOURCE.gws_omix.FastaFile': File.get_typing_name()
         }
 
         for key, value in typing_dict.items():
