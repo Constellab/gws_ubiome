@@ -3,6 +3,7 @@
 # About us: https://gencovery.com
 
 import os
+
 from gws_core import MambaShellProxy, MessageDispatcher
 
 
@@ -15,4 +16,5 @@ class Picrust2ShellProxyHelper():
 
     @classmethod
     def create_proxy(cls, message_dispatcher: MessageDispatcher = None):
-        return MambaShellProxy(cls.ENV_DIR_NAME, cls.ENV_FILE_PATH, message_dispatcher=message_dispatcher)
+        return MambaShellProxy(env_file_path=cls.ENV_FILE_PATH, env_name=cls.ENV_DIR_NAME,
+                               message_dispatcher=message_dispatcher)
