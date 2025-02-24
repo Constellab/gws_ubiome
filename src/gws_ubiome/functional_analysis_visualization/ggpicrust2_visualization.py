@@ -112,13 +112,6 @@ class Ggpicrust2FunctionalAnalysis(Task):
         pca_file_path = os.path.join(shell_proxy.working_dir, "pca_results.csv")
         plolty_resource = self.build_plotly(pca_file_path, pca_proportion_file_path, Reference_column)
 
-    #    # return the output table
-    #    return {
-    #        'table_1': table,
-    #        'errorbar_result': File(pathway_errorbar),
-    #        'heatmap_result': File(pathway_heatmap),
-    #        'plotly_result': plolty_resource
-    #    }
 
         # return the output plotly resource and resource set
         return {
