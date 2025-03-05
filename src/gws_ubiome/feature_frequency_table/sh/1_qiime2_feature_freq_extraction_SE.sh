@@ -16,6 +16,7 @@ qiime dada2 denoise-single \
   --i-demultiplexed-seqs $qiime_dir/demux.qza \
   --p-trunc-len $trcL \
   --p-n-threads $threads \
+  --p-min-fold-parent-over-abundance 16 \
   --p-n-reads-learn 1000 \
   --o-table table.qza \
   --o-representative-sequences rep-seqs.qza \
