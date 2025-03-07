@@ -25,13 +25,11 @@ if (!"ggpicrust2" %in% installed.packages()) {
 }
 
 library(ggpicrust2)
-
 library(remotes)
-# Specify the repository URL containing the package version you want
-# Replace 'repo_url' with the URL of the repository
-repo_url <- "https://cran.r-project.org/src/contrib/Archive/ggplot2/ggplot2_3.5.0.tar.gz"
-# Install the desired package version from the specified repository
-install_url(repo_url)
+
+if (!"ggplot2" %in% installed.packages()) {
+  devtools::install_github("tidyverse/ggplot2", ref = "v3.5.1")
+}
 library(ggplot2)
 
 if (!requireNamespace("remotes", quietly = TRUE)) {
