@@ -9,7 +9,7 @@ from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, InputSpec,
                       TableImporter, Task, TaskInputs, TaskOutputs,
                       task_decorator)
 
-from ..base_env.Ggpicrust2_env import Ggpicrust2ShellProxyHelper
+from ..base_env.Ggpicrust2_env import Ggpicrust2vShellProxyHelper
 
 
 @task_decorator("ItsGgpicrust2FunctionalAnalysisVisualization", human_name="ITS Functional Analysis Prediction Visualization",
@@ -83,7 +83,7 @@ class Ggpicrust2FunctionalAnalysis(Task):
         Slice_start = params["Slice_start"]
 
         # retrieve the factor param value
-        shell_proxy: ShellProxy = Ggpicrust2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # call python file
         cmd = f"Rscript --vanilla {self.r_file_path} {metacyc_abundance.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component} {Slice_start}"
