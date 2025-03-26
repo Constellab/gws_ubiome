@@ -4,7 +4,7 @@ import os
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       InputSpecs, IntParam, OutputSpec, OutputSpecs,
                       ShellProxy, Table, TableAnnotatorHelper, TableImporter,
-                      Task, TaskInputs, TaskOutputs, task_decorator,PlotlyResource)
+                      Task, TaskInputs, TaskOutputs, task_decorator, PlotlyResource)
 import plotly.graph_objects as go
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
@@ -48,12 +48,12 @@ class Qiime2FeatureTableExtractorPE(Task):
             Folder,
             short_description="Rarefaction curves folder. Can be used with taxonomy task (!no rarefaction are done on counts!))",
             human_name="Rarefaction_curves")})
-    config_specs: ConfigSpecs = {
+    config_specs: ConfigSpecs = ConfigSpecs({
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime")
-    }
+    })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder = inputs["quality_check_folder"]
@@ -64,7 +64,8 @@ class Qiime2FeatureTableExtractorPE(Task):
         hard_trim = params["5_prime_hard_trimming_reads_size"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(
+            self.message_dispatcher)
 
         if hard_trim == 0:  # When sequencing data are not being hard-trimmed
             outputs = self.run_cmd_paired_end(shell_proxy,
@@ -100,7 +101,8 @@ class Qiime2FeatureTableExtractorPE(Task):
 
         cmd_1 = [
             " bash ",
-            os.path.join(script_file_dir, "./sh/1_qiime2_feature_freq_extraction_PE.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/1_qiime2_feature_freq_extraction_PE.sh"),
             qiime2_folder_path,
             trct_forward,
             trct_reverse,
@@ -115,17 +117,20 @@ class Qiime2FeatureTableExtractorPE(Task):
         # This script perform Qiime2 demux , quality assessment
         cmd_2 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/2_qiime2_outputs_formating.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/2_qiime2_outputs_formating.sh"),
             qiime2_folder_path,
             shell_proxy.working_dir
         ]
-        self.log_info_message("[Step-2] : Formating output files for data visualisation")
+        self.log_info_message(
+            "[Step-2] : Formating output files for data visualisation")
         res = shell_proxy.run(cmd_2)
         if res != 0:
             raise Exception("Second step did not finished")
         self.update_progress_value(100, "[Step-2] : Done")
 
-        output_folder_path = os.path.join(shell_proxy.working_dir, "sample_freq_details")
+        output_folder_path = os.path.join(
+            shell_proxy.working_dir, "sample_freq_details")
 
         return output_folder_path
 
@@ -140,14 +145,16 @@ class Qiime2FeatureTableExtractorPE(Task):
 
         cmd_1 = [
             " bash ",
-            os.path.join(script_file_dir, "./sh/1_qiime2_feature_freq_extraction_PE.hard_trim.sh"),
+            os.path.join(
+                script_file_dir, "./sh/1_qiime2_feature_freq_extraction_PE.hard_trim.sh"),
             qiime2_folder_path,
             trct_forward,
             trct_reverse,
             thrd,
             hard_trim
         ]
-        self.log_info_message("Qiime2 features inference + reads hard trimming")
+        self.log_info_message(
+            "Qiime2 features inference + reads hard trimming")
         res = shell_proxy.run(cmd_1)
         if res != 0:
             raise Exception("Qiime2 features inference did not finished")
@@ -156,7 +163,8 @@ class Qiime2FeatureTableExtractorPE(Task):
         # This script perform Qiime2 demux , quality assessment
         cmd_2 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/2_qiime2_outputs_formating.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/2_qiime2_outputs_formating.sh"),
             qiime2_folder_path,
             shell_proxy.working_dir
         ]
@@ -166,7 +174,8 @@ class Qiime2FeatureTableExtractorPE(Task):
             raise Exception("One error occured when formating output files")
         self.update_progress_value(100, "Done")
 
-        output_folder_path = os.path.join(shell_proxy.working_dir, "sample_freq_details")
+        output_folder_path = os.path.join(
+            shell_proxy.working_dir, "sample_freq_details")
 
         return output_folder_path
 
@@ -180,14 +189,17 @@ class Qiime2FeatureTableExtractorPE(Task):
             File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "denoising-stats.tsv")
-        stats_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+        stats_table: Table = TableImporter.call(
+            File(path=path), {'delimiter': 'tab', "index_column": 0})
 
         path = os.path.join(result_file.path, "gws_metadata.csv")
-        metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table: Table = TableImporter.call(
+            File(path=path), {'delimiter': 'tab'})
         feature_table = TableAnnotatorHelper.annotate_rows(
             feature_table, metadata_table, use_table_row_names_as_ref=True)
 
-        stats_table = TableAnnotatorHelper.annotate_rows(stats_table, metadata_table, use_table_row_names_as_ref=True)
+        stats_table = TableAnnotatorHelper.annotate_rows(
+            stats_table, metadata_table, use_table_row_names_as_ref=True)
         stats_table.name = "Denoising Metrics Table"
 
         boxplot = self.view_frequency_table_as_box_plot(feature_table)
@@ -201,13 +213,17 @@ class Qiime2FeatureTableExtractorPE(Task):
     def view_frequency_table_as_box_plot(self, table: Table) -> PlotlyResource:
         fig = go.Figure()
 
-        my_column_passed_filter = table.get_column_data('percentage of input passed filter')
+        my_column_passed_filter = table.get_column_data(
+            'percentage of input passed filter')
         my_column_merged = table.get_column_data('percentage of input merged')
-        my_column_non_chimeric = table.get_column_data('percentage of input non-chimeric')
+        my_column_non_chimeric = table.get_column_data(
+            'percentage of input non-chimeric')
 
-        fig.add_trace(go.Box(y=my_column_passed_filter, name="1 - passed filter"))
+        fig.add_trace(go.Box(y=my_column_passed_filter,
+                      name="1 - passed filter"))
         fig.add_trace(go.Box(y=my_column_merged, name="2 - merged"))
-        fig.add_trace(go.Box(y=my_column_non_chimeric, name="3 - non-chimeric"))
+        fig.add_trace(go.Box(y=my_column_non_chimeric,
+                      name="3 - non-chimeric"))
 
         fig.update_layout(
             title='Denoising Metrics Boxplots',

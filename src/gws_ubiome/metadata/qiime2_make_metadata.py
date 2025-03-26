@@ -47,7 +47,7 @@ class Qiime2MetadataTableMaker(Task):
         FastqFolder, short_description="FASTQ folder", human_name="Folder_folder")})
     output_specs: OutputSpecs = OutputSpecs({'metadata_table': OutputSpec(
         File, short_description="Metadata file", human_name="Metadata_file")})
-    config_specs: ConfigSpecs = {
+    config_specs: ConfigSpecs = ConfigSpecs({
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],
@@ -65,7 +65,7 @@ class Qiime2MetadataTableMaker(Task):
             default_value="metadata.txt",
             short_description="Choose an output metadata file name")
 
-    }
+    })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         fastq_folder = inputs["fastq_folder"]
@@ -73,7 +73,8 @@ class Qiime2MetadataTableMaker(Task):
         output_name = params["metadata_file_name"]
         fastq_folder_path = fastq_folder.path
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(
+            self.message_dispatcher)
 
         if seq == "paired-end":
             fwd = params["forward_file_differentiator"]
@@ -103,7 +104,8 @@ class Qiime2MetadataTableMaker(Task):
                            ) -> None:
         cmd = [
             "bash",
-            os.path.join(script_file_dir, "./sh/0_qiime2_manifest_paired_end.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/0_qiime2_manifest_paired_end.sh"),
             fastq_folder_path,
             forward,
             reverse,
@@ -129,7 +131,8 @@ class Qiime2MetadataTableMaker(Task):
                            ) -> None:
         cmd = [
             "bash",
-            os.path.join(script_file_dir, "./sh/0_qiime2_manifest_single_end.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/0_qiime2_manifest_single_end.sh"),
             fastq_folder_path,
             output
         ]

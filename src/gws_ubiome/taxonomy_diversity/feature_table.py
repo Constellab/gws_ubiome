@@ -11,7 +11,7 @@ class FeatureTable(Table):
     """
     @view(view_type=StackedBarPlotView, human_name='Feature stacked barplot',
           short_description='Feature stacked barplots',
-          specs={}, default_view=False)
+          default_view=False)
     def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
         s_view = StackedBarPlotView(normalize=True)
         data = self.get_data()

@@ -54,11 +54,11 @@ class Qiime2DifferentialAnalysis(Task):
         'result_tables': OutputSpec(ResourceSet),
         'result_folder': OutputSpec(Folder)
     })
-    config_specs: ConfigSpecs = {
+    config_specs: ConfigSpecs = ConfigSpecs({
         "metadata_column": StrParam(
             human_name="Metadata column",
             short_description="Column on which the differential analysis will be performed"),
-        "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")}
+        "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")})
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
 
@@ -71,7 +71,8 @@ class Qiime2DifferentialAnalysis(Task):
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
         # test last qiime2 version, for the new ancom fonction (ancombc)
         # shell_proxy = Qiime2_2022_11_ShellProxyHelper.create_proxy(self.message_dispatcher)
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(
+            self.message_dispatcher)
 
         # perform ANCOM analysis
 
@@ -93,7 +94,8 @@ class Qiime2DifferentialAnalysis(Task):
                 script_file_dir: str) -> TaskOutputs:
 
         cmd = [
-            " bash ", os.path.join(script_file_dir, "./sh/5_qiime2.differential_analysis.all_taxa_levels.sh"),
+            " bash ", os.path.join(
+                script_file_dir, "./sh/5_qiime2.differential_analysis.all_taxa_levels.sh"),
             qiime2_folder.path,
             metadata_col,
             thrds,
@@ -103,31 +105,40 @@ class Qiime2DifferentialAnalysis(Task):
         shell_proxy.run(cmd)
 
         result_folder = Folder()
-        result_folder.path = os.path.join(shell_proxy.working_dir, "differential_analysis")
+        result_folder.path = os.path.join(
+            shell_proxy.working_dir, "differential_analysis")
 
         resource_table_set: ResourceSet = ResourceSet()
         resource_table_set.name = "Set of differential analysis tables"
         for key, value in self.OUTPUT_FILES.items():
-            path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            path = os.path.join(shell_proxy.working_dir,
+                                "differential_analysis", value)
+            table: Table = TableImporter.call(
+                File(path=path), {'delimiter': 'tab', "index_column": 0})
             table.name = key
 
             # Metadata table
-            path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            metadata_table: Table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+            path = os.path.join(shell_proxy.working_dir,
+                                "differential_analysis", value)
+            metadata_table: Table = TableImporter.call(
+                File(path=path), {'delimiter': 'tab'})
 
-            table_annotated = TableAnnotatorHelper.annotate_rows(table, metadata_table, use_table_row_names_as_ref=True)
+            table_annotated = TableAnnotatorHelper.annotate_rows(
+                table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
             resource_table_set.add_resource(table_annotated)
 
         for key, value in self.PERCENTILE_TABLE.items():
-            path = os.path.join(shell_proxy.working_dir, "differential_analysis", value)
-            table = TableImporter.call(File(path=path), {'delimiter': 'tab', "index_column": 0})
+            path = os.path.join(shell_proxy.working_dir,
+                                "differential_analysis", value)
+            table = TableImporter.call(
+                File(path=path), {'delimiter': 'tab', "index_column": 0})
             data = table.get_data()
             column_tags = []
 
             column_names = table.column_names
-            first_row = [val if val else "unknown" for _, val in enumerate(data.iloc[0, :])]
+            first_row = [val if val else "unknown" for _,
+                         val in enumerate(data.iloc[0, :])]
             group_key = metadata_col
             final_col_names = []
             for i, col_name in enumerate(column_names):

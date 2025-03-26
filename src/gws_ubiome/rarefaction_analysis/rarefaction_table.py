@@ -19,7 +19,7 @@ class RarefactionTable(Table):
 
     @view(view_type=LinePlot2DView, human_name='Rarefaction lineplot',
           short_description='Lineplot of the rarefaction table',
-          specs={}, default_view=True)
+          default_view=True)
     def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
         lp_view = LinePlot2DView()
         column_tags = self.get_column_tags()

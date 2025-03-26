@@ -62,12 +62,12 @@ class Qiime2QualityCheck(Task):
         'result_folder': OutputSpec(Folder),
         'quality_table': OutputSpec(ResourceSet)
     })
-    config_specs: ConfigSpecs = {
+    config_specs: ConfigSpecs = ConfigSpecs({
         "sequencing_type":
         StrParam(
             default_value="paired-end", allowed_values=["paired-end", "single-end"],
             short_description="Type of sequencing. Defaults to paired-end")
-    }
+    })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         fastq_folder = inputs["fastq_folder"]
@@ -78,7 +78,8 @@ class Qiime2QualityCheck(Task):
         manifest_table_file_path = metadata_table.path
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(
+            self.message_dispatcher)
 
         if seq == "paired-end":
             outputs = self.run_cmd_paired_end(shell_proxy,
@@ -106,7 +107,8 @@ class Qiime2QualityCheck(Task):
         # This script create Qiime2 metadata file by modify initial gws metedata file
         cmd_1 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/1_qiime2_create_metadata_csv_paired_end.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/1_qiime2_create_metadata_csv_paired_end.sh"),
             fastq_folder_path,
             manifest_table_file_path
         ]
@@ -131,7 +133,8 @@ class Qiime2QualityCheck(Task):
         # This script create visualisation output files for users (Boxplot compatible with Constellab front)
         cmd_3 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/3_qiime2_generate_boxplot_output_files.sh"),
+            os.path.join(script_file_dir,
+                         "./sh/3_qiime2_generate_boxplot_output_files.sh"),
             os.path.join(shell_proxy.working_dir, "quality_check")
         ]
         self.log_info_message("[Step-3] : Creating visualisation output files")
@@ -143,13 +146,17 @@ class Qiime2QualityCheck(Task):
         result_folder = Folder()
 
         # Getting quality_check folder to perfom file/table annotations
-        result_folder.path = os.path.join(shell_proxy.working_dir, "quality_check")
+        result_folder.path = os.path.join(
+            shell_proxy.working_dir, "quality_check")
 
         # Create annotated feature table
         path = os.path.join(result_folder.path, "gws_metadata.csv")
-        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
-        frwd_path = os.path.join(shell_proxy.working_dir, "quality_check", self.FORWARD_READ_FILE_PATH)
-        rvrs_path = os.path.join(shell_proxy.working_dir, "quality_check", self.REVERSE_READ_FILE_PATH)
+        metadata_table = TableImporter.call(
+            File(path=path), {'delimiter': 'tab'})
+        frwd_path = os.path.join(shell_proxy.working_dir,
+                                 "quality_check", self.FORWARD_READ_FILE_PATH)
+        rvrs_path = os.path.join(shell_proxy.working_dir,
+                                 "quality_check", self.REVERSE_READ_FILE_PATH)
 
         # Quality table fwd
         quality_table_forward = TableImporter.call(
@@ -201,22 +208,26 @@ class Qiime2QualityCheck(Task):
                            ) -> TaskOutputs:
         cmd = [
             "bash",
-            os.path.join(script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_single_end.sh"),
+            os.path.join(
+                script_file_dir, "./sh/1_qiime2_demux_trimmed_quality_check_single_end.sh"),
             fastq_folder_path,
             manifest_table_file_path
         ]
 
         shell_proxy.run(cmd)
 
-        result_folder = Folder(os.path.join(shell_proxy.working_dir, "quality_check"))
+        result_folder = Folder(os.path.join(
+            shell_proxy.working_dir, "quality_check"))
 
         # create annotated feature table
 
         path = os.path.join(result_folder.path, "gws_metadata.csv")
-        metadata_table = TableImporter.call(File(path=path), {'delimiter': 'tab'})
+        metadata_table = TableImporter.call(
+            File(path=path), {'delimiter': 'tab'})
 
         resource_table: ResourceSet = ResourceSet()
-        qual_path = os.path.join(shell_proxy.working_dir, "quality_check", self.READS_FILE_PATH)
+        qual_path = os.path.join(shell_proxy.working_dir,
+                                 "quality_check", self.READS_FILE_PATH)
         quality_table_single_end = TableImporter.call(
             File(path=qual_path),
             {'delimiter': 'tab', "index_column": 0})
@@ -269,9 +280,12 @@ class Qiime2QualityCheck(Task):
         if "window_size" not in params:
             params["window_size"] = 15  # Proposed by copilot
 
-        mean_median = y.rolling(window=params["window_size"], min_periods=1).mean()
-        mean_q1 = q1.rolling(window=params["window_size"], min_periods=1).mean()
-        mean_q3 = q3.rolling(window=params["window_size"], min_periods=1).mean()
+        mean_median = y.rolling(
+            window=params["window_size"], min_periods=1).mean()
+        mean_q1 = q1.rolling(
+            window=params["window_size"], min_periods=1).mean()
+        mean_q3 = q3.rolling(
+            window=params["window_size"], min_periods=1).mean()
         lp_view.add_series(
             x=data.columns.values.tolist(),
             y=mean_median.values.tolist(),  # quality median

@@ -1,6 +1,6 @@
 
-from gws_core import (ConfigParams, StackedBarPlotView, StrParam, Table,
-                      TableTagAggregatorHelper, TypingDeprecated,
+from gws_core import (ConfigParams, ConfigSpecs, StackedBarPlotView, StrParam,
+                      Table, TableTagAggregatorHelper, TypingDeprecated,
                       resource_decorator, view)
 
 
@@ -14,7 +14,7 @@ class TaxonomyTableTagged(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Stacked Bar Plot View with column tags',
           short_description='Grouping boxplot according to a column tag',
-          specs={"Metadata_tag": StrParam()})
+          specs=ConfigSpecs({"Metadata_tag": StrParam()}))
     def view_as_grouped_stackedbarplot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView(normalize=True)
