@@ -3,11 +3,11 @@ import os
 
 import pandas as pd
 import plotly.express as px
-from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, InputSpec,
-                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
+from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, FloatParam,
+                      InputSpec, InputSpecs, IntParam, OutputSpec, OutputSpecs,
                       PlotlyResource, ResourceSet, ShellProxy, StrParam,
                       TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator,FloatParam)
+                      task_decorator)
 
 from ..base_env.Ggpicrust2_env import Ggpicrust2vShellProxyHelper
 
@@ -47,7 +47,7 @@ class Ggpicrust2FunctionalAnalysis(Task):
             short_description="Show the difference after dimensional reduction via principal component analysis.")
     })
 
-    config_specs: ConfigSpecs = {
+    config_specs: ConfigSpecs = ConfigSpecs({
         "DA_method": StrParam(allowed_values=["LinDA", " "], short_description="Differential abundance (DA) method"),
         "Samples_column_name": StrParam(short_description="Column name in metadata file containing the sample name"),
         "Reference_column": StrParam(short_description="Column name in metadata file containing the reference group"),
@@ -62,7 +62,7 @@ class Ggpicrust2FunctionalAnalysis(Task):
         "Slice_start": IntParam(
             default_value=1, min_value=1, human_name="Slice start", visibility=IntParam.PROTECTED_VISIBILITY,
             short_description="You can modify the slice window of the errorbar and the heatmap by modifying the slice start in order to focus on a subset of the results"),
-    }
+    })
 
     r_file_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
@@ -83,7 +83,8 @@ class Ggpicrust2FunctionalAnalysis(Task):
         Slice_start = params["Slice_start"]
 
         # retrieve the factor param value
-        shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(
+            self.message_dispatcher)
 
         # call python file
         cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component} {Slice_start}"
@@ -106,12 +107,14 @@ class Ggpicrust2FunctionalAnalysis(Task):
                 elif filename.startswith("pathway_heatmap_") and filename.endswith(".png"):
                     resource_set.add_resource(File(file_path), filename)
                 elif filename.startswith("daa_annotated_results_") and filename.endswith(".csv"):
-                    resource_set.add_resource(TableImporter.call(File(file_path)), filename)
+                    resource_set.add_resource(
+                        TableImporter.call(File(file_path)), filename)
 
-        pca_proportion_file_path = os.path.join(shell_proxy.working_dir, "pca_proportion.csv")
+        pca_proportion_file_path = os.path.join(
+            shell_proxy.working_dir, "pca_proportion.csv")
         pca_file_path = os.path.join(shell_proxy.working_dir, "pca_results.csv")
-        plolty_resource = self.build_plotly(pca_file_path, pca_proportion_file_path, Reference_column)
-
+        plolty_resource = self.build_plotly(
+            pca_file_path, pca_proportion_file_path, Reference_column)
 
         # return the output plotly resource and resource set
         return {
@@ -129,9 +132,11 @@ class Ggpicrust2FunctionalAnalysis(Task):
 
         # Create a scatter plot
         if num_components == 2:
-            fig = px.scatter(data, x=data.columns[0], y=data.columns[1], color=Reference_column)
+            fig = px.scatter(
+                data, x=data.columns[0], y=data.columns[1], color=Reference_column)
         elif num_components == 3:
-            fig = px.scatter_3d(data, x=data.columns[0], y=data.columns[1], z=data.columns[2], color=Reference_column)
+            fig = px.scatter_3d(
+                data, x=data.columns[0], y=data.columns[1], z=data.columns[2], color=Reference_column)
             # Customize the 3D plot layout
             fig.update_layout(
                 scene=dict(

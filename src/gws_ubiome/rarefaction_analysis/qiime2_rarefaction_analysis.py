@@ -30,7 +30,7 @@ class Qiime2RarefactionAnalysis(Task):
         "rarefaction_table": OutputSpec(ResourceSet),
         'result_folder': OutputSpec(Folder)
     })
-    config_specs: ConfigSpecs = {
+    config_specs: ConfigSpecs = ConfigSpecs({
         "min_coverage": IntParam(default_value=20, min_value=20, short_description="Minimum number of reads to test"),
         "max_coverage":
         IntParam(
@@ -38,7 +38,7 @@ class Qiime2RarefactionAnalysis(Task):
             short_description="Maximum number of reads to test. Near to median value of the previous sample frequencies is advised"),
         "iteration": IntParam(default_value=10, min_value=10, short_description="Number of iteration for the rarefaction step")
 
-    }
+    })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         feature_frequency_folder = inputs["feature_frequency_folder"]
@@ -48,7 +48,8 @@ class Qiime2RarefactionAnalysis(Task):
         iteration_number = params["iteration"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
-        shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
+        shell_proxy = Qiime2ShellProxyHelper.create_proxy(
+            self.message_dispatcher)
 
         outputs = self.run_cmd_lines(shell_proxy,
                                      script_file_dir,
@@ -89,8 +90,10 @@ class Qiime2RarefactionAnalysis(Task):
         # This script perform Qiime2 demux , quality assessment
         cmd_2 = [
             "bash",
-            os.path.join(script_file_dir, "./sh/2_converting_table_for_visualisation.sh"),
-            os.path.join(script_file_dir, "./perl/3_transform_table_for_boxplot.pl")
+            os.path.join(script_file_dir,
+                         "./sh/2_converting_table_for_visualisation.sh"),
+            os.path.join(script_file_dir,
+                         "./perl/3_transform_table_for_boxplot.pl")
         ]
         self.log_info_message("Formating output files for data visualisation")
         res = shell_proxy.run(cmd_2)
@@ -98,7 +101,8 @@ class Qiime2RarefactionAnalysis(Task):
             raise Exception("Second step did not finished")
         self.update_progress_value(100, "[Step-2] : Done")
 
-        output_folder_path = os.path.join(shell_proxy.working_dir, "rarefaction_curves_analysis")
+        output_folder_path = os.path.join(
+            shell_proxy.working_dir, "rarefaction_curves_analysis")
 
         return output_folder_path
 
@@ -106,8 +110,10 @@ class Qiime2RarefactionAnalysis(Task):
 
         result_folder = Folder(output_folder_path)
 
-        observed_path = os.path.join(result_folder.path, self.OBSERVED_FEATURE_FILE)
-        shannon_path = os.path.join(result_folder.path, self.SHANNON_INDEX_FILE)
+        observed_path = os.path.join(
+            result_folder.path, self.OBSERVED_FEATURE_FILE)
+        shannon_path = os.path.join(
+            result_folder.path, self.SHANNON_INDEX_FILE)
 
         observed_feature_table = RarefactionTableImporter.call(
             File(path=observed_path),
@@ -146,15 +152,18 @@ class Qiime2RarefactionAnalysis(Task):
         all_sample_ids = list(set([tag["sample-id"] for tag in column_tags]))
 
         for sample_id in all_sample_ids:
-            sample_table = table.select_by_column_tags([{"sample-id": sample_id}])
+            sample_table = table.select_by_column_tags(
+                [{"sample-id": sample_id}])
             sample_column_tags = sample_table.get_column_tags()
             positions = [float(tag["depth"]) for tag in sample_column_tags]
 
             sample_data = sample_table.get_data()
 
-            quantile = nanquantile(sample_data.to_numpy(), q=[0.25, 0.5, 0.75], axis=0)
+            quantile = nanquantile(sample_data.to_numpy(), q=[
+                0.25, 0.5, 0.75], axis=0)
             median = quantile[1, :].tolist()
-            lp_view.add_series(x=positions, y=median, name=sample_id, tags=sample_column_tags)
+            lp_view.add_series(x=positions, y=median,
+                               name=sample_id, tags=sample_column_tags)
 
         lp_view.x_label = "Count depth"
         lp_view.y_label = "Index value"

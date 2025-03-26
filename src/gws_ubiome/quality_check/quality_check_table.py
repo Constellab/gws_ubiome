@@ -1,6 +1,6 @@
 
-from gws_core import (BoxPlotView, ConfigParams, IntParam, LinePlot2DView,
-                      Table, TableImporter, TypingDeprecated,
+from gws_core import (BoxPlotView, ConfigParams, ConfigSpecs, IntParam,
+                      LinePlot2DView, Table, TableImporter, TypingDeprecated,
                       importer_decorator, resource_decorator, view)
 
 
@@ -14,7 +14,6 @@ class QualityCheckTable(Table):
 
     @view(view_type=BoxPlotView, human_name='Sequencing quality boxplot',
           short_description='Boxplot of the reads sequencing quality',
-          specs={},
           default_view=True)
     def view_as_boxplot(self, params: ConfigParams) -> BoxPlotView:
         bx_view = BoxPlotView()
@@ -35,7 +34,7 @@ class QualityCheckTable(Table):
 
     @view(view_type=LinePlot2DView, human_name='Quality line plot',
           short_description='Line plots of the reads sequencing quality',
-          specs={"window_size": IntParam(default_value=15)},
+          specs=ConfigSpecs({"window_size": IntParam(default_value=15)}),
           default_view=False
           )
     def view_as_lineplot(self, params: ConfigParams) -> LinePlot2DView:
