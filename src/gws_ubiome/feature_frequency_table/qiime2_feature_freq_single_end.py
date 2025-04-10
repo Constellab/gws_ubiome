@@ -53,7 +53,9 @@ class Qiime2FeatureTableExtractorSE(Task):
     config_specs: ConfigSpecs = {
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
-        "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime")
+        "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime"),
+        "p-min-fold-parent-over-abundance": IntParam(optional=True, default_value=1, min_value=1, short_description="The minimum abundance of potential parents of a sequence being tested as chimeric")
+
     }
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -62,6 +64,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         thrd = params["threads"]
         trct_forward = params["truncated_reads_size"]
         hard_trim = params["5_prime_hard_trimming_reads_size"]
+        min_fold = params["p-min-fold-parent-over-abundance"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
@@ -71,7 +74,8 @@ class Qiime2FeatureTableExtractorSE(Task):
                                               script_file_dir,
                                               qiime2_folder_path,
                                               trct_forward,
-                                              thrd
+                                              thrd,
+                                              min_fold
                                               )
         else:  # When sequencing data are being hard-trimmed
             outputs = self.run_cmd_single_end_hard_trim(shell_proxy,
@@ -79,7 +83,8 @@ class Qiime2FeatureTableExtractorSE(Task):
                                                         qiime2_folder_path,
                                                         trct_forward,
                                                         thrd,
-                                                        hard_trim
+                                                        hard_trim,
+                                                        min_fold
                                                         )
 
         # Output formatting and annotation
@@ -92,7 +97,8 @@ class Qiime2FeatureTableExtractorSE(Task):
                            script_file_dir: str,
                            qiime2_folder_path: str,
                            trct_forward: int,
-                           thrd: int
+                           thrd: int,
+                           min_fold: int
                            ) -> str:
 
         cmd_1 = [
@@ -100,7 +106,8 @@ class Qiime2FeatureTableExtractorSE(Task):
             os.path.join(script_file_dir, "./sh/1_qiime2_feature_freq_extraction_SE.sh"),
             qiime2_folder_path,
             str(trct_forward),
-            str(thrd)
+            str(thrd),
+            str(min_fold)
         ]
         self.log_info_message("[Step-1] : Qiime2 features inference")
         res = shell_proxy.run(cmd_1)
@@ -130,7 +137,8 @@ class Qiime2FeatureTableExtractorSE(Task):
                                      qiime2_folder_path: str,
                                      trct_forward: int,
                                      thrd: int,
-                                     hard_trim: int
+                                     hard_trim: int,
+                                     min_fold: int
                                      ) -> str:
 
         cmd_1 = [
@@ -139,7 +147,8 @@ class Qiime2FeatureTableExtractorSE(Task):
             qiime2_folder_path,
             str(trct_forward),
             str(thrd),
-            str(hard_trim)
+            str(hard_trim),
+            str(min_fold)
         ]
         self.log_info_message("Qiime2 features inference + reads hard trimming")
         res = shell_proxy.run(cmd_1)

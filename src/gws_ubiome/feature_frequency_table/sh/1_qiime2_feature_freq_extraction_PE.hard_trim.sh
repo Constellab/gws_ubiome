@@ -14,9 +14,9 @@ trcF=$2
 trcR=$3
 threads=$4
 trm=$5
+minFold=$6
 
-
-qiime dada2 denoise-paired --i-demultiplexed-seqs $qiime_dir/demux.qza --p-trunc-len-f $trcF --p-trunc-len-r $trcR --p-trim-left-f $trm --p-trim-left-r $trm --p-n-threads $threads --o-table table.qza --o-representative-sequences rep-seqs.qza --o-denoising-stats denoising-stats.qza
+qiime dada2 denoise-paired --i-demultiplexed-seqs $qiime_dir/demux.qza --p-trunc-len-f $trcF --p-trunc-len-r $trcR --p-trim-left-f $trm --p-trim-left-r $trm --p-min-fold-parent-over-abundance $minFold --p-n-threads $threads --o-table table.qza --o-representative-sequences rep-seqs.qza --o-denoising-stats denoising-stats.qza
 
 qiime feature-table summarize --i-table table.qza --o-visualization feature-table.qzv --m-sample-metadata-file $qiime_dir/qiime2_manifest.csv
 

@@ -52,7 +52,9 @@ class Qiime2FeatureTableExtractorPE(Task):
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
-        "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime")
+        "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime"),
+        "p-min-fold-parent-over-abundance": IntParam(optional=True, default_value=1, min_value=1, short_description="The minimum abundance of potential parents of a sequence being tested as chimeric")
+
     }
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -62,6 +64,7 @@ class Qiime2FeatureTableExtractorPE(Task):
         trct_forward = params["truncated_forward_reads_size"]
         trct_reverse = params["truncated_reverse_reads_size"]
         hard_trim = params["5_prime_hard_trimming_reads_size"]
+        min_fold = params["p-min-fold-parent-over-abundance"]
         script_file_dir = os.path.dirname(os.path.realpath(__file__))
 
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(self.message_dispatcher)
@@ -72,7 +75,8 @@ class Qiime2FeatureTableExtractorPE(Task):
                                               qiime2_folder_path,
                                               trct_forward,
                                               trct_reverse,
-                                              thrd
+                                              thrd,
+                                              min_fold
                                               )
         else:  # When sequencing data are being hard-trimmed
             outputs = self.run_cmd_paired_end_hard_trim(shell_proxy,
@@ -81,7 +85,8 @@ class Qiime2FeatureTableExtractorPE(Task):
                                                         trct_forward,
                                                         trct_reverse,
                                                         thrd,
-                                                        hard_trim
+                                                        hard_trim,
+                                                        min_fold
                                                         )
 
         # Output formating and annotation
@@ -95,7 +100,8 @@ class Qiime2FeatureTableExtractorPE(Task):
                            qiime2_folder_path: str,
                            trct_forward: int,
                            trct_reverse: int,
-                           thrd: int
+                           thrd: int,
+                           min_fold: int
                            ) -> str:
 
         cmd_1 = [
@@ -104,7 +110,8 @@ class Qiime2FeatureTableExtractorPE(Task):
             qiime2_folder_path,
             trct_forward,
             trct_reverse,
-            thrd
+            thrd,
+            min_fold
         ]
         self.log_info_message("[Step-1] : Qiime2 features inference")
         res = shell_proxy.run(cmd_1)
@@ -135,7 +142,8 @@ class Qiime2FeatureTableExtractorPE(Task):
                                      trct_forward: int,
                                      trct_reverse: int,
                                      thrd: int,
-                                     hard_trim: int
+                                     hard_trim: int,
+                                     min_fold: int
                                      ) -> str:
 
         cmd_1 = [
@@ -145,7 +153,8 @@ class Qiime2FeatureTableExtractorPE(Task):
             trct_forward,
             trct_reverse,
             thrd,
-            hard_trim
+            hard_trim,
+            min_fold
         ]
         self.log_info_message("Qiime2 features inference + reads hard trimming")
         res = shell_proxy.run(cmd_1)
