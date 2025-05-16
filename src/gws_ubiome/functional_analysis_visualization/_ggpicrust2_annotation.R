@@ -4,6 +4,25 @@ library(tibble)
 library(tidyverse)
 library(ggprism)
 library(patchwork)
+
+## ─── Installer KEGGREST ‘devel’ sans toucher aux dépendances ────────────
+if (!requireNamespace("KEGGREST", quietly = TRUE) ||
+    packageVersion("KEGGREST") < "1.42.0") {
+
+  if (!requireNamespace("remotes", quietly = TRUE))
+      install.packages("remotes")          # au cas où
+
+  message("Installing KEGGREST (devel, patched)…")
+  remotes::install_git(
+    "https://git.bioconductor.org/packages/KEGGREST",
+    ref          = "devel",                # branche avec correctif
+    upgrade      = "never",                # ne met à jour aucun autre pkg
+    dependencies = FALSE,                  # ← clé : ne touche ni Biostrings
+    build_vignettes = FALSE
+  )
+}
+## ────────────────────────────────────────────────────────────────────────
+
 library(KEGGREST)
 library(ggh4x)
 library(dplyr)

@@ -55,7 +55,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime"),
         "p-min-fold-parent-over-abundance": IntParam(optional=True, default_value=1, min_value=1, short_description="The minimum abundance of potential parents of a sequence being tested as chimeric")
 
-    }
+    })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder=inputs["quality_check_folder"]
