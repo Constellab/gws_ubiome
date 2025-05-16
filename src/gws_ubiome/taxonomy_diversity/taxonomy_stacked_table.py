@@ -1,9 +1,9 @@
 import copy
 
 import numpy as np
-from gws_core import (BoolParam, BoxPlotView, ConfigParams, StackedBarPlotView,
-                      StrParam, Table, TableUnfolderHelper, TypingDeprecated,
-                      resource_decorator, view)
+from gws_core import (BoolParam, BoxPlotView, ConfigParams, ConfigSpecs,
+                      StackedBarPlotView, StrParam, Table, TableUnfolderHelper,
+                      TypingDeprecated, resource_decorator, view)
 
 
 @resource_decorator(unique_name="TaxonomyTable", hide=True,
@@ -15,7 +15,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot',
           short_description='Stacked barplots of the taxonomic composition',
-          specs={}, default_view=False)
+          default_view=False)
     def view_as_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView()
@@ -35,7 +35,7 @@ class TaxonomyTable(Table):
 
     @view(view_type=StackedBarPlotView, human_name='Taxonomy stacked barplot normalised (TSS)',
           short_description='Normalised stacked barplots of the taxonomic composition',
-          specs={}, default_view=True)
+          default_view=True)
     def view_as_noramlised_taxo_stacked_bar_plot(self, params: ConfigParams) -> StackedBarPlotView:
 
         s_view = StackedBarPlotView(normalize=True)
@@ -53,9 +53,9 @@ class TaxonomyTable(Table):
 
     @view(view_type=BoxPlotView, human_name='Boxplot view for row tags',
           short_description='Grouping boxplot according to a row tag',
-          specs={"Metadata_tag": StrParam(),
-                 "Normalize": BoolParam(default_value=False),
-                 "Log10": BoolParam(default_value=False)},
+          specs=ConfigSpecs({"Metadata_tag": StrParam(),
+                             "Normalize": BoolParam(default_value=False),
+                             "Log10": BoolParam(default_value=False)}),
           default_view=False)
     def view_as_grouped_boxplots(self, params: ConfigParams) -> BoxPlotView:
         lp_view = BoxPlotView()
