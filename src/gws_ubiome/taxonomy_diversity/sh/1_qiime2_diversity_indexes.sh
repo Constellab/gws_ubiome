@@ -17,6 +17,7 @@ mkdir taxonomy_and_diversity/table_files ;
 
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences $qiime_dir/rep-seqs.qza \
+  --p-parttree \
   --o-alignment ./taxonomy_and_diversity/raw_files/aligned-rep-seqs.qza \
   --o-masked-alignment ./taxonomy_and_diversity/raw_files/masked-aligned-rep-seqs.qza \
   --o-tree unrooted-tree.qza \
