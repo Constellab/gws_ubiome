@@ -1,218 +1,677 @@
+#!/usr/bin/env Rscript
 
-# Load required libraries
-library(tibble)
-library(tidyverse)
-library(ggprism)
-library(patchwork)
+suppressPackageStartupMessages({
+  library(tibble)
+  library(tidyverse)
+  library(ggprism)
+  library(patchwork)
+})
 
-## ─── Installer KEGGREST ‘devel’ sans toucher aux dépendances ────────────
+# -- Bioconductor KEGGREST (patched) -------------------------------------------
 if (!requireNamespace("KEGGREST", quietly = TRUE) ||
     packageVersion("KEGGREST") < "1.42.0") {
-
-  if (!requireNamespace("remotes", quietly = TRUE))
-      install.packages("remotes")          # au cas où
-
-  message("Installing KEGGREST (devel, patched)…")
+  if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
   remotes::install_git(
     "https://git.bioconductor.org/packages/KEGGREST",
-    ref          = "devel",                # branche avec correctif
-    upgrade      = "never",                # ne met à jour aucun autre pkg
-    dependencies = FALSE,                  # ← clé : ne touche ni Biostrings
+    ref             = "devel",
+    upgrade         = "never",
+    dependencies    = FALSE,
     build_vignettes = FALSE
   )
 }
-## ────────────────────────────────────────────────────────────────────────
-
 library(KEGGREST)
-library(ggh4x)
-library(dplyr)
-library(plotly)
-library(R.utils)
 
+suppressPackageStartupMessages({
+  library(ggh4x)
+  library(dplyr)
+  library(plotly)
+  library(R.utils)
+  library(GGally)
+  library(ggplot2)
+  library(RColorBrewer)
+  library(readr)
+})
 
-# Check if 'MicrobiomeStat' package is installed, and install if not
+# ------------------------------
+#  Install/attach run-time deps
+# ------------------------------
 if (!"MicrobiomeStat" %in% installed.packages()) {
-  devtools::install_github("cafferychen777/MicrobiomeStat" , ref="MicrobiomeStat_Version_1.1.2")  #version 1.1.2
+  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("cafferychen777/MicrobiomeStat", ref = "MicrobiomeStat_Version_1.1.2")
 }
-
 library(MicrobiomeStat)
 
-
-#Check if 'ggpicrust2' package is installed, and install if not
 if (!"ggpicrust2" %in% installed.packages()) {
-  devtools::install_github('cafferychen777/ggpicrust2' , ref = 'ggpicrust2_1.7.1.tgz')   #version 1.7.1
+  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+  devtools::install_github("cafferychen777/ggpicrust2", ref = "ggpicrust2 2.3.3")
 }
-
 library(ggpicrust2)
-library(remotes)
 
-if (!"ggplot2" %in% installed.packages()) {
-  devtools::install_github("tidyverse/ggplot2", ref = "v3.5.1")
-}
-library(ggplot2)
-
-if (!requireNamespace("remotes", quietly = TRUE)) {
-  install.packages("remotes")
-}
-remotes::install_cran("readr")
-library(readr)
-
-print("START")
-print(sessionInfo())
-print("end")
-packageVersion("ggplot2")
-print("ggplot2 versioooooon")
-
-# Retrieve command-line arguments
+# ------------------------------
+#  CLI arguments & parameters
+# ------------------------------
 args <- commandArgs(trailingOnly = TRUE)
+if (length(args) < 8) {
+  stop("Eight arguments required: ko_abundance_file, metadata_file, DA_method, ",
+       "Samples_column_name, Reference_column, Reference_group, Round_digit, ",
+       "PCA_component")
+}
 
-# Use the arguments as variables
-ko_abundance_file <- args[1]
-metadata_file <- args[2]
-DA_method <- args[3]
-Samples_column_name <- args[4]  
-Reference_column <- args[5]
-Reference_group <- args[6]
-Round_digit <- as.logical(args[7])  # Convert to logical
-PCA_component <- as.logical(args[8])  # Convert to logical
-Slice_start <- as.numeric(args[9])  # New argument for slice start index
+ko_abundance_file   <- args[1]
+metadata_file       <- args[2]
+DA_method           <- args[3]
+Samples_column_name <- args[4]
+Reference_column    <- args[5]
+Reference_group     <- args[6]
+Round_digit         <- as.logical(args[7])
+PCA_component       <- as.logical(args[8])
 
-# Calculate the end index
-Slice_end <- Slice_start + 14
+# ==============================
+#  Text sizes & layout knobs
+# ==============================
+map_tick_text_size      <- 17  # pathway names (left map area, pt)
+class_text_size         <- 17  # class labels (far left, pt)
 
+# errorbar global title + axis sizes
+plot_title_size_pt      <- 35  # global title
+axis_title_size_pt      <- 20  # x-axis titles (Relative Abundance, log2FC, p-value)
+ra_tick_text_size_pt    <- 16  # Relative Abundance axis tick numbers
+logfc_tick_text_size_pt <- 18  # tick numbers under log2 fold change
+padj_number_size_pt     <- 16  # numbers printed in the p-value (adjusted) panel
 
-# Read the metadata file
-metadata <- read_delim(metadata_file, delim = "\t", escape_double = FALSE, trim_ws = TRUE , comment = "#")
+# errorbar extra space under x-axis titles (moves titles away from ticks) log2Fc, relative abundance et les chiffres
+axis_title_margin_pt    <- 35
 
-# Check if the file ends with '.gz' (an indicator of gzip compression)
+# errorbar legend knobs (for R1/R2)
+legend_text_size_pt     <- 18  # legend text size ("R1", "R2")
+legend_key_size_cm      <- 1.2 # legend square height (cm)
+legend_key_width_cm     <- 1.6 # legend square width (cm)
+
+# errorbar Title spacing (moves the overall title down from the top)
+plot_title_top_gap_pt    <- 24  # space above title
+plot_title_bottom_gap_pt <- 10  # space below title
+plot_outer_top_gap_pt    <- 8   # outer top margin for full figure
+
+# --- Heatmap knobs (axes, legend) ---
+heat_x_text_size_pt       <- 20
+heat_y_text_size_pt       <- 26
+heat_x_angle_deg          <- 90
+heat_axis_title_size_pt   <- 22
+heat_axis_title_margin_pt <- 14
+
+# Keep the colorbar VERTICAL on the right (handled via + guides and + theme on returned ggplot)
+heat_legend_text_size_pt  <- 16
+heat_legend_title_size_pt <- 16
+heat_colorbar_width_cm    <- 0.7
+heat_colorbar_height_cm   <- 10
+
+# --- Group strip (facet) knobs at the bottom of the heatmap ---
+strip_text_size_pt        <- 20   # makes the R1/R2 strip thicker/larger
+strip_text_margin_pt      <- 6    # internal padding; increases strip thickness
+strip_pad_pt              <- 4    # gap between panels and strip when switched
+
+# --- Heatmap title knobs (NOUVEAU : pour espacer/miniaturiser le titre) ---
+heat_title_size_pt        <- 35   # taille du titre de la heatmap (avant 40 en dur)
+heat_title_top_gap_pt     <- 30   # espace AU-DESSUS du titre
+heat_title_bottom_gap_pt  <- 24   # espace SOUS le titre
+
+# widths (relative for patchwork)
+left_class_width <- 1.90
+left_map_width   <- 1.90
+bar_width        <- 1.60
+logfc_width      <- 0.55
+padj_width       <- 0.25
+panel_widths     <- c(left_class_width + left_map_width, bar_width, logfc_width, padj_width)
+
+# Extra gap at the very far left so class labels aren’t clipped (mm)
+left_gap_mm <- 70
+
+# ------------------------------
+#  Analysis settings
+# ------------------------------
+min_samples <- 1
+padj_cutoff <- 0.05
+slice_size  <- 29
+
+print(sessionInfo())
+
+# ------------------------------
+#  Read metadata & abundance
+# ------------------------------
+metadata <- read_delim(metadata_file, delim = "\t", escape_double = FALSE,
+                       trim_ws = TRUE, comment = "#")
+
 if (tools::file_ext(ko_abundance_file) == "gz") {
-  # Check if the decompressed file exists
-  decompressed_file <- sub(".gz$", "", ko_abundance_file)
+  decompressed <- sub(".gz$", "", ko_abundance_file)
+  if (!file.exists(decompressed)) R.utils::gunzip(ko_abundance_file, remove = FALSE)
+  ko_abundance_file <- decompressed
+}
+if (!file.exists(ko_abundance_file))
+  stop("Input file ", ko_abundance_file, " does not exist.")
 
-  if (!file.exists(decompressed_file)) {
-    # If it's compressed and the decompressed file doesn't exist, decompress the file.
-    gunzip(ko_abundance_file, remove = FALSE)
-  }
+kegg_abundance <- ko2kegg_abundance(ko_abundance_file)
 
-  ko_abundance_file <- decompressed_file
+# ------------------------------
+#  Pre-filter low-prevalence pathways
+# ------------------------------
+keep <- rowSums(kegg_abundance > 0) >= min_samples
+message(sum(!keep), " pathways filtered (prevalence < ", min_samples, ")")
+kegg_abundance <- kegg_abundance[keep, , drop = FALSE]
+
+# ------------------------------
+#  Align sample order
+# ------------------------------
+common <- intersect(colnames(kegg_abundance), metadata[[Samples_column_name]])
+if (length(common) < 3)
+  stop("Fewer than 3 common samples between abundance matrix and metadata.")
+
+kegg_abundance <- kegg_abundance[, common, drop = FALSE]
+metadata        <- metadata[match(common, metadata[[Samples_column_name]]), , drop = FALSE]
+
+# ============================================================
+#  Helpers & Patched pathway_errorbar (no seam version)
+# ============================================================
+utils::globalVariables(c("group","name","value","feature","negative_log10_p",
+                         "group_nonsense","nonsense","pathway_class","p_adjust",
+                         "log_2_fold_change"))
+
+.make_big_pastel <- function(n) {
+  base <- c(brewer.pal(12, "Set3"),
+            brewer.pal(8,  "Pastel1"),
+            brewer.pal(8,  "Pastel2"),
+            brewer.pal(8,  "Accent"))
+  grDevices::colorRampPalette(base)(n)
 }
 
-# Load the file (whether it is decompressed or not).
-if (file.exists(ko_abundance_file)) {
-  kegg_abundance <- ko2kegg_abundance(ko_abundance_file)
-} else {
-  cat("Le fichier d'entrée n'existe pas.")
-}
+pt_to_mm <- function(pt) pt / ggplot2::.pt
 
-# If you want to analyze KEGG pathway abundance instead of KO within the pathway, turn ko_to_kegg to TRUE.
-# Handle both cases (Reference_group < 3 and Reference_group >= 3)
-if (length(unique(metadata[[Reference_column]])) >= 3) {
-  daa_results_df <- pathway_daa(abundance = kegg_abundance, metadata = metadata, group = Reference_column, daa_method = DA_method, select = NULL, reference = Reference_group)
-} else {
-  daa_results_df <- pathway_daa(abundance = kegg_abundance, metadata = metadata, group = Reference_column, daa_method = DA_method, select = NULL, reference = NULL)
-}
+pathway_errorbar_patched <- function(
+  abundance,
+  daa_results_df,
+  Group,
+  ko_to_kegg = TRUE,
+  p_values_threshold = 0.05,
+  order = "pathway_class",
+  select = NULL,
+  p_value_bar = TRUE,
+  colors = NULL,
+  x_lab = "pathway_name",
+  log2_fold_change_color = "auto",
+  color_theme = "default",
+  pathway_class_colors = NULL,
+  legend_position = "top",
+  legend_direction = "horizontal",
+  legend_title = NULL,
+  legend_title_size = 12,
+  legend_text_size = 10,
+  legend_key_size = 0.8,      # height in cm
+  legend_key_width = 1.2,     # width in cm
+  legend_ncol = NULL,
+  legend_nrow = NULL,
+  map_tick_text_size = 13,
+  class_text_size    = 5,
+  left_gap_mm        = 80,
+  panel_widths       = c(3.8, 1.6, 0.55, 0.25),
+  axis_title_size    = 20,
+  ra_tick_size       = 16,
+  axis_title_margin  = 14,
+  logfc_tick_size    = 16,
+  padj_number_size   = 12,
+  padj_number_color  = "#000000"
+){
+  stopifnot(is.matrix(abundance) || is.data.frame(abundance))
+  stopifnot(is.data.frame(daa_results_df))
+  req <- c("feature","method","group1","group2","p_adjust")
+  miss <- setdiff(req, colnames(daa_results_df))
+  if (length(miss)) stop("Missing in daa_results_df: ", paste(miss, collapse=", "))
+  if (length(Group) != ncol(abundance))
+    stop("Length of Group must match number of columns in abundance matrix")
 
+  if (is.null(x_lab)) x_lab <- if (ko_to_kegg) "pathway_name" else "description"
+  daa_results_df <- daa_results_df[!is.na(daa_results_df[, x_lab]), , drop = FALSE]
 
-# Get unique groups in 'group1'
-unique_groups_group1 <- unique(daa_results_df$group1)
-
-# Initialize an empty list to store results
-results_list <- list()
-
-# Iterate over each unique group
-for (selected_group in unique_groups_group1) {
-  # Filter the data for the current group
-  current_group_results <- daa_results_df %>% filter(group1 == selected_group)
-  
-  # Filter based on p_adjust and slice
-  filtered_slice <- current_group_results %>% filter(p_adjust < 0.05) %>% arrange(p_adjust) %>% slice(Slice_start:Slice_end)
-  
-  # Annotate pathway results using KO to KEGG conversion
-  tryCatch(
-    {
-        daa_annotated_results_df <- pathway_annotation(pathway = "KO", daa_results_df = filtered_slice, ko_to_kegg = TRUE)
-    },
-    error=function(e){
-      stop('No statistically significant biomarkers found. Statistically significant biomarkers refer to those biomarkers that demonstrate a significant difference in expression between different groups, as determined by a statistical test (p_adjust < 0.05 in this case).', e)
+  if (!exists("get_color_theme")) {
+    get_color_theme <- function(theme_name, n_groups = 2) {
+      list(
+        group_colors         = RColorBrewer::brewer.pal(max(3, n_groups), "Set2"),
+        pathway_class_colors = RColorBrewer::brewer.pal(8, "Pastel1"),
+        fold_change_single   = "#87ceeb"
+      )
     }
+  }
+  n_groups   <- nlevels(as.factor(Group))
+  theme_cols <- get_color_theme(color_theme, n_groups)
+  if (is.null(colors))               colors <- theme_cols$group_colors[1:n_groups]
+  if (is.null(pathway_class_colors)) pathway_class_colors <- theme_cols$pathway_class_colors
+  if (identical(log2_fold_change_color, "auto")) log2_fold_change_color <- theme_cols$fold_change_single
+
+  # filter
+  abundance <- as.matrix(abundance)
+  daa_results_filtered_df <- daa_results_df[daa_results_df$p_adjust < p_values_threshold, , drop = FALSE]
+  daa_results_filtered_sub_df <- if (!is.null(select)) {
+    daa_results_filtered_df[daa_results_filtered_df$feature %in% select, , drop = FALSE]
+  } else daa_results_filtered_df
+  if (nrow(daa_results_filtered_sub_df) == 0)
+    stop("No significant features (p_adjust < ", p_values_threshold, ").")
+
+  # relative abundance + summary
+  relative_abundance_mat <- apply(t(abundance), 1, function(x) x / sum(x))
+  sub_relative_abundance_mat <- relative_abundance_mat[
+    rownames(relative_abundance_mat) %in% daa_results_filtered_sub_df$feature, , drop = FALSE
+  ]
+  sample_to_group_map <- stats::setNames(as.character(Group), colnames(abundance))
+  correct_groups <- sample_to_group_map[colnames(sub_relative_abundance_mat)]
+
+  error_bar_matrix <- cbind(sample = colnames(sub_relative_abundance_mat),
+                            group  = correct_groups,
+                            t(sub_relative_abundance_mat))
+  error_bar_df <- as.data.frame(error_bar_matrix)
+  error_bar_df$group <- factor(correct_groups, levels = levels(as.factor(Group)))
+
+  error_bar_long <- tidyr::pivot_longer(error_bar_df, -c(sample, group)) |>
+    mutate(group = as.factor(group))
+  error_bar_long$sample <- factor(error_bar_long$sample)
+  error_bar_long$name   <- factor(error_bar_long$name)
+  error_bar_long$value  <- as.numeric(error_bar_long$value)
+
+  sump <- error_bar_long |>
+    group_by(name, group) |>
+    summarise(mean = mean(value), sd = stats::sd(value), .groups="drop") |>
+    mutate(group2 = "nonsense")
+
+  # ordering
+  ord <- switch(order,
+    "p_values" = order(daa_results_filtered_sub_df$p_adjust),
+    "name" = order(daa_results_filtered_sub_df$feature),
+    "pathway_class" = {
+      if (!"pathway_class" %in% colnames(daa_results_filtered_sub_df))
+        stop("Missing 'pathway_class'. Run pathway_annotation first.")
+      order(daa_results_filtered_sub_df$pathway_class, daa_results_filtered_sub_df$p_adjust)
+    },
+    "group" = {
+      daa_results_filtered_sub_df$pro <- 1
+      for (i in levels(as.factor(sump$name))) {
+        sub <- sump[sump$name == i, ]
+        pro_group <- as.vector(sub$group[sub$mean == max(sub$mean)])
+        idx <- which(daa_results_filtered_sub_df$feature == i & !is.na(daa_results_filtered_sub_df$feature))
+        if (length(idx) > 0) daa_results_filtered_sub_df$pro[idx] <- pro_group
+      }
+      order(daa_results_filtered_sub_df$pro, daa_results_filtered_sub_df$p_adjust)
+    },
+    order
   )
-  # Round data if Round_digit is TRUE
+  daa_results_filtered_sub_df <- daa_results_filtered_sub_df[ord, , drop = FALSE]
+
+  # match summary order
+  sump_ord <- bind_rows(lapply(daa_results_filtered_sub_df$feature, function(i) sump[sump$name == i, ]))
+  if (ko_to_kegg == FALSE) {
+    matched <- match(sump_ord$name, daa_results_filtered_sub_df$feature)
+    sump_ord[, x_lab] <- daa_results_filtered_sub_df[matched, x_lab]
+  }
+  if (ko_to_kegg == TRUE) {
+    sump_ord$pathway_class <- rep(daa_results_filtered_sub_df$pathway_class,
+                                  each = length(levels(factor(sump_ord$group))))
+  }
+  sump_ord$name <- factor(sump_ord$name, levels = rev(daa_results_filtered_sub_df$feature))
+
+  # class bands
+  cls_top_to_bot <- rev(daa_results_filtered_sub_df$pathway_class)
+  runs   <- rle(as.character(cls_top_to_bot))
+  ends   <- cumsum(runs$lengths)
+  starts <- c(0, head(ends, -1))
+  band_df <- data.frame(
+    ymin  = starts + 0.5,
+    ymax  = ends   + 0.5,
+    class = runs$values
+  )
+  class_levels <- unique(band_df$class)
+  if (length(pathway_class_colors) < length(class_levels))
+    pathway_class_colors <- .make_big_pastel(length(class_levels))
+  class_cols <- setNames(pathway_class_colors[seq_along(class_levels)], class_levels)
+  y_max <- nrow(daa_results_filtered_sub_df) + 0.5
+
+  # LEFT: class + map (contiguous)
+  path_labels <- data.frame(
+    y = seq_len(nrow(daa_results_filtered_sub_df)),
+    label = rev(daa_results_filtered_sub_df[[x_lab]])
+  )
+  left_combined <-
+    ggplot() +
+    geom_rect(data = band_df,
+              aes(xmin = 0, xmax = 2, ymin = ymin, ymax = ymax, fill = class),
+              alpha = 0.45, color = NA, show.legend = FALSE) +
+    scale_fill_manual(values = class_cols, guide = "none") +
+    geom_text(data = transform(band_df, y = (ymin + ymax)/2),
+              aes(x = 0.98, y = y, label = class),
+              hjust = 1, size = pt_to_mm(class_text_size),
+              fontface = "bold", color = "#000000") +
+    geom_text(data = path_labels,
+              aes(x = 1.98, y = y, label = label),
+              hjust = 1, size = pt_to_mm(map_tick_text_size),
+              fontface = "bold", color = "#000000") +
+    scale_x_continuous(limits = c(0, 2), expand = c(0, 0)) +
+    scale_y_continuous(limits = c(0.5, y_max), expand = c(0, 0)) +
+    coord_cartesian(clip = "off") +
+    ggprism::theme_prism(base_size = 12) +
+    theme(
+      axis.ticks = element_blank(),
+      axis.line  = element_blank(),
+      panel.grid = element_blank(),
+      panel.background = element_blank(),
+      axis.text = element_blank(),
+      plot.margin = grid::unit(c(0, 0, 0, left_gap_mm), "mm"),
+      axis.title = element_blank(),
+      legend.position = "none"
+    )
+
+  # BAR: relative abundance (with legend)
+  bar_errorbar <- ggplot(sump_ord, aes(mean, name, fill = group)) +
+    geom_errorbar(aes(xmax = mean + sd, xmin = 0),
+                  position = position_dodge(width = 0.8),
+                  width = 0.5, linewidth = 0.5, color = "black") +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
+    GGally::geom_stripped_cols(width = 10) +
+    scale_fill_manual(values = colors) +
+    scale_color_manual(values = colors) +
+    ggprism::theme_prism(base_size = 12) +
+    scale_x_continuous(expand = c(0, 0)) +
+    labs(x = "Relative Abundance", y = NULL) +
+    theme(
+      axis.ticks.y = element_blank(),
+      axis.text.y  = element_blank(),
+      axis.line.y  = element_blank(),
+      axis.line.x  = element_line(linewidth = 0.5),
+      axis.ticks.x = element_line(linewidth = 0.5),
+      panel.grid.major = element_blank(),
+      axis.text.x  = element_text(angle = 45, hjust = 1, size = ra_tick_size, color = "black"),
+      axis.title.x = element_text(size = axis_title_size, color = "black", hjust = 0.5,
+                                  margin = margin(t = axis_title_margin)),
+      legend.position     = legend_position,
+      legend.direction    = legend_direction,
+      legend.key.size     = grid::unit(legend_key_size, "cm"),
+      legend.key.width    = grid::unit(legend_key_width, "cm"),
+      legend.text         = element_text(size = legend_text_size, face = "bold"),
+      legend.title        = if (!is.null(legend_title)) element_text(size = legend_title_size, face = "bold") else element_blank(),
+      legend.justification= "center",
+      legend.box.just     = "center",
+      plot.margin  = margin(0, 5, 5, 0, unit = "pt")
+    ) +
+    coord_cartesian(clip = "off")
+
+  if (!is.null(legend_ncol) || !is.null(legend_nrow)) {
+    bar_errorbar <- bar_errorbar +
+      guides(fill = guide_legend(ncol = legend_ncol, nrow = legend_nrow, byrow = TRUE))
+  }
+
+  # LOG2 FC panel
+  daa_results_filtered_sub_df$group_nonsense <- "nonsense"
+  if (!"log_2_fold_change" %in% colnames(daa_results_filtered_sub_df))
+    daa_results_filtered_sub_df$log_2_fold_change <- NA_real_
+  for (i in daa_results_filtered_sub_df$feature) {
+    means <- sump_ord[sump_ord$name %in% i, ]
+    fr <- daa_results_filtered_sub_df[daa_results_filtered_sub_df$feature == i, ]
+    g1 <- fr$group1[1]; g2 <- fr$group2[1]
+    m1 <- means[means$group == g1, ]$mean; m2 <- means[means$group == g2, ]$mean
+    pseudo <- 1e-10
+    if (length(m1) && length(m2))
+      daa_results_filtered_sub_df[daa_results_filtered_sub_df$feature==i, "log_2_fold_change"] <-
+        log2((m2 + pseudo) / (m1 + pseudo))
+  }
+  daa_results_filtered_sub_df$feature <- factor(daa_results_filtered_sub_df$feature,
+                                                levels = rev(daa_results_filtered_sub_df$feature))
+
+  p_values_bar <- ggplot(daa_results_filtered_sub_df,
+                         aes(feature, log_2_fold_change, fill = group_nonsense)) +
+    geom_bar(stat = "identity", width = 0.8) +
+    labs(y = "log2 fold change", x = NULL) +
+    GGally::geom_stripped_cols() +
+    scale_fill_manual(values = log2_fold_change_color) +
+    scale_color_manual(values = log2_fold_change_color) +
+    geom_hline(aes(yintercept = 0), linetype = 'dashed', color = 'black') +
+    ggprism::theme_prism(base_size = 12) +
+    scale_y_continuous(expand = c(0, 0)) +
+    theme(
+      axis.ticks.y = element_blank(),
+      axis.line.y  = element_blank(),
+      axis.line.x  = element_line(linewidth = 0.5),
+      axis.ticks.x = element_line(linewidth = 0.5),
+      panel.grid.major = element_blank(),
+      axis.text.y = element_blank(),
+      axis.text.x = element_text(size = logfc_tick_size, color = "black", margin = margin(b = 6)),
+      axis.title.x = element_text(size = axis_title_size, color = "black", hjust = 0.5,
+                                  margin = margin(t = axis_title_margin)),
+      legend.position = "none"
+    ) +
+    coord_flip()
+
+  # RIGHT: p-values (numbers only)
+  format_p_value <- function(p) ifelse(p < 0.001, sprintf("%.1e", p), sprintf("%.3f", p))
+  daa_results_filtered_sub_df$unique <-
+    nrow(daa_results_filtered_sub_df) - seq_len(nrow(daa_results_filtered_sub_df)) + 1
+
+  p_annotation <- ggplot(daa_results_filtered_sub_df, aes(group_nonsense, p_adjust)) +
+    geom_text(aes(group_nonsense, unique, label = format_p_value(p_adjust)),
+              size = pt_to_mm(padj_number_size), fontface = "bold", family = "sans",
+              color = padj_number_color) +
+    labs(y = "p-value (adjusted)") +
+    scale_y_discrete(position = "right") +
+    ggprism::theme_prism(base_size = 12) +
+    theme(
+      axis.ticks = element_blank(),
+      axis.line  = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.background = element_blank(),
+      axis.text = element_blank(),
+      plot.margin = unit(c(0, 2, 0, 0), "mm"),
+      axis.title.y = element_text(size = axis_title_size, color = "black", vjust = 0),
+      axis.title.x = element_blank(),
+      legend.position = "none"
+    )
+
+  # assemble (bars)
+  if (p_value_bar) {
+    combination_bar_plot <- left_combined + bar_errorbar + p_values_bar + p_annotation +
+      patchwork::plot_layout(ncol = 4, widths = panel_widths)
+  } else {
+    combination_bar_plot <- left_combined + bar_errorbar + p_annotation +
+      patchwork::plot_layout(ncol = 3, widths = c(panel_widths[1], panel_widths[2], panel_widths[4]))
+  }
+  combination_bar_plot
+}
+
+# ------------------------------
+#  Differential abundance
+# ------------------------------
+reference_arg <- if (length(unique(metadata[[Reference_column]])) >= 3) Reference_group else NULL
+daa_results_df <- pathway_daa(
+  abundance  = kegg_abundance,
+  metadata   = metadata,
+  group      = Reference_column,
+  daa_method = DA_method,
+  reference  = reference_arg
+)
+
+# ------------------------------
+#  Iterate over pairwise comparisons
+# ------------------------------
+for (selected_group in unique(daa_results_df$group1)) {
+  message("Comparison vs. ", selected_group)
+
+  sig <- daa_results_df %>%
+    filter(group1 == selected_group, p_adjust < padj_cutoff) %>%
+    arrange(p_adjust)
+
+  if (nrow(sig) == 0) {
+    write.csv(data.frame(message = "Aucun biomarqueur significatif"),
+              file = sprintf("daa_annotated_results_%s.csv", selected_group),
+              row.names = FALSE)
+    next
+  }
+
+  full_annot <- pathway_annotation(pathway = "KO", daa_results_df = sig, ko_to_kegg = TRUE)
   if (Round_digit) {
-    daa_annotated_results_df$p_adjust <- sprintf("%.0e", daa_annotated_results_df$p_adjust)
-    daa_annotated_results_df$p_adjust <- as.numeric(daa_annotated_results_df$p_adjust)
-
+    full_annot$p_adjust <- sprintf("%.0e", full_annot$p_adjust)
+    full_annot$p_adjust <- as.numeric(full_annot$p_adjust)
   }
-  
-  # Handle both cases (length of distinct elements in Reference_column < 3 and >= 3)
+  write.csv(full_annot,
+            file = sprintf("daa_annotated_results_%s.csv", selected_group),
+            row.names = FALSE)
 
-  if (length(unique(metadata[[Reference_column]])) >= 3) {
-    sub_kegg_abundance <- kegg_abundance[,metadata[metadata[[Reference_column]] %in% c(Reference_group,selected_group),][[Samples_column_name]]]
-    sub_metadata <- metadata[metadata[[Reference_column]] %in% c(Reference_group,selected_group),]
-  } else {
-    sub_kegg_abundance <- kegg_abundance[, metadata[[Samples_column_name]]]
-    sub_metadata <- metadata
+  sub_samples <- if (length(unique(metadata[[Reference_column]])) >= 3) {
+    metadata %>% filter(.data[[Reference_column]] %in% c(Reference_group, selected_group)) %>%
+      pull(.data[[Samples_column_name]])
+  } else metadata[[Samples_column_name]]
+
+  sub_kegg_abundance <- kegg_abundance[, sub_samples, drop = FALSE]
+  sub_metadata       <- metadata[match(sub_samples, metadata[[Samples_column_name]]), , drop = FALSE]
+  sub_kegg_abundance <- sub_kegg_abundance[rowSums(sub_kegg_abundance) > 0, , drop = FALSE]
+
+  n_slices <- ceiling(nrow(full_annot) / slice_size)
+  for (slice_idx in seq_len(n_slices)) {
+    slice_start <- (slice_idx - 1) * slice_size + 1
+    slice_end   <- min(slice_start + slice_size - 1, nrow(full_annot))
+    slice_df    <- full_annot[slice_start:slice_end, , drop = FALSE]
+
+    # ---------------- errorbar plot ----------------
+    # >>> Color mapping for Relative Abundance bars:
+    #     Force R1 = BLUE and R2 = RED in the legend and bars.
+    #     If other group names exist, they fall back to a Set2 palette.
+    desired_bar_colors <- c(R1 = "#1f77b4",  # blue
+                            R2 = "#d62728")  # red
+    group_levels <- levels(factor(sub_metadata[[Reference_column]]))
+    fallback_cols <- RColorBrewer::brewer.pal(max(3, length(group_levels)), "Set2")[seq_along(group_levels)]
+    bar_colors <- setNames(
+      ifelse(group_levels %in% names(desired_bar_colors),
+             desired_bar_colors[group_levels],
+             fallback_cols),
+      group_levels
+    )
+
+    err_plot <- pathway_errorbar_patched(
+      abundance          = sub_kegg_abundance,
+      daa_results_df     = slice_df,
+      Group              = sub_metadata[[Reference_column]],
+      ko_to_kegg         = TRUE,
+      p_values_threshold = padj_cutoff,
+      order              = "pathway_class",
+      p_value_bar        = TRUE,
+      x_lab              = "pathway_name",
+      map_tick_text_size = map_tick_text_size,
+      class_text_size    = class_text_size,
+      left_gap_mm        = left_gap_mm,
+      panel_widths       = panel_widths,
+      axis_title_size    = axis_title_size_pt,
+      ra_tick_size       = ra_tick_text_size_pt,
+      axis_title_margin  = axis_title_margin_pt,
+      logfc_tick_size    = logfc_tick_text_size_pt,
+      padj_number_size   = padj_number_size_pt,
+      legend_position    = "top",
+      legend_direction   = "horizontal",
+      legend_text_size   = legend_text_size_pt,
+      legend_key_size    = legend_key_size_cm,
+      legend_key_width   = legend_key_width_cm,
+      colors             = bar_colors               # <--- apply blue/red here
+    ) +
+      patchwork::plot_annotation(
+        title = "Differential relative abundance errorbar plot",
+        theme = theme(
+          plot.title = element_text(
+            hjust = 0.5, size = plot_title_size_pt, face = "bold",
+            margin = margin(t = plot_title_top_gap_pt,
+                            r = 0,
+                            b = plot_title_bottom_gap_pt,
+                            l = 0)
+          ),
+          plot.margin = margin(t = plot_outer_top_gap_pt, r = 0, b = 0, l = 0)
+        )
+      )
+
+    ggsave(sprintf("pathway_errorbar_%s_slice%d.png", selected_group, slice_idx),
+           err_plot, width = 40, height = 20, units = "in", dpi = 300)
+
+    # ---------------- HEATMAP (keep row order; NO extra band) ----------------
+    # On garde l’ordre vertical d’origine pour les pathways présents dans la slice
+    row_levels <- slice_df$feature
+    heat_mat <- sub_kegg_abundance %>%
+      rownames_to_column("feature") %>%
+      filter(feature %in% row_levels) %>%
+      mutate(feature = factor(feature, levels = row_levels)) %>%
+      arrange(match(feature, row_levels)) %>%
+      column_to_rownames("feature")
+
+    # Création de la heatmap avec les paramètres par défaut de ggpicrust2,
+    # puis stylisation : titre, légende verticale à droite, axes et strip plus lisibles.
+    heat_plot <- pathway_heatmap(
+      abundance = heat_mat,
+      metadata  = sub_metadata,
+      group     = Reference_column
+      # (Optionnel) Pour harmoniser la bande R1/R2 avec les mêmes couleurs:
+      # , colors   = desired_bar_colors
+    ) +
+      ggtitle("Differential relative abundance pathway heatmap plot") +
+      # Légende (colorbar) verticale à droite et redimensionnée
+      guides(fill = guide_colorbar(
+        direction   = "vertical",
+        barwidth    = grid::unit(heat_colorbar_width_cm, "cm"),
+        barheight   = grid::unit(heat_colorbar_height_cm, "cm"),
+        title       = "Value",
+        title.position = "top",
+        title.hjust    = 0.5
+      )) +
+      # Axes, espacement/tailles du titre, et strip (R1/R2) plus épais
+      theme(
+        # ---- Titre de la heatmap : plus petit et plus éloigné du bord supérieur ----
+        plot.title = element_text(
+          size = heat_title_size_pt, face = "bold", hjust = 0.5,
+          margin = margin(t = heat_title_top_gap_pt,
+                          r = 0,
+                          b = heat_title_bottom_gap_pt,
+                          l = 0)
+        ),
+        legend.position = "right",
+        legend.text  = element_text(size = heat_legend_text_size_pt),
+        legend.title = element_text(size = heat_legend_title_size_pt),
+
+        axis.text.x  = element_text(size = heat_x_text_size_pt,
+                                    angle = heat_x_angle_deg,
+                                    vjust = 1, hjust = 1,
+                                    margin = margin(t = 6)),
+        axis.text.y  = element_text(size = heat_y_text_size_pt,
+                                    margin = margin(r = 4)),
+        axis.title.x = element_text(size = heat_axis_title_size_pt,
+                                    margin = margin(t = heat_axis_title_margin_pt)),
+        axis.title.y = element_text(size = heat_axis_title_size_pt,
+                                    margin = margin(r = heat_axis_title_margin_pt)),
+
+        # Bande de conditions en bas (strip) : on garde celle du package et on l’épaissit
+        strip.text.x = element_text(size = strip_text_size_pt, face = "bold",
+                                    margin = margin(t = strip_text_margin_pt,
+                                                    b = strip_text_margin_pt)),
+        strip.switch.pad.grid = grid::unit(strip_pad_pt, "pt")
+      )
+
+    ggsave(sprintf("pathway_heatmap_%s_slice%d.png", selected_group, slice_idx),
+           heat_plot, width = 40, height = 20, units = "in", dpi = 300)
   }
-
-  sub_kegg_abundance <- sub_kegg_abundance[rowSums(sub_kegg_abundance) != 0,]
-
-  # output 1 : Generate daa_annotated_file
-  write.csv(daa_annotated_results_df, file = paste0("daa_annotated_results_", selected_group, ".csv"), row.names = FALSE)
-  
-  # output 2 : pathway errorbar
-  pathway_errorbar <- pathway_errorbar(abundance = sub_kegg_abundance, daa_results_df = daa_annotated_results_df, Group = sub_metadata[[Reference_column]], p_values_threshold = 0.05, order = "pathway_class", select = NULL, ko_to_kegg = TRUE, p_value_bar = TRUE, colors = NULL, x_lab = "pathway_name") +
-labs(
-  title = "Pathway differential abundance comparison",
-) +
-ggplot2::theme(
-  plot.title = element_text(hjust = 7, size = 15))  # Adjust title alignment to the middle and size
-
-
-
-  # output3 : Perform heatmap analysis
-  pathway_heatmap <- pathway_heatmap(abundance = sub_kegg_abundance %>% rownames_to_column("feature") %>% filter(feature %in% daa_annotated_results_df$feature) %>% column_to_rownames("feature"), metadata = metadata, group = Reference_column)+ ggtitle("Pathway differential abundance comparison")+ theme(plot.title = element_text(size = 40, face = "bold",hjust = 0.5),
-    axis.text.x = element_text(size = 11, angle = 90, vjust = 0.5),  # Rotate x-axis labels vertically
-    axis.text.y = element_text(size = 25))   # Adjust the size of y-axis labels les KO05856
-
-
- # Save the plots to PNG files
-  # output 2 : errorbar
-  ggsave(paste0("pathway_errorbar_", selected_group, ".png"), pathway_errorbar, width = 40, height = 20, units = "in", dpi = 300)
-  # output 3  : heatmap
-  ggsave(paste0("pathway_heatmap_", selected_group, ".png"), pathway_heatmap, width = 40, height = 20, units = "in", dpi = 300)
-  
-  # Save the results in the list
-  results_list[[selected_group]] <- list(daa_annotated_results_df = daa_annotated_results_df, pathway_errorbar = pathway_errorbar, pathway_heatmap = pathway_heatmap)
 }
 
-# Load the PCA script
-# Define the pathway_pca function
-pathway_pca <- function(abundance, metadata, group, PCA_component) {
-  # Perform PCA on the abundance data
-  if (PCA_component) {
-    # 3D PCA
-    pca_axis <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$x[, 1:3]
-    pca_proportion <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev[1:3] / sum(stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev) * 100
-  } else {
-    # 2D PCA
-    pca_axis <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$x[, 1:2]
-    pca_proportion <- stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev[1:2] / sum(stats::prcomp(t(abundance), center = TRUE, scale = TRUE)$sdev) * 100
-  }
-
-  # Combine the PCA results with the metadata information
-  pca <- cbind(pca_axis, metadata %>% select(all_of(group)))
-  pca$Group <- pca[, group]
-
-  # Return the PCA results
-  return(list(pca_proportion = pca_proportion, pca = pca))
+# ------------------------------
+#  PCA (filtered matrix)
+# ------------------------------
+pathway_pca <- function(abundance, metadata, group, PCA_component = FALSE) {
+  pcs    <- if (PCA_component) 1:3 else 1:2
+  pca    <- prcomp(t(abundance), center = TRUE, scale. = TRUE)
+  scores <- pca$x[, pcs, drop = FALSE]
+  varpct <- pca$sdev[pcs] / sum(pca$sdev) * 100
+  scores <- cbind(scores, metadata %>% dplyr::select(all_of(group)))
+  scores$Group <- scores[[group]]
+  list(pca_proportion = varpct, pca = scores)
 }
 
-# Perform PCA analysis
-pca_results <- pathway_pca(abundance = kegg_abundance, metadata = metadata, group = Reference_column, PCA_component = PCA_component)
+pca_results <- pathway_pca(kegg_abundance, metadata, Reference_column, PCA_component)
+write.csv(pca_results$pca_proportion, "pca_proportion.csv", row.names = FALSE)
+write.csv(pca_results$pca,            "pca_results.csv",     row.names = FALSE)
 
-
-utils::globalVariables(c("rowname","Sample","Value","quantile","facet_nested","strip_nested","elem_list_rect"))
-
-
-# Save pca_proportion and pca variables in separate CSV files
-write.csv(pca_results$pca_proportion, file = "pca_proportion.csv", row.names = FALSE)
-write.csv(pca_results$pca, file = "pca_results.csv", row.names = FALSE)
+utils::globalVariables(c("rowname","Sample","Value","quantile",
+                         "facet_nested","strip_nested","elem_list_rect"))
+message("Finished successfully.\n")

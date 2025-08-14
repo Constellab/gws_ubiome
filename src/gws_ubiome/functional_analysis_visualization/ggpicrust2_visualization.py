@@ -58,10 +58,6 @@ class Ggpicrust2FunctionalAnalysis(Task):
         "PCA_component": BoolParam(
             default_value=False, human_name="PCA Component",
             short_description="Perform 3D PCA if True, 2D PCA if False."),
-
-        "Slice_start": IntParam(
-            default_value=1, min_value=1, human_name="Slice start", visibility=IntParam.PROTECTED_VISIBILITY,
-            short_description="You can modify the slice window of the errorbar and the heatmap by modifying the slice start in order to focus on a subset of the results"),
     })
 
     r_file_path = os.path.join(
@@ -80,14 +76,13 @@ class Ggpicrust2FunctionalAnalysis(Task):
         Reference_group = params["Reference_group"]
         Round_digit = params["Round_digit"]
         PCA_component = params["PCA_component"]
-        Slice_start = params["Slice_start"]
 
         # retrieve the factor param value
         shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(
             self.message_dispatcher)
 
         # call python file
-        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component} {Slice_start}"
+        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component}"
         result = shell_proxy.run(cmd, shell_mode=True)
 
         if result != 0:
@@ -123,79 +118,83 @@ class Ggpicrust2FunctionalAnalysis(Task):
         }
 
     def build_plotly(self, pca_file_path, pca_proportion_file_path, Reference_column) -> PlotlyResource:
-        # Read the CSV data
+        # ---------------- KNOBS ----------------
+        title_line1 = "Principal Component Analysis (PCA)"
+        title_line2 = "applied to pathway abundance data"
+        title_text  = f"{title_line1}<br>{title_line2}"
+
+        title_font_size       = 17   # <- diminue un peu la taille du titre
+        title_bottom_pad_px   = 17   # <- espace entre le titre et le graphe (augmente si besoin)
+        top_margin_px         = 90   # marge supérieure totale pour ne rien couper
+
+        marker_size = 10             # taille des points (laisse tel quel ou ajuste)
+        marker_outline_width = 0.5
+        # --------------------------------------
+
+        import pandas as pd
+        import plotly.express as px
+        from plotly.graph_objs import Figure
+
         data = pd.read_csv(pca_file_path)
         proportion_data = pd.read_csv(pca_proportion_file_path)
 
-        # Extract the values for principal components
         num_components = data.shape[1] - 2
 
-        # Create a scatter plot
         if num_components == 2:
             fig = px.scatter(
-                data, x=data.columns[0], y=data.columns[1], color=Reference_column)
+                data,
+                x=data.columns[0],
+                y=data.columns[1],
+                color=Reference_column
+            )
         elif num_components == 3:
             fig = px.scatter_3d(
-                data, x=data.columns[0], y=data.columns[1], z=data.columns[2], color=Reference_column)
-            # Customize the 3D plot layout
+                data,
+                x=data.columns[0],
+                y=data.columns[1],
+                z=data.columns[2],
+                color=Reference_column
+            )
             fig.update_layout(
                 scene=dict(
                     xaxis_title=f"PC1 ({proportion_data.iloc[0, 0]:.2f}%)",
                     yaxis_title=f"PC2 ({proportion_data.iloc[1, 0]:.2f}%)",
                     zaxis_title=f"PC3 ({proportion_data.iloc[2, 0]:.2f}%)"
                 ),
-                width=800,
-                height=600
+                width=800, height=600
             )
         else:
             raise ValueError("Number of principal components must be 2 or 3")
 
-        # Customize the plot layout for both 2D and 3D
+        # — Titre sur 2 lignes + espace dessous —
         fig.update_layout(
-            title="Principal Component Analysis (PCA) applied to pathway abundance data",
+            title=dict(
+                text=title_text,
+                x=0.5, xanchor="center", yanchor="top",
+                font=dict(size=title_font_size),
+                pad=dict(t=0, r=0, b=title_bottom_pad_px, l=0)  # espace sous le titre
+            ),
+            margin=dict(t=top_margin_px),  # marge supérieure globale
             xaxis_title=f"{data.columns[0]} ({proportion_data.iloc[0, 0]:.2f}%)",
             yaxis_title=f"{data.columns[1]} ({proportion_data.iloc[1, 0]:.2f}%)",
-            xaxis=dict(
-                showline=True,
-                linecolor='black',
-                mirror=True,
-                showticklabels=True
-            ),
-            yaxis=dict(
-                showline=True,
-                linecolor='black',
-                mirror=True,
-                showticklabels=True
-            )
+            xaxis=dict(showline=True, linecolor='black', mirror=True, showticklabels=True),
+            yaxis=dict(showline=True, linecolor='black', mirror=True, showticklabels=True)
         )
 
-        # Add dashed lines for the axes covering the whole plot
-        fig.add_shape(
-            type="line",
-            x0=min(data[data.columns[0]]) - 5,
-            x1=max(data[data.columns[0]]) + 5,
-            y0=0,
-            y1=0,
-            line=dict(dash="dash", color="black", width=0.5)
-        )
+        # — Points plus gros —
+        fig.update_traces(marker=dict(size=marker_size, line=dict(width=marker_outline_width, color="black")))
 
-        fig.add_shape(
-            type="line",
-            x0=0,
-            x1=0,
-            y0=min(data[data.columns[1]]) - 5,
-            y1=max(data[data.columns[1]]) + 5,
-            line=dict(dash="dash", color="black", width=0.5)
-        )
+        # Axes en pointillés passant par l’origine
+        fig.add_shape(type="line",
+                    x0=min(data[data.columns[0]]) - 5, x1=max(data[data.columns[0]]) + 5,
+                    y0=0, y1=0, line=dict(dash="dash", color="black", width=0.5))
+        fig.add_shape(type="line",
+                    x0=0, x1=0,
+                    y0=min(data[data.columns[1]]) - 5, y1=max(data[data.columns[1]]) + 5,
+                    line=dict(dash="dash", color="black", width=0.5))
 
         if num_components == 3:
-            fig.add_shape(
-                type="line",
-                x0=0,
-                x1=0,
-                y0=0,
-                y1=0,
-                line=dict(dash="dash", color="black", width=0.5)
-            )
+            fig.add_shape(type="line", x0=0, x1=0, y0=0, y1=0,
+                        line=dict(dash="dash", color="black", width=0.5))
 
         return PlotlyResource(fig)
