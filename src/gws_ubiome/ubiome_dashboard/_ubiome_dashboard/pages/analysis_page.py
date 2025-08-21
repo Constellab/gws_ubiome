@@ -3,9 +3,9 @@ from typing import List
 from state import State
 from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_home import navigate_to_first_page
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step
 import pandas as pd
-from gws_core import Tag, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core import Tag, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 
@@ -16,15 +16,15 @@ def has_successful_scenario(step_name, scenarios_by_step):
     return any(s.status == ScenarioStatus.SUCCESS for s in scenarios_by_step[step_name])
 
 
-def build_analysis_tree_menu(ubiome_state: State, analysis_name: str):
+def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     """Build the tree menu for analysis workflow steps"""
     button_menu = StreamlitTreeMenu(key="analysis_tree_menu")
 
-    analysis_name_parsed = Tag.parse_tag(analysis_name)
+    ubiome_pipeline_id_parsed = Tag.parse_tag(ubiome_pipeline_id)
 
-    # Get all scenarios for this analysis
+    # Get all scenarios for this analysis, we retrieve all the other thanks to the id ubiome pipeline id
     search_scenario_builder = ScenarioSearchBuilder() \
-        .add_tag_filter(Tag(key=ubiome_state.TAG_ANALYSIS_NAME, value=analysis_name_parsed, auto_parse=True)) \
+        .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=ubiome_pipeline_id_parsed, auto_parse=True)) \
         .add_is_archived_filter(False)
 
     all_scenarios: List[Scenario] = search_scenario_builder.search_all()
@@ -43,24 +43,24 @@ def build_analysis_tree_menu(ubiome_state: State, analysis_name: str):
 
 
     # 1) Metadata table
-    if "Metadata" in scenarios_by_step or True:  # Always show first step
+    # Always show first step
 
-        if "Metadata" in scenarios_by_step:
-            # If a scenario exists
-            key=scenario.id
-        else:
-            key = "metadata"
-        metadata_item = StreamlitTreeMenuItem(
-            label="1) Metadata table",
-            key=key,
-            material_icon='table_chart'
-        )
+    if ubiome_state.TAG_METADATA in scenarios_by_step:
+        # If a scenario exists
+        key_metadata = scenario.id
+    else:
+        key_metadata = ubiome_state.TAG_METADATA
+    metadata_item = StreamlitTreeMenuItem(
+        label="1) Metadata table",
+        key=key_metadata,
+        material_icon='table_chart'
+    )
 
 
-        button_menu.add_item(metadata_item)
+    button_menu.add_item(metadata_item)
 
     # 2) QC - only if metadata is successful
-    if has_successful_scenario("Metadata", scenarios_by_step) or "QC" in scenarios_by_step:
+    if has_successful_scenario(ubiome_state.TAG_METADATA, scenarios_by_step) or "QC" in scenarios_by_step:
 
         if "QC" in scenarios_by_step:
             key = scenario.id
@@ -166,7 +166,7 @@ def build_analysis_tree_menu(ubiome_state: State, analysis_name: str):
     )
     button_menu.add_item(rapport_item)
 
-    return button_menu
+    return button_menu, key_metadata
 
 def render_analysis_page():
     ubiome_config = UbiomeConfig.get_instance()
@@ -177,22 +177,33 @@ def render_analysis_page():
     if not selected_analysis:
         return st.error("No analysis selected. Please select an analysis from the first page.")
 
-    # Get analysis name from scenario
-    analysis_name = selected_analysis.get_short_name().split(" - ")[0]
+    # Get analysis name from scenario tag
+    entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_analysis.id)
+    tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[0].to_simple_tag()
+    analysis_name = tag_analysis_name.value
+
+    # Get ubiome pipeline id from scenario tag
+    tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
+    ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
     # Create two columns
     left_col, right_col = st.columns([1, 4])
 
     # Left column - Analysis workflow tree
     with left_col:
-        # Button to go home using config
-        if ubiome_config.build_home_button():
+        # Button to go home
+        if st.button("Home", use_container_width=True, icon=":material/home:", type="primary"):
+            router = StreamlitRouter.load_from_session()
             router.navigate("first-page")
 
         st.write(f"**Analysis:** {analysis_name}")
 
-        # Build and render the analysis tree menu
-        tree_menu = build_analysis_tree_menu(ubiome_state, analysis_name)
+        # Build and render the analysis tree menu, and keep the key of the first element
+        tree_menu, key_metadata = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
+
+        # Set default selected item to metadata table
+
+        tree_menu.set_default_selected_item(key_metadata)
 
         # Render the tree menu
         selected_item = tree_menu.render()
@@ -227,12 +238,11 @@ def render_analysis_page():
         }
         """
         with StreamlitContainers.container_with_style('analysis-container', style):
-            st.write("Analysis Details")
             st.write("**Selected Step:**", ubiome_state.get_step_pipeline())
 
 
             if ubiome_state.get_selected_scenario():
-                selected_scenario = ubiome_state.get_selected_scenario()
+                selected_scenario : Scenario = ubiome_state.get_selected_scenario()
 
                 # Write the status of the scenario at the top right
                 col_empty, col_status = StreamlitContainers.columns_with_fit_content(
@@ -240,9 +250,17 @@ def render_analysis_page():
                         cols=[1, 'fit-content'], vertical_align_items='center')
 
                 with col_status:
-                    st.write(f"**Status:** {selected_scenario.status}")
+                    st.write(f"**Status:** {selected_scenario.status.value}")
 
                 st.write(ubiome_state.get_selected_scenario().get_short_name())
+
+                if ubiome_state.get_step_pipeline() == ubiome_state.TAG_METADATA:
+                    # Render metadata table
+                    render_metadata_step(selected_scenario)
+                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
+                    render_qc_step(selected_scenario)
+                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
+                    render_feature_inference_step(selected_scenario)
 
 
 
