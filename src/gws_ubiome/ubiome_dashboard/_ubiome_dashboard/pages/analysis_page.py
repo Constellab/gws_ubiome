@@ -6,7 +6,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeCo
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_home import navigate_to_first_page
 import pandas as pd
 from gws_core import Tag, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
-
+from gws_core.tag.tag_entity_type import TagEntityType
+from gws_core.tag.entity_tag_list import EntityTagList
 
 # Check if steps are completed (have successful scenarios)
 def has_successful_scenario(step_name, scenarios_by_step):
@@ -32,7 +33,9 @@ def build_analysis_tree_menu(ubiome_state: State, analysis_name: str):
     # Group scenarios by step type
     scenarios_by_step = {}
     for scenario in all_scenarios:
-        step_name = scenario.get_short_name().split(" - ")[-1] if " - " in scenario.get_short_name() else "Unknown" # TODO récupérer la valeur du tag ubiome
+        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
+        tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
+        step_name = tag_step_name.value
         if step_name not in scenarios_by_step:
             scenarios_by_step[step_name] = []
         scenarios_by_step[step_name].append(scenario)
@@ -204,7 +207,10 @@ def render_analysis_page():
 
             if selected_scenario_new:
                 ubiome_state.set_selected_scenario(selected_scenario_new)
-                ubiome_state.set_step_pipeline(selected_scenario_new.get_short_name().split(" - ")[-1]) # TODO get the tag
+
+                entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_scenario_new.id)
+                tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
+                ubiome_state.set_step_pipeline(tag_step_name.value)
 
             else:
                 ubiome_state.set_selected_scenario(None)

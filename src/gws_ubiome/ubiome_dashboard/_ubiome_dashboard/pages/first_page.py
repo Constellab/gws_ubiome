@@ -5,6 +5,8 @@ from gws_core.streamlit import StreamlitContainers, StreamlitRouter
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
 import pandas as pd
 from gws_core import Tag, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus
+from gws_core.tag.tag_entity_type import TagEntityType
+from gws_core.tag.entity_tag_list import EntityTagList
 from streamlit_slickgrid import (
     slickgrid,
     Formatters,
@@ -67,11 +69,16 @@ def render_first_page():
             # Create data for SlickGrid table
             table_data = []
             for scenario in list_scenario_user:
+                entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
+                tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[0].to_simple_tag()
+
+                tag_fastq_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_FASTQ)[0].to_simple_tag()
+
                 table_data.append({
                     "id": scenario.id,
-                    "Name given": scenario.get_short_name(),# TODO : get the name from the tag
+                    "Name given": tag_analysis_name.value,
                     "Folder": scenario.folder, # TODO : get the folder associated to the scenario
-                    "Fastq name": "", # TODO get the fastq name from the tags
+                    "Fastq name": tag_fastq_name.value,
                     "Status": scenario.status.value if scenario.status else "" # TODO mettre le status de la dernière tâche ou de toutes
                 })
 

@@ -49,7 +49,6 @@ def render_new_analysis_page():
 
             name_fastq = selected_fastq.get_resource().get_name()
 
-            # TODO : remove when maj of gws_core
             # We parse value to ensure it is a valid tag format because auto parse is not longer availaible
             # for values in lab
             name_fastq_parsed = Tag.parse_tag(name_fastq)
