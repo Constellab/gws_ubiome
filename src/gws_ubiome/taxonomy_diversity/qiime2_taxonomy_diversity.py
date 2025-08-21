@@ -3,13 +3,15 @@ import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
                       InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      ResourceSet, ShellProxy, StackedBarPlotView, StrParam,
+                      ResourceSet, ShellProxy, StrParam,
                       Table, TableAnnotatorHelper, TableImporter, Task,
                       TaskFileDownloader, TaskInputs, TaskOutputs,
-                      ViewResource, task_decorator)
-from pandas import DataFrame
+                      task_decorator)
+
+from gws_core.impl.plotly.plotly_resource import PlotlyResource
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
+import plotly.graph_objects as go
 
 
 @task_decorator("Qiime2TaxonomyDiversity", human_name="Q2 Taxonomy Diversity",
@@ -276,12 +278,11 @@ class Qiime2TaxonomyDiversity(Task):
             table_annotated = TableAnnotatorHelper.annotate_rows(
                 table, metadata_table, use_table_row_names_as_ref=True)
             table_annotated.name = key
-            table_annotated_bar_plot_view = ViewResource(
-                self.view_as_normalised_taxo_stacked_bar_plot(table_annotated).to_dto(params).to_json_dict())
-            table_annotated_bar_plot_view.name = key + "_stacked_barplot"
+            table_annotated_bar_plot = self.plotly_bar_plot(table_annotated)
+            table_annotated_bar_plot.name = key + "_stacked_barplot"
 
             taxo_resource_table_set.add_resource(table_annotated)
-            taxo_resource_table_set.add_resource(table_annotated_bar_plot_view)
+            taxo_resource_table_set.add_resource(table_annotated_bar_plot)
 
         for key, value in self.FEATURE_TABLES_PATH.items():
             #  Importing Metadata table
@@ -308,16 +309,44 @@ class Qiime2TaxonomyDiversity(Task):
             'taxonomy_tables': taxo_resource_table_set
         }
 
-    def view_as_normalised_taxo_stacked_bar_plot(self, table: Table) -> StackedBarPlotView:
-        s_view = StackedBarPlotView(normalize=True)
+    def plotly_bar_plot(self, table: Table) -> PlotlyResource:
+        """
+        Create a plotly stacked bar plot from a table, normalizing y to [0, 1].
+        :param table: The table to plot
+        :return: A PlotlyResource containing the bar plot
+        """
         table_data = table.transpose().get_data()
         tdata = table_data.T
-        for i in range(0, tdata.shape[1]):
-            if isinstance(tdata.iat[0, i], str):
+
+        fig = go.Figure()
+
+        colors = go.Figure().layout.template.layout.sunburstcolorway or [
+            "#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A",
+            "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"
+        ]
+        color_count = len(colors)
+        x_tick_labels = tdata.index.to_list()
+
+        # Normalize each column so that the sum for each sample (row) is 1
+        norm_tdata = tdata.div(tdata.sum(axis=1), axis=0).fillna(0)
+
+        for i in range(0, norm_tdata.shape[1]):
+            if isinstance(norm_tdata.iat[0, i], str):
                 continue
-            y = tdata.iloc[:, i].values.tolist()
-            s_view.add_series(y=y, name=tdata.columns[i])
-        s_view.x_tick_labels = tdata.index.to_list()
-        s_view.y_label = "Feature count"
-        s_view.x_label = "Samples"
-        return s_view
+            y = norm_tdata.iloc[:, i].values.tolist()
+            color = colors[i % color_count]
+            fig.add_trace(go.Bar(
+                x=x_tick_labels,
+                y=y,
+                name=norm_tdata.columns[i],
+                marker_color=color
+            ))
+
+        fig.update_layout(
+            barmode='stack',
+            xaxis_title="Samples",
+            yaxis_title="Feature count",
+            xaxis=dict(tickmode='array', tickvals=x_tick_labels, ticktext=x_tick_labels),
+            yaxis=dict(range=[0, 1])
+        )
+        return PlotlyResource(fig)

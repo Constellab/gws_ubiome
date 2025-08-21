@@ -3,11 +3,14 @@ import os
 
 from gws_core import (ConfigParams, File, Folder, InputSpec, InputSpecs,
                       OutputSpec, OutputSpecs, ResourceSet, ShellProxy,
-                      StackedBarPlotView, Table, TableAnnotatorHelper,
+                      Table, TableAnnotatorHelper,
                       TableImporter, Task, TaskInputs, TaskOutputs,
-                      ViewResource, task_decorator)
+                      task_decorator)
+from gws_core.impl.plotly.plotly_resource import PlotlyResource
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
+
+import plotly.graph_objects as go
 
 
 @task_decorator("Qiime2TableDbAnnotator", human_name="Qiime2 taxa composition annotator",
@@ -48,9 +51,9 @@ class Qiime2TableDbAnnotator(Task):
         'annotation_table': InputSpec(File, short_description="Annotation table: taxa<tabulation>info", human_name="Annotation_table")})
     output_specs: OutputSpecs = OutputSpecs({
         'relative_abundance_table': OutputSpec(Table, human_name="Relative_Abundance_Annotated_Table"),
-        'relative_abundance_view': OutputSpec(ViewResource, human_name="Relative_Abundance_Annotated_View"),
+        'relative_abundance_plotly_resource': OutputSpec(PlotlyResource, human_name="Relative_Abundance_Annotated_Plotly_Resource"),
         'absolute_abundance_table': OutputSpec(Table, human_name="Absolute_Abundance_Annotated_Table"),
-        'absolute_abundance_view': OutputSpec(ViewResource, human_name="Absolute_Abundance_Annotated_View")
+        'absolute_abundance_plotly_resource': OutputSpec(PlotlyResource, human_name="Absolute_Abundance_Annotated_Plotly_Resource")
     })
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
@@ -129,30 +132,52 @@ class Qiime2TableDbAnnotator(Task):
         table_absolute_abundance_annotated.name = "Annotated taxa composition table (absolute count)"
         table_relative_abundance_annotated.name = "Annotated taxa composition table (relative count)"
 
-        table_absolute_abundance_view = ViewResource(self.view_as_grouped_stackedbarplot(
-            table_absolute_abundance_annotated, params).to_dto(params).to_json_dict())
-        table_relative_abundance_view = ViewResource(self.view_as_grouped_stackedbarplot(
-            table_relative_abundance_annotated, params).to_dto(params).to_json_dict())
+        relative_abundance_plotly_resource = self.stackedbarplot_plotly(table_relative_abundance_annotated)
+        absolute_abundance_plotly_resource = self.stackedbarplot_plotly(table_absolute_abundance_annotated)
 
         return {
             'relative_abundance_table': table_relative_abundance_annotated,
-            'relative_abundance_view': table_relative_abundance_view,
+            'relative_abundance_plotly_resource': relative_abundance_plotly_resource,
             'absolute_abundance_table': table_absolute_abundance_annotated,
-            'absolute_abundance_view': table_absolute_abundance_view
+            'absolute_abundance_plotly_resource': absolute_abundance_plotly_resource
         }
 
-    def view_as_grouped_stackedbarplot(self, table: Table, params: ConfigParams) -> StackedBarPlotView:
+    def stackedbarplot_plotly(self, table: Table) -> PlotlyResource:
 
-        s_view = StackedBarPlotView(normalize=True)
-        annotated_table: Table = None
-        annotated_table = table
+        annotated_table: Table = table
         initialdf = annotated_table.get_data()
 
-        for i in range(0, initialdf.shape[1]):
-            if isinstance(initialdf.iat[0, i], str):
-                continue
-            y = initialdf.iloc[:, i].values.tolist()
-            s_view.add_series(y=y, name=initialdf.columns[i])
-        s_view.x_tick_labels = initialdf.index.to_list()
+        # Normalize each row so values sum to 1 (if sum > 0)
+        normalized_df = initialdf.copy()
+        for idx, row in initialdf.iterrows():
+            row_sum = row[row.apply(lambda x: isinstance(x, (int, float)))].sum()
+            if row_sum > 0:
+                normalized_df.loc[idx] = row.apply(lambda x: x / row_sum if isinstance(x, (int, float)) else x)
+            else:
+                normalized_df.loc[idx] = row
 
-        return s_view
+        fig = go.Figure()
+
+        colors = go.Figure().layout.template.layout.sunburstcolorway or [
+            "#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A",
+            "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"
+        ]
+        color_count = len(colors)
+        x_tick_labels = normalized_df.index.to_list()
+
+        for i in range(0, normalized_df.shape[1]):
+            if isinstance(normalized_df.iat[0, i], str):
+                continue
+            y = normalized_df.iloc[:, i].values.tolist()
+            fig.add_trace(
+                go.Bar(
+                    x=x_tick_labels, y=y, name=normalized_df.columns[i],
+                    marker_color=colors[i % color_count]))
+
+        fig.update_layout(
+            barmode='stack',
+            xaxis=dict(tickmode='array', tickvals=x_tick_labels, ticktext=x_tick_labels),
+            yaxis=dict(range=[0, 1])
+        )
+
+        return PlotlyResource(fig)

@@ -2,13 +2,16 @@
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, LinePlot2DView, OutputSpec,
+                      InputSpecs, IntParam, OutputSpec,
                       OutputSpecs, ResourceSet, ShellProxy, Table, Task,
-                      TaskInputs, TaskOutputs, ViewResource, task_decorator)
+                      TaskInputs, TaskOutputs, task_decorator)
 from numpy import nanquantile
+
+from gws_core.impl.plotly.plotly_resource import PlotlyResource
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from .rarefaction_table import RarefactionTableImporter
+import plotly.graph_objects as go
 
 
 @task_decorator("Qiime2RarefactionAnalysis", human_name="Q2RarefactionAnalysis",
@@ -125,13 +128,11 @@ class Qiime2RarefactionAnalysis(Task):
             {'delimiter': 'tab', "index_column": 0})
         shannon_index_table.name = "Shannon index"
 
-        observed_feature_table_lineplot: ViewResource = ViewResource(
-            self.view_as_lineplot(observed_feature_table).to_dto(params).to_json_dict())
+        observed_feature_table_lineplot: PlotlyResource = self.plotly_lineplot(observed_feature_table)
 
         observed_feature_table_lineplot.name = "Observed features Lineplot"
 
-        shannon_index_table_lineplot: ViewResource = ViewResource(
-            self.view_as_lineplot(shannon_index_table).to_dto(params).to_json_dict())
+        shannon_index_table_lineplot: PlotlyResource = self.plotly_lineplot(shannon_index_table)
 
         shannon_index_table_lineplot.name = "Shannon index Lineplot"
 
@@ -146,26 +147,37 @@ class Qiime2RarefactionAnalysis(Task):
         return {"result_folder": result_folder,
                 "rarefaction_table": resource_table}
 
-    def view_as_lineplot(self, table: Table) -> LinePlot2DView:
-        lp_view = LinePlot2DView()
+    def plotly_lineplot(self, table: Table) -> PlotlyResource:
         column_tags = table.get_column_tags()
         all_sample_ids = list(set([tag["sample-id"] for tag in column_tags]))
 
-        for sample_id in all_sample_ids:
+        fig = go.Figure()
+
+        # Use Plotly's qualitative color palette
+        colors = go.Figure().layout.template.layout.sunburstcolorway or [
+            "#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A",
+            "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"
+        ]
+
+        for idx, sample_id in enumerate(all_sample_ids):
             sample_table = table.select_by_column_tags(
                 [{"sample-id": sample_id}])
             sample_column_tags = sample_table.get_column_tags()
             positions = [float(tag["depth"]) for tag in sample_column_tags]
-
             sample_data = sample_table.get_data()
 
             quantile = nanquantile(sample_data.to_numpy(), q=[
                 0.25, 0.5, 0.75], axis=0)
             median = quantile[1, :].tolist()
-            lp_view.add_series(x=positions, y=median,
-                               name=sample_id, tags=sample_column_tags)
+            color = colors[idx % len(colors)]
+            fig.add_trace(go.Scatter(
+                y=median,
+                x=positions,
+                mode='lines+markers',
+                name=sample_id,
+                line=dict(color=color),
+                marker=dict(color=color, size=3)
+            ))
 
-        lp_view.x_label = "Count depth"
-        lp_view.y_label = "Index value"
-
-        return lp_view
+        fig.update_layout(xaxis_title="Count depth", yaxis_title="Index value")
+        return PlotlyResource(fig)
