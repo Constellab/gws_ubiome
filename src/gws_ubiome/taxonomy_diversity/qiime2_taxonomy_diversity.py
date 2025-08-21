@@ -339,14 +339,23 @@ class Qiime2TaxonomyDiversity(Task):
                 x=x_tick_labels,
                 y=y,
                 name=norm_tdata.columns[i],
-                marker_color=color
+                marker_color=color,
+                hovertemplate=f'{norm_tdata.columns[i]} : %{{y}}<extra></extra>'
             ))
 
         fig.update_layout(
             barmode='stack',
             xaxis_title="Samples",
             yaxis_title="Feature count",
-            xaxis=dict(tickmode='array', tickvals=x_tick_labels, ticktext=x_tick_labels),
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_tick_labels,
+                ticktext=x_tick_labels,
+                title=dict(
+                    text="Samples",
+                    standoff=20  # Add margin above x-axis title
+                )
+            ),
             yaxis=dict(range=[0, 1])
         )
         return PlotlyResource(fig)

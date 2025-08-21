@@ -159,6 +159,9 @@ class Qiime2RarefactionAnalysis(Task):
             "#19D3F3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"
         ]
 
+        # Collect all unique depth positions for x-axis ticks
+        all_positions = sorted(set(float(tag["depth"]) for tag in column_tags))
+
         for idx, sample_id in enumerate(all_sample_ids):
             sample_table = table.select_by_column_tags(
                 [{"sample-id": sample_id}])
@@ -176,17 +179,24 @@ class Qiime2RarefactionAnalysis(Task):
                 mode='lines+markers',
                 name=sample_id,
                 line=dict(color=color),
-                marker=dict(color=color, size=3)
+                marker=dict(color=color, size=3),
+                hovertemplate=f'{sample_id} : %{{y}}<extra></extra>'
             ))
 
-        fig.update_layout(xaxis_title="Count depth", yaxis_title="Index value", xaxis={
-            "showline": True,
-            "linecolor": 'black',
-            "linewidth": 1
-        },
+        fig.update_layout(
+            xaxis_title="Count depth",
+            yaxis_title="Index value",
+            xaxis={
+                "showline": True,
+                "linecolor": 'black',
+                "linewidth": 1,
+                "tickmode": "array",
+                "tickvals": all_positions,
+            },
             yaxis={
                 "showline": True,
                 "linecolor": 'black',
                 "linewidth": 1
-        })
+            }
+        )
         return PlotlyResource(fig)

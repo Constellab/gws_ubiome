@@ -143,7 +143,6 @@ class Qiime2TableDbAnnotator(Task):
         }
 
     def stackedbarplot_plotly(self, table: Table) -> PlotlyResource:
-
         annotated_table: Table = table
         initialdf = annotated_table.get_data()
 
@@ -172,12 +171,24 @@ class Qiime2TableDbAnnotator(Task):
             fig.add_trace(
                 go.Bar(
                     x=x_tick_labels, y=y, name=normalized_df.columns[i],
-                    marker_color=colors[i % color_count]))
+                    marker_color=colors[i % color_count],
+                    hovertemplate=f'{normalized_df.columns[i]} : %{{y}}<extra></extra>'))
 
         fig.update_layout(
             barmode='stack',
-            xaxis=dict(tickmode='array', tickvals=x_tick_labels, ticktext=x_tick_labels),
-            yaxis=dict(range=[0, 1])
+            margin=dict(b=120),
+            xaxis=dict(
+                tickmode='array',
+                tickvals=x_tick_labels,
+                ticktext=x_tick_labels,
+                tickfont=dict(size=10),
+                automargin=True,
+                title_standoff=20,
+            ),
+            yaxis=dict(
+                range=[0, 1],
+                tickfont=dict(size=10)
+            )
         )
 
         return PlotlyResource(fig)
