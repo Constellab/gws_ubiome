@@ -266,9 +266,9 @@ class Qiime2QualityCheck(Task):
                 y=[min_vals[i], q1_vals[i], median_vals[i], q3_vals[i], max_vals[i]],
                 name=str(x),
                 boxpoints=False,
-                marker=dict(color='black'),
+                marker=dict(color=box_color),
                 showlegend=False,
-                line=dict(width=1, color='black'),
+                line=dict(width=1, color=box_color),
                 fillcolor=box_color,
                 width=0.1
             ))
@@ -277,7 +277,17 @@ class Qiime2QualityCheck(Task):
             xaxis_title="Base Position",
             yaxis_title="PHRED Score",
             showlegend=False,
-            boxmode='group'
+            boxmode='group',
+            xaxis=dict(
+                showline=True,
+                linecolor='black',
+                linewidth=1
+            ),
+            yaxis=dict(
+                showline=True,
+                linecolor='black',
+                linewidth=1
+            )
         )
         return PlotlyResource(fig)
 
@@ -335,5 +345,18 @@ class Qiime2QualityCheck(Task):
             )
         )
 
-        fig.update_layout(xaxis_title="Base Position", yaxis_title="PHRED Score")
+        fig.update_layout(
+            xaxis_title="Base Position",
+            yaxis_title="PHRED Score",
+            xaxis={
+                "showline": True,
+                "linecolor": 'black',
+                "linewidth": 1
+            },
+            yaxis={
+                "showline": True,
+                "linecolor": 'black',
+                "linewidth": 1
+            }
+        )
         return PlotlyResource(fig)

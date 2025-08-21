@@ -179,5 +179,14 @@ class Qiime2RarefactionAnalysis(Task):
                 marker=dict(color=color, size=3)
             ))
 
-        fig.update_layout(xaxis_title="Count depth", yaxis_title="Index value")
+        fig.update_layout(xaxis_title="Count depth", yaxis_title="Index value", xaxis={
+            "showline": True,
+            "linecolor": 'black',
+            "linewidth": 1
+        },
+            yaxis={
+                "showline": True,
+                "linecolor": 'black',
+                "linewidth": 1
+        })
         return PlotlyResource(fig)
