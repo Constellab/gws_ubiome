@@ -351,7 +351,8 @@ class Qiime2QualityCheck(Task):
             xaxis={
                 "showline": True,
                 "linecolor": 'black',
-                "linewidth": 1
+                "linewidth": 1,
+                "zeroline": False
             },
             yaxis={
                 "showline": True,

@@ -343,6 +343,7 @@ class Qiime2TaxonomyDiversity(Task):
                 hovertemplate=f'{norm_tdata.columns[i]} : %{{y}}<extra></extra>'
             ))
 
+        # Automatically adjust margins so x-axis labels do not overlap with the axis title
         fig.update_layout(
             barmode='stack',
             xaxis_title="Samples",
@@ -352,10 +353,11 @@ class Qiime2TaxonomyDiversity(Task):
                 tickvals=x_tick_labels,
                 ticktext=x_tick_labels,
                 title=dict(
-                    text="Samples",
-                    standoff=20  # Add margin above x-axis title
-                )
+                    text="Samples"
+                ),
+                automargin=True  # Let plotly adjust margin for axis labels/title
             ),
-            yaxis=dict(range=[0, 1])
+            yaxis=dict(range=[0, 1]),
+            margin=dict(b=80)  # Reasonable default; automargin will add more if needed
         )
         return PlotlyResource(fig)
