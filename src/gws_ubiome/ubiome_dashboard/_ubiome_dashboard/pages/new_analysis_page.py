@@ -28,6 +28,7 @@ def render_new_analysis_page():
         sequencing_type = st.radio("Select if data is paired-end or single-end", ("Paired-end", "Single-end"))
 
         analysis_name = st.text_input("Insert your analysis name")
+
         space_service = SpaceService.get_instance()
         list_folders_in_lab = space_service.get_all_lab_root_folders().folders
         folder_dict = {}

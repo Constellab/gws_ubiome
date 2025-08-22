@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from typing import List
 from state import State
@@ -5,7 +6,7 @@ from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, Str
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step
 import pandas as pd
-from gws_core import Tag, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 
@@ -44,10 +45,9 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
     # 1) Metadata table
     # Always show first step
-
     if ubiome_state.TAG_METADATA in scenarios_by_step:
-        # If a scenario exists
-        key_metadata = scenario.id
+        # If a scenario exists, use the first scenario's ID
+        key_metadata = scenarios_by_step[ubiome_state.TAG_METADATA][0].id
     else:
         key_metadata = ubiome_state.TAG_METADATA
     metadata_item = StreamlitTreeMenuItem(
@@ -60,33 +60,34 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     button_menu.add_item(metadata_item)
 
     # 2) QC - only if metadata is successful
-    if has_successful_scenario(ubiome_state.TAG_METADATA, scenarios_by_step) or "QC" in scenarios_by_step:
+    if has_successful_scenario(ubiome_state.TAG_METADATA, scenarios_by_step) or ubiome_state.TAG_QC in scenarios_by_step:
 
-        if "QC" in scenarios_by_step:
-            key = scenario.id
+        if ubiome_state.TAG_QC in scenarios_by_step:
+            # Use the first QC scenario's ID
+            key_qc = scenarios_by_step[ubiome_state.TAG_QC][0].id
         else:
-            key = "qc"
+            key_qc = ubiome_state.TAG_QC
         qc_item = StreamlitTreeMenuItem(
             label="2) QC",
-            key=key,
+            key=key_qc,
             material_icon='check_circle'
         )
 
         button_menu.add_item(qc_item)
 
     # 3) Feature inference - only if QC is successful
-    if has_successful_scenario("QC", scenarios_by_step) or "Feature inference" in scenarios_by_step:
+    if has_successful_scenario(ubiome_state.TAG_QC, scenarios_by_step) or ubiome_state.TAG_FEATURE_INFERENCE in scenarios_by_step:
         feature_item = StreamlitTreeMenuItem(
             label="3) Feature inference",
-            key="feature_inference",
+            key=ubiome_state.TAG_FEATURE_INFERENCE,
             material_icon='analytics'
         )
 
-        if "Feature inference" in scenarios_by_step:
-            for scenario in scenarios_by_step["Feature inference"]:
+        if ubiome_state.TAG_FEATURE_INFERENCE in scenarios_by_step:
+            for scenario in scenarios_by_step[ubiome_state.TAG_FEATURE_INFERENCE]:
                 scenario_item = StreamlitTreeMenuItem(
                     label=scenario.get_short_name(),
-                    key=scenario.id,
+                    key=scenario.id, # TODO change the key to have the correct key - same for other steps
                     material_icon='description'
                 )
 
@@ -186,6 +187,34 @@ def render_analysis_page():
     tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
     ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
+    #TODO ajouter un warning ou faire en sorte que ça marche même quand le scénario est en cours
+
+    # Get fastq and metadata table
+    scenario_proxy = ScenarioProxy.from_existing_scenario(selected_analysis.id)
+    # Retrieve the protocol
+    protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
+
+    # Retrieve outputs
+    # Fastq
+    file_fastq : Folder = protocol_proxy.get_process('metadata_process').get_input('fastq_folder')
+    ubiome_state.set_resource_id_fastq(file_fastq.get_model_id())
+
+    # Metadata table
+    metadata_table_resource_search = ResourceModel.select().where(
+        (Tag.key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
+        (Tag.value == ubiome_state.get_current_ubiome_pipeline_id()) &
+        (Tag.key == ubiome_state.TAG_UBIOME) &
+        (Tag.value == ubiome_state.TAG_METADATA_UPDATED) &
+        (ResourceModel.resource_typing_name.contains('File'))  # Search for File type resources
+    )
+
+    metadata_updated = metadata_table_resource_search.first()
+    if metadata_updated:
+        ubiome_state.set_resource_id_metadata_table(metadata_updated.id)
+    else : # Get the table from initial scenario
+        metadata_output : Folder = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
+        ubiome_state.set_resource_id_metadata_table(metadata_output.get_model_id())
+
     # Create two columns
     left_col, right_col = st.columns([1, 4])
 
@@ -240,27 +269,30 @@ def render_analysis_page():
         with StreamlitContainers.container_with_style('analysis-container', style):
             st.write("**Selected Step:**", ubiome_state.get_step_pipeline())
 
+            is_scenario = True if ubiome_state.get_selected_scenario() else False
 
-            if ubiome_state.get_selected_scenario():
+            if is_scenario:
                 selected_scenario : Scenario = ubiome_state.get_selected_scenario()
 
                 # Write the status of the scenario at the top right
                 col_empty, col_status = StreamlitContainers.columns_with_fit_content(
-                        key="button_new",
+                        key="container_status",
                         cols=[1, 'fit-content'], vertical_align_items='center')
 
                 with col_status:
                     st.write(f"**Status:** {selected_scenario.status.value}")
 
                 st.write(ubiome_state.get_selected_scenario().get_short_name())
+            else :
+                selected_scenario = None
 
-                if ubiome_state.get_step_pipeline() == ubiome_state.TAG_METADATA:
-                    # Render metadata table
-                    render_metadata_step(selected_scenario)
-                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
-                    render_qc_step(selected_scenario)
-                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
-                    render_feature_inference_step(selected_scenario)
+            if ubiome_state.get_step_pipeline() == ubiome_state.TAG_METADATA:
+                # Render metadata table
+                render_metadata_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
+                render_qc_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
+                render_feature_inference_step(selected_scenario, ubiome_state)
 
 
 
