@@ -49,6 +49,7 @@ def render_new_analysis_page():
             list_required_fields_filled = []
             list_required_fields_filled.append(ubiome_state.check_if_required_is_filled(ubiome_state.get_resource_selector_fastq()))
             list_required_fields_filled.append(ubiome_state.check_if_required_is_filled(ubiome_state.get_analysis_name_user()))
+            list_required_fields_filled.append(ubiome_state.get_qiime2_metadata_config()["is_valid"])
             # Check if mandatory fields have been filled
             if False in list_required_fields_filled:
                 st.warning("Please fill all the mandatory fields: fastq resource and analysis name.")
@@ -88,7 +89,7 @@ def render_new_analysis_page():
             scenario.add_tag(Tag(ubiome_state.TAG_SEQUENCING_TYPE, sequencing_type, is_propagable=True, auto_parse=True))
 
             # Step 1 : Metadata task
-            metadata_process : ProcessProxy = protocol.add_process(Qiime2MetadataTableMaker, 'metadata_process', config_params=ubiome_state.get_qiime2_metadata_config())
+            metadata_process : ProcessProxy = protocol.add_process(Qiime2MetadataTableMaker, 'metadata_process', config_params=ubiome_state.get_qiime2_metadata_config()["config"])
             protocol.add_connector(out_port=fastq_resource >> 'resource',
                                        in_port=metadata_process << "fastq_folder")
             # Add output
