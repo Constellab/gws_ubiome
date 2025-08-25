@@ -19,7 +19,7 @@ def has_successful_scenario(step_name, scenarios_by_step):
 
 def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     """Build the tree menu for analysis workflow steps"""
-    button_menu = StreamlitTreeMenu(key="analysis_tree_menu")
+    button_menu = StreamlitTreeMenu(key=ubiome_state.TREE_ANALYSIS_KEY)
 
     ubiome_pipeline_id_parsed = Tag.parse_tag(ubiome_pipeline_id)
 
@@ -41,13 +41,20 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
             scenarios_by_step[step_name] = []
         scenarios_by_step[step_name].append(scenario)
 
+    ubiome_state.set_scenarios_by_step_dict(scenarios_by_step)
 
+    # Set in the state if data is single-end or paired-end
+    metadata_scenario = ubiome_state.get_scenario_step_metadata()[0]
+    entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, metadata_scenario.id)
+    sequencing_type_tag = entity_tag_list.get_tags_by_key(ubiome_state.TAG_SEQUENCING_TYPE)[0].to_simple_tag()
+    sequencing_type = sequencing_type_tag.value
+    ubiome_state.set_sequencing_type(sequencing_type)
 
     # 1) Metadata table
     # Always show first step
     if ubiome_state.TAG_METADATA in scenarios_by_step:
         # If a scenario exists, use the first scenario's ID
-        key_metadata = scenarios_by_step[ubiome_state.TAG_METADATA][0].id
+        key_metadata = ubiome_state.get_scenario_step_metadata()[0].id
     else:
         key_metadata = ubiome_state.TAG_METADATA
     metadata_item = StreamlitTreeMenuItem(
@@ -64,7 +71,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
         if ubiome_state.TAG_QC in scenarios_by_step:
             # Use the first QC scenario's ID
-            key_qc = scenarios_by_step[ubiome_state.TAG_QC][0].id
+            key_qc = ubiome_state.get_scenario_step_qc()[0].id
         else:
             key_qc = ubiome_state.TAG_QC
         qc_item = StreamlitTreeMenuItem(
@@ -231,8 +238,10 @@ def render_analysis_page():
         tree_menu, key_metadata = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
 
         # Set default selected item to metadata table
-
         tree_menu.set_default_selected_item(key_metadata)
+
+        # Save in session_state the tree_menu
+        ubiome_state.set_tree_menu_object(tree_menu)
 
         # Render the tree menu
         selected_item = tree_menu.render()
@@ -267,7 +276,6 @@ def render_analysis_page():
         }
         """
         with StreamlitContainers.container_with_style('analysis-container', style):
-            st.write("**Selected Step:**", ubiome_state.get_step_pipeline())
 
             is_scenario = True if ubiome_state.get_selected_scenario() else False
 
