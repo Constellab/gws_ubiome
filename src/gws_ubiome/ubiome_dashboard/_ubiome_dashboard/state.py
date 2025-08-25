@@ -1,10 +1,10 @@
-
+from typing import List, Dict
 import streamlit as st
 
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 
-from gws_core import Scenario
+from gws_core import Scenario, ResourceModel
 
 class State:
     """Class to manage the state of the app.
@@ -12,12 +12,29 @@ class State:
 
     TAG_BRICK = "brick"
     TAG_UBIOME = "ubiome"
+
+    # step tags
     TAG_METADATA = "metadata"
     TAG_QC = "quality_control"
     TAG_FEATURE_INFERENCE = "feature_inference"
+    TAG_RAREFACTION = "rarefaction"
+    TAG_TAXONOMY = "taxonomy"
+    TAG_PCOA_DIVERSITY = "pcoa_diversity"
+    TAG_ANCOM = "ancom"
+    TAG_DB_ANNOTATOR = "db_annotator"
+    TAG_16S = "16S"
+    TAG_16S_VISU = "16S_visualization"
+
+    TAG_SEQUENCING_TYPE = "sequencing_type"
     TAG_FASTQ = "fastq_name"
     TAG_ANALYSIS_NAME = "analysis_name"
+
+    # Tags unique ids
     TAG_UBIOME_PIPELINE_ID = "ubiome_pipeline_id"
+    TAG_FEATURE_INFERENCE_ID = "feature_inference_id"
+    TAG_TAXONOMY_ID = "taxonomy_id"
+    TAG_16S_ID = "16S_id"
+
     SELECTED_SCENARIO_KEY = "selected_scenario"
     SELECTED_ANALYSIS_KEY = "selected_analysis"
     STEP_PIPELINE_KEY = "step_pipeline"
@@ -26,6 +43,16 @@ class State:
     RESOURCE_ID_METADATA_TABLE_KEY = "resource_id_metadata_table"
     TAG_METADATA_UPDATED = "metadata_table_updated"
     TREE_ANALYSIS_KEY = "analysis_tree_menu"
+    SCENARIOS_BY_STEP_KEY = "scenarios_by_step"
+
+    RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
+    ANALYSIS_NAME_USER = "analysis_name_user"
+
+    TREE_ANALYSIS_OBJECT = "analysis_tree_menu_object"
+
+    # Config keys
+    QIIME2_METADATA_CONFIG_KEY = "qiime2_metadata_config"
+    FEATURE_INFERENCE_CONFIG_KEY = "feature_inference_config"
 
     @classmethod
     def reset_tree_analysis(cls) -> None:
@@ -33,6 +60,19 @@ class State:
         if cls.TREE_ANALYSIS_KEY in st.session_state:
             del st.session_state[cls.TREE_ANALYSIS_KEY]
 
+    @classmethod
+    def check_if_required_is_filled(cls, valeur: str) -> bool:
+        if not valeur:
+            return False
+        return True
+
+    @classmethod
+    def get_resource_selector_fastq(cls) -> ResourceModel:
+        return st.session_state.get(cls.RESOURCE_SELECTOR_FASTQ_KEY, None)
+
+    @classmethod
+    def get_analysis_name_user(cls) -> str:
+        return st.session_state.get(cls.ANALYSIS_NAME_USER, None)
 
     @classmethod
     def set_selected_scenario(cls, scenario: Scenario):
@@ -103,3 +143,82 @@ class State:
     @classmethod
     def get_selected_folder_id(cls) -> str:
         return st.session_state.get(cls.SELECTED_FOLDER_ID_KEY)
+
+    # Functions get config
+
+    @classmethod
+    def get_qiime2_metadata_config(cls) -> Dict:
+        return st.session_state.get(cls.QIIME2_METADATA_CONFIG_KEY, {})
+
+    @classmethod
+    def get_feature_inference_config(cls) -> Dict:
+        return st.session_state.get(cls.FEATURE_INFERENCE_CONFIG_KEY, {})
+
+    @classmethod
+    def get_sequencing_type(cls) -> str:
+        return st.session_state.get(cls.TAG_SEQUENCING_TYPE)
+
+    @classmethod
+    def set_sequencing_type(cls, sequencing_type: str) -> None:
+        st.session_state[cls.TAG_SEQUENCING_TYPE] = sequencing_type
+
+    # Get scenarios ids of each step
+    @classmethod
+    def get_scenarios_by_step_dict(cls) -> Dict:
+        return st.session_state.get(cls.SCENARIOS_BY_STEP_KEY, {})
+
+    @classmethod
+    def set_scenarios_by_step_dict(cls, scenarios_by_step: Dict) -> None:
+        st.session_state[cls.SCENARIOS_BY_STEP_KEY] = scenarios_by_step
+
+    @classmethod
+    def get_scenario_step_metadata(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_METADATA)
+
+    @classmethod
+    def get_scenario_step_qc(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_QC)
+
+    @classmethod
+    def get_scenario_step_feature_inference(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_FEATURE_INFERENCE)
+
+    @classmethod
+    def get_scenario_step_rarefaction(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_RAREFACTION)
+
+    @classmethod
+    def get_scenario_step_taxonomy(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_TAXONOMY)
+
+    @classmethod
+    def get_scenario_step_ancom(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_ANCOM)
+
+    @classmethod
+    def get_scenario_step_db_annotator(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_DB_ANNOTATOR)
+
+    @classmethod
+    def get_scenario_step_16s(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_16S)
+
+    @classmethod
+    def get_scenario_step_16s_visu(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_16S_VISU)
+
+    @classmethod
+    def get_tree_menu_object(cls):
+        """Get the tree menu instance from session state."""
+        return st.session_state.get(cls.TREE_ANALYSIS_OBJECT)
+
+    @classmethod
+    def set_tree_menu_object(cls, tree_menu_object) -> None:
+        st.session_state[cls.TREE_ANALYSIS_OBJECT] = tree_menu_object
+
+    @classmethod
+    def update_tree_menu_selection(cls, item_key: str):
+        """Update the tree menu selection if tree menu instance exists."""
+        tree_menu = cls.get_tree_menu_object()
+        if tree_menu:
+            tree_menu.set_selected_item(item_key)
