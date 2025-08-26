@@ -9,6 +9,7 @@ import pandas as pd
 from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
+from gws_core.tag.entity_tag import EntityTag
 
 # Check if steps are completed (have successful scenarios)
 def has_successful_scenario(step_name, scenarios_by_step):
@@ -169,6 +170,22 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                                 material_icon='biotech'
                             )
 
+                            # Check if ANCOM scenarios exist for this taxonomy
+                            if ubiome_state.TAG_ANCOM in scenarios_by_step:
+                                for ancom_scenario in scenarios_by_step[ubiome_state.TAG_ANCOM]:
+                                    ancom_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, ancom_scenario.id)
+                                    ancom_taxonomy_id_tags = ancom_entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+                                    scenario_taxonomy_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, tax_scenario.id).get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+
+                                    if (ancom_taxonomy_id_tags and scenario_taxonomy_id_tags and
+                                        ancom_taxonomy_id_tags[0].to_simple_tag().value == scenario_taxonomy_id_tags[0].to_simple_tag().value):
+                                        ancom_item_child = StreamlitTreeMenuItem(
+                                            label=ancom_scenario.get_short_name(),
+                                            key=ancom_scenario.id,
+                                            material_icon='description'
+                                        )
+                                        ancom_item.add_children([ancom_item_child])
+
                             taxa_comp_item = StreamlitTreeMenuItem(
                                 label="7) Taxa Composition",
                                 key=f"{ubiome_state.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
@@ -253,20 +270,46 @@ def render_analysis_page():
     file_fastq : Folder = protocol_proxy.get_process('metadata_process').get_input('fastq_folder')
     ubiome_state.set_resource_id_fastq(file_fastq.get_model_id())
 
-    # Metadata table
-    metadata_table_resource_search = ResourceModel.select().where(
-        (Tag.key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
-        (Tag.value == ubiome_state.get_current_ubiome_pipeline_id()) &
-        (Tag.key == ubiome_state.TAG_UBIOME) &
-        (Tag.value == ubiome_state.TAG_METADATA_UPDATED) &
-        (ResourceModel.resource_typing_name.contains('File'))  # Search for File type resources
-    )
+    ##### Metadata table
 
-    metadata_updated = metadata_table_resource_search.first()
+    # Find resources that have both required tags
+    metadata_updated = None
+
+    try:
+        # Search for resources with the pipeline ID tag
+        pipeline_id_entities = EntityTag.select().where(
+            (EntityTag.entity_type == TagEntityType.RESOURCE) &
+            (EntityTag.tag_key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
+            (EntityTag.tag_value == ubiome_state.get_current_ubiome_pipeline_id())
+        )
+
+        # Search for resources with the metadata updated tag
+        metadata_updated_entities = EntityTag.select().where(
+            (EntityTag.entity_type == TagEntityType.RESOURCE) &
+            (EntityTag.tag_key == ubiome_state.TAG_UBIOME) &
+            (EntityTag.tag_value == ubiome_state.TAG_METADATA_UPDATED)
+        )
+
+        # Find common entity IDs
+        pipeline_id_entity_ids = [entity.entity_id for entity in pipeline_id_entities]
+        metadata_updated_entity_ids = [entity.entity_id for entity in metadata_updated_entities]
+        common_entity_ids = list(set(pipeline_id_entity_ids) & set(metadata_updated_entity_ids))
+
+        # Search for ResourceModel with those entity IDs and File type
+        if common_entity_ids:
+            metadata_table_resource_search = ResourceModel.select().where(
+                (ResourceModel.id.in_(common_entity_ids)) &
+                (ResourceModel.resource_typing_name.contains('File'))
+            )
+            metadata_updated = metadata_table_resource_search.first()
+    except Exception as e:
+        # If there's an error with the tag search, just use the original metadata
+        pass
+
     if metadata_updated:
         ubiome_state.set_resource_id_metadata_table(metadata_updated.id)
     else : # Get the table from initial scenario
-        metadata_output : Folder = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
+        metadata_output : File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
         ubiome_state.set_resource_id_metadata_table(metadata_output.get_model_id())
 
     # Create two columns

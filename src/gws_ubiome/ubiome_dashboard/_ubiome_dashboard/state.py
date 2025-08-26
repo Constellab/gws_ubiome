@@ -60,6 +60,7 @@ class State:
     RAREFACTION_CONFIG_KEY = "rarefaction_config"
     TAXONOMY_CONFIG_KEY = "taxonomy_config"
     PCOA_CONFIG_KEY = "pcoa_config"
+    ANCOM_CONFIG_KEY = "ancom_config"
 
     @classmethod
     def reset_tree_analysis(cls) -> None:
@@ -196,6 +197,10 @@ class State:
     @classmethod
     def get_pcoa_config(cls) -> Dict:
         return st.session_state.get(cls.PCOA_CONFIG_KEY, {})
+
+    @classmethod
+    def get_ancom_config(cls) -> Dict:
+        return st.session_state.get(cls.ANCOM_CONFIG_KEY, {})
 
     @classmethod
     def get_sequencing_type(cls) -> str:
