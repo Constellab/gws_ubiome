@@ -44,6 +44,7 @@ class State:
     RESOURCE_ID_METADATA_TABLE_KEY = "resource_id_metadata_table"
     TAG_METADATA_UPDATED = "metadata_table_updated"
     SCENARIOS_BY_STEP_KEY = "scenarios_by_step"
+    PCOA_DIVERSITY_TABLE_SELECT_KEY = "pcoa_diversity_table_select"
 
     RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
     ANALYSIS_NAME_USER = "analysis_name_user"
@@ -96,6 +97,10 @@ class State:
     def get_selected_analysis(cls) -> Scenario:
         return st.session_state.get(cls.SELECTED_ANALYSIS_KEY)
 
+    @classmethod
+    def get_pcoa_diversity_table_select(cls) -> str:
+        return st.session_state.get(cls.PCOA_DIVERSITY_TABLE_SELECT_KEY)
+
     # Infos of the metadata scenario
 
     @classmethod
@@ -124,6 +129,14 @@ class State:
     @classmethod
     def get_current_feature_scenario_id_parent(cls) -> str:
         return st.session_state.get(cls.TAG_FEATURE_INFERENCE_ID)
+
+    @classmethod
+    def set_current_taxonomy_scenario_id_parent(cls, scenario_id: str):
+        st.session_state[cls.TAG_TAXONOMY_ID] = scenario_id
+
+    @classmethod
+    def get_current_taxonomy_scenario_id_parent(cls) -> str:
+        return st.session_state.get(cls.TAG_TAXONOMY_ID)
 
     @classmethod
     def get_resource_id_fastq(cls) -> str:
@@ -218,7 +231,7 @@ class State:
 
     @classmethod
     def get_scenario_step_pcoa(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_PCOA)
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_PCOA_DIVERSITY)
 
     @classmethod
     def get_scenario_step_ancom(cls) -> List[Scenario]:

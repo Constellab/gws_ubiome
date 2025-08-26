@@ -144,11 +144,11 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                             # Sub-analysis items under taxonomy
                             pcoa_diversity_item = StreamlitTreeMenuItem(
                                 label="5) PCOA diversity",
-                                key=f"{ubiome_state.TAG_PCOA}_{tax_scenario.id}",
+                                key=f"{ubiome_state.TAG_PCOA_DIVERSITY}_{tax_scenario.id}",
                                 material_icon='scatter_plot'
                             )
-                            if ubiome_state.TAG_PCOA in scenarios_by_step:
-                                for pcoa_scenario in scenarios_by_step[ubiome_state.TAG_PCOA]:
+                            if ubiome_state.TAG_PCOA_DIVERSITY in scenarios_by_step:
+                                for pcoa_scenario in scenarios_by_step[ubiome_state.TAG_PCOA_DIVERSITY]:
                                     # Check if this pcoa scenario belongs to this taxonomy scenario
                                     pcoa_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, pcoa_scenario.id)
                                     pcoa_taxonomy_id_tags = pcoa_entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
@@ -174,7 +174,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                                 material_icon='pie_chart'
                             )
 
-                            tax_item.add_children([pcoa_item, ancom_item, taxa_comp_item])
+                            tax_item.add_children([pcoa_diversity_item, ancom_item, taxa_comp_item])
                             taxonomy_item.add_children([tax_item])
 
                 # 8) 16S sub-step
@@ -343,4 +343,3 @@ def render_analysis_page():
                 render_16s_visu_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S):
                 render_16s_step(selected_scenario, ubiome_state)
-
