@@ -2,7 +2,7 @@ import os
 import streamlit as st
 from typing import List
 from state import State
-from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
+from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step
 import pandas as pd
@@ -168,11 +168,28 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                                 key=f"{ubiome_state.TAG_ANCOM}_{tax_scenario.id}",
                                 material_icon='biotech'
                             )
+
                             taxa_comp_item = StreamlitTreeMenuItem(
-                                label="5) Taxa Composition",
+                                label="7) Taxa Composition",
                                 key=f"{ubiome_state.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
                                 material_icon='pie_chart'
                             )
+
+                            # Check if DB annotator scenarios exist for this taxonomy
+                            if ubiome_state.TAG_DB_ANNOTATOR in scenarios_by_step:
+                                for db_scenario in scenarios_by_step[ubiome_state.TAG_DB_ANNOTATOR]:
+                                    db_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, db_scenario.id)
+                                    db_taxonomy_id_tags = db_entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+                                    scenario_taxonomy_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, tax_scenario.id).get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+
+                                    if (db_taxonomy_id_tags and scenario_taxonomy_id_tags and
+                                        db_taxonomy_id_tags[0].to_simple_tag().value == scenario_taxonomy_id_tags[0].to_simple_tag().value):
+                                        db_item = StreamlitTreeMenuItem(
+                                            label=db_scenario.get_short_name(),
+                                            key=db_scenario.id,
+                                            material_icon='description'
+                                        )
+                                        taxa_comp_item.add_children([db_item])
 
                             tax_item.add_children([pcoa_diversity_item, ancom_item, taxa_comp_item])
                             taxonomy_item.add_children([tax_item])

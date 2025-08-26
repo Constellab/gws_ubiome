@@ -45,6 +45,7 @@ class State:
     TAG_METADATA_UPDATED = "metadata_table_updated"
     SCENARIOS_BY_STEP_KEY = "scenarios_by_step"
     PCOA_DIVERSITY_TABLE_SELECT_KEY = "pcoa_diversity_table_select"
+    SELECTED_ANNOTATION_TABLE_KEY = "selected_annotation_table"
 
     RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
     ANALYSIS_NAME_USER = "analysis_name_user"
@@ -100,6 +101,10 @@ class State:
     @classmethod
     def get_pcoa_diversity_table_select(cls) -> str:
         return st.session_state.get(cls.PCOA_DIVERSITY_TABLE_SELECT_KEY)
+
+    @classmethod
+    def get_selected_annotation_table(cls) -> ResourceModel:
+        return st.session_state.get(cls.SELECTED_ANNOTATION_TABLE_KEY)
 
     # Infos of the metadata scenario
 
