@@ -673,12 +673,9 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if selected_item.key.startswith(ubiome_state.TAG_PCOA_DIVERSITY):
         taxonomy_scenario_parent_id = ubiome_state.get_parent_taxonomy_scenario_from_step()
         ubiome_state.set_current_taxonomy_scenario_id_parent(taxonomy_scenario_parent_id)
-        # Retrieve also the feature inference scenario linked
-        taxonomy_scenario = Scenario.get_by_id(taxonomy_scenario_parent_id)
-        # Search the value of the tag feature inference in taxonomy_scenario
-        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, taxonomy_scenario.id)
-        feature_inference_id_tag = entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
-        ubiome_state.set_current_feature_scenario_id_parent(feature_inference_id_tag.value)
+        # Retrieve the feature inference scenario ID using the utility function
+        feature_inference_id = ubiome_state.get_feature_inference_id_from_taxonomy_scenario(taxonomy_scenario_parent_id)
+        ubiome_state.set_current_feature_scenario_id_parent(feature_inference_id)
 
     if not selected_scenario:
         # On click, open a dialog to allow the user to select params of PCOA

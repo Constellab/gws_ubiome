@@ -308,3 +308,12 @@ class State:
         if scenario_id:
             return Scenario.get_by_id(scenario_id)
         return None
+
+    @classmethod
+    def get_feature_inference_id_from_taxonomy_scenario(cls, taxonomy_scenario_id: str) -> str:
+        """Get the feature inference ID from a taxonomy scenario ID."""
+        taxonomy_scenario = Scenario.get_by_id(taxonomy_scenario_id)
+        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, taxonomy_scenario.id)
+        feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
+        return feature_inference_id_tag.value
+
