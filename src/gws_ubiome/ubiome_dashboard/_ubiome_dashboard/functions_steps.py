@@ -6,7 +6,7 @@ from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitContainers, S
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
 import pandas as pd
 from gws_core import Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
-from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE
+from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE, Qiime2RarefactionAnalysis
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
 import streamlit.components.v1 as components
@@ -148,7 +148,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                 if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
                     st.dataframe(selected_resource.get_data())
                 elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
-                    st.plotly_chart(selected_resource) # TODO : vérifier que c'est bon une fois que ce sera transformé en plotly
+                    st.plotly_chart(selected_resource.get_figure())
 
         with tabmultiqc:
             if not multiqc_already_run:
@@ -214,7 +214,7 @@ def dialog_feature_inference_params(task_feature_inference : Task, ubiome_state:
             scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_FEATURE_INFERENCE, is_propagable=True))
             scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=True, auto_parse=True))
             scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, StringHelper.generate_uuid(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, scenario.get_model_id(), is_propagable=True, auto_parse=True))
 
             # Step 3 : Qiime2FeatureTableExtractorPE or SE task
             # Depending of Paire end ou single end param choose at the beggining, set the corresponding task
@@ -357,7 +357,6 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
                 # Handle row click - you can add specific actions here
                 selected_fi_scenario = next((s for s in list_scenario_fi if s.id == row_id), None)
                 if selected_fi_scenario:
-                    st.info(f"Selected Feature Inference scenario: {selected_fi_scenario.title}")
                     # Update tree menu selection using the state method
                     ubiome_state.update_tree_menu_selection(selected_fi_scenario.id)
                     st.rerun()
@@ -393,7 +392,7 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
         # Display results if scenario is successful
         if selected_scenario.status == ScenarioStatus.SUCCESS:
 
-            tab_table, tab_boxplot = st.tabs(["Table", "Boxplot"])
+            tab_boxplot, tab_table = st.tabs(["Boxplot", "Table"])
 
             with tab_table:
                 # Display stats
@@ -403,9 +402,223 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
 
             with tab_boxplot:
                 # Display boxplot
-                boxplot_output = protocol_proxy.get_process('feature_process').get_output('boxplot')
+                boxplot_output = protocol_proxy.get_process('feature_process').get_output('boxplot').get_figure()
                 if boxplot_output:
                     st.plotly_chart(boxplot_output)
 
+@st.dialog("Rarefaction parameters")
+def dialog_rarefaction_params(ubiome_state: State):
+    form_config = StreamlitTaskRunner(Qiime2RarefactionAnalysis)
+    form_config.generate_config_form_without_run(
+        session_state_key=ubiome_state.RAREFACTION_CONFIG_KEY, default_config_values=Qiime2RarefactionAnalysis.config_specs.get_default_values())
 
+    if st.button("Run Rarefaction", use_container_width=True, icon=":material/play_arrow:", key="button_rarefaction"):
+        if not ubiome_state.get_rarefaction_config()["is_valid"]:
+            st.warning("Please fill all the mandatory fields.")
+            return
+        with StreamlitAuthenticateUser():
+            # Create a new scenario in the lab
+            folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
+            scenario: ScenarioProxy = ScenarioProxy(
+                None, folder=folder, title=f"{ubiome_state.get_current_analysis_name()} - Rarefaction",
+                creation_type=ScenarioCreationType.MANUAL,
+            )
+            protocol: ProtocolProxy = scenario.get_protocol()
 
+            feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
+
+            # Add tags to the scenario
+            scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_RAREFACTION, is_propagable=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=True, auto_parse=True))
+            # Add rarefaction process
+            rarefaction_process : ProcessProxy = protocol.add_process(Qiime2RarefactionAnalysis, 'rarefaction_process', config_params=ubiome_state.get_rarefaction_config()["config"])
+
+            # Retrieve feature inference output
+            # Get the feature inference scenario
+            scenario_proxy_fi = ScenarioProxy.from_existing_scenario(feature_scenario_id)
+            protocol_proxy_fi: ProtocolProxy = scenario_proxy_fi.get_protocol()
+            feature_output : Folder = protocol_proxy_fi.get_process('feature_process').get_output('result_folder')
+
+            feature_resource = protocol.add_process(
+                InputTask, 'feature_resource',
+                {InputTask.config_name: feature_output.get_model_id()})
+
+            # Connect it to the input of the rarefaction task
+            protocol.add_connector(out_port=feature_resource >> 'resource',
+                                    in_port=rarefaction_process << 'feature_frequency_folder')
+
+            # Add outputs
+            protocol.add_output('rarefaction_table_output', rarefaction_process >> 'rarefaction_table', flag_resource=False)
+            protocol.add_output('rarefaction_folder_output', rarefaction_process >> 'result_folder', flag_resource=False)
+            scenario.add_to_queue()
+
+            ubiome_state.reset_tree_analysis()
+            st.rerun()
+
+def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    # Get the selected tree menu item to determine which feature inference scenario is selected
+    tree_menu = ubiome_state.get_tree_menu_object()
+    selected_item = tree_menu.get_selected_item()
+    if selected_item.key.startswith(ubiome_state.TAG_RAREFACTION):
+        # We're in the general rarefaction view, show all feature inference scenarios
+        feature_scenario_parent_id = ubiome_state.get_parent_feature_inference_scenario_from_step()
+        # save in session state
+        ubiome_state.set_current_feature_scenario_id_parent(feature_scenario_parent_id)
+
+    if not selected_scenario:
+        # On click, open a dialog to allow the user to select params of rarefaction
+        st.button("Run new Rarefaction", icon=":material/play_arrow:", use_container_width=False,
+                    on_click=lambda state=ubiome_state: dialog_rarefaction_params(state))
+
+        # Display table of existing Rarefaction scenarios
+        st.markdown("### Previous Rarefaction Analyses")
+
+        list_scenario_rarefaction = ubiome_state.get_scenario_step_rarefaction()
+
+        if list_scenario_rarefaction:
+            # Create data for SlickGrid table
+            table_data = []
+            all_param_keys = set()  # To collect all unique parameter keys
+
+            # First pass: collect all parameter data and unique keys
+            scenarios_params = []
+            for scenario in list_scenario_rarefaction:
+                scenario_proxy = ScenarioProxy.from_existing_scenario(scenario.id)
+                protocol_proxy = scenario_proxy.get_protocol()
+                rarefaction_process = protocol_proxy.get_process('rarefaction_process')
+                config_params = rarefaction_process._process_model.config.to_simple_dto().values
+                scenarios_params.append((scenario, config_params))
+                all_param_keys.update(config_params.keys())
+
+            # Second pass: create table data with all parameters
+            for scenario, config_params in scenarios_params:
+                row_data = {
+                    "id": scenario.id,
+                    "Scenario Name": scenario.title,
+                    "Creation Date": scenario.created_at.strftime("%Y-%m-%d %H:%M") if scenario.created_at else "",
+                    "Status": scenario.status.value if scenario.status else ""
+                }
+
+                # Add each parameter as a separate column
+                for param_key in all_param_keys:
+                    row_data[param_key] = config_params.get(param_key, "")
+
+                table_data.append(row_data)
+
+            # Create columns dynamically
+            columns = [
+                {
+                    "id": "Scenario Name",
+                    "name": "Scenario Name",
+                    "field": "Scenario Name",
+                    "sortable": True,
+                    "type": FieldType.string,
+                    "filterable": True,
+                    "width": 200,
+                },
+                {
+                    "id": "Creation Date",
+                    "name": "Creation Date",
+                    "field": "Creation Date",
+                    "sortable": True,
+                    "type": FieldType.string,
+                    "filterable": True,
+                    "width": 150,
+                },
+                {
+                    "id": "Status",
+                    "name": "Status",
+                    "field": "Status",
+                    "sortable": True,
+                    "type": FieldType.string,
+                    "filterable": True,
+                    "width": 100,
+                },
+            ]
+
+            # Add parameter columns
+            for param_key in sorted(all_param_keys):
+                # Create a more readable column name
+                column_name = param_key.replace("_", " ").replace("-", " ").title()
+                columns.append({
+                    "id": param_key,
+                    "name": column_name,
+                    "field": param_key,
+                    "sortable": True,
+                    "type": FieldType.string,
+                    "filterable": True,
+                    "width": 120,
+                })
+
+            options = {
+                "enableFiltering": True,
+                "enableTextExport": True,
+                "enableExcelExport": True,
+                "enableColumnPicker": True,
+                "externalResources": [
+                    ExportServices.ExcelExportService,
+                    ExportServices.TextExportService,
+                ],
+                "autoResize": {
+                    "minHeight": 400,
+                },
+                "multiColumnSort": False,
+            }
+
+            out = slickgrid(table_data, columns=columns, options=options, key="rarefaction_grid", on_click="rerun")
+
+            if out is not None:
+                row_id, col = out
+                # Handle row click
+                selected_rarefaction_scenario = next((s for s in list_scenario_rarefaction if s.id == row_id), None)
+                if selected_rarefaction_scenario:
+                    # Update tree menu selection using the state method
+                    ubiome_state.update_tree_menu_selection(selected_rarefaction_scenario.id)
+                    st.rerun()
+        else:
+            st.info("No Rarefaction analyses found.")
+    else:
+        # Display details about scenario rarefaction
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
+
+        # Get parameters
+        rarefaction_process = protocol_proxy.get_process('rarefaction_process')
+        config_params = rarefaction_process._process_model.config.to_simple_dto().values
+
+        st.write("### Rarefaction Scenario Results")
+
+        # Display parameters in a table
+        with st.expander("Parameters - Reminder"):
+
+            # Create a DataFrame for parameters
+            param_data = []
+            for key, value in config_params.items():
+                readable_key = key.replace("_", " ").replace("-", " ").title()
+                param_data.append({
+                    "Parameter": readable_key,
+                    "Value": str(value)
+                })
+
+            if param_data:
+                param_df = pd.DataFrame(param_data)
+                st.dataframe(param_df, use_container_width=True, hide_index=True)
+
+        # Display results if scenario is successful
+        if selected_scenario.status == ScenarioStatus.SUCCESS:
+            # Display rarefaction table
+            rarefaction_resource_set = protocol_proxy.get_process('rarefaction_process').get_output('rarefaction_table')
+            if rarefaction_resource_set:
+                resource_set_result_dict = rarefaction_resource_set.get_resources()
+                # Give the user the posibility to choose the result to display
+                selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys())
+                if selected_result:
+                    selected_resource = resource_set_result_dict.get(selected_result)
+                    if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
+                        st.dataframe(selected_resource.get_data())
+                    elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
+                        st.plotly_chart(selected_resource.get_figure())

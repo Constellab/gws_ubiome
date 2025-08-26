@@ -4,7 +4,7 @@ from typing import List
 from state import State
 from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step
 import pandas as pd
 from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
@@ -94,29 +94,36 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
             for scenario in scenarios_by_step[ubiome_state.TAG_FEATURE_INFERENCE]:
                 scenario_item = StreamlitTreeMenuItem(
                     label=scenario.get_short_name(),
-                    key=scenario.id, # TODO change the key to have the correct key - same for other steps
+                    key=scenario.id,
                     material_icon='description'
                 )
 
-                # 4) Rarefaction sub-step
+                # 4) Rarefaction sub-step - use a key that includes the parent scenario ID
                 rarefaction_item = StreamlitTreeMenuItem(
                     label="4) Rarefaction",
-                    key=f"rarefaction_{scenario.id}",
+                    key=f"{ubiome_state.TAG_RAREFACTION}_{scenario.id}",  # Include parent scenario ID
                     material_icon='trending_down'
                 )
-                if "Rarefaction" in scenarios_by_step:
-                    for rare_scenario in scenarios_by_step["Rarefaction"]:
-                        rare_item = StreamlitTreeMenuItem(
-                            label=rare_scenario.get_short_name(),
-                            key=rare_scenario.id,
-                            material_icon='description'
-                        )
-                        rarefaction_item.add_children([rare_item])
+                if ubiome_state.TAG_RAREFACTION in scenarios_by_step:
+                    for rare_scenario in scenarios_by_step[ubiome_state.TAG_RAREFACTION]:
+                        # Check if this rarefaction scenario belongs to this feature inference scenario
+                        # by checking the feature inference ID tag
+                        rare_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, rare_scenario.id)
+                        rare_feature_id_tags = rare_entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+                        scenario_feature_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id).get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+                        if (rare_feature_id_tags and scenario_feature_id_tags and
+                            rare_feature_id_tags[0].to_simple_tag().value == scenario_feature_id_tags[0].to_simple_tag().value):
+                            rare_item = StreamlitTreeMenuItem(
+                                label=rare_scenario.get_short_name(),
+                                key=rare_scenario.id,
+                                material_icon='description'
+                            )
+                            rarefaction_item.add_children([rare_item])
 
                 # 4) Taxonomy sub-step
                 taxonomy_item = StreamlitTreeMenuItem(
                     label="4) Taxonomy",
-                    key=f"taxonomy_{scenario.id}",
+                    key=ubiome_state.TAG_TAXONOMY,
                     material_icon='account_tree'
                 )
                 if "Taxonomy" in scenarios_by_step:
@@ -130,17 +137,17 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                         # Sub-analysis items under taxonomy
                         pcoa_item = StreamlitTreeMenuItem(
                             label="5) PCOA diversity",
-                            key=f"pcoa_{tax_scenario.id}",
+                            key=f"pcoa_{tax_scenario.id}", # TODO voir si key juste
                             material_icon='scatter_plot'
                         )
                         ancom_item = StreamlitTreeMenuItem(
                             label="6) ANCOM",
-                            key=f"ancom_{tax_scenario.id}",
+                            key=f"ancom_{tax_scenario.id}",  # TODO voir si key juste
                             material_icon='biotech'
                         )
                         taxa_comp_item = StreamlitTreeMenuItem(
                             label="5) Taxa Composition",
-                            key=f"taxa_comp_{tax_scenario.id}",
+                            key=f"taxa_comp_{tax_scenario.id}", # TODO voir si key juste
                             material_icon='pie_chart'
                         )
 
@@ -289,8 +296,6 @@ def render_analysis_page():
 
                 with col_status:
                     st.write(f"**Status:** {selected_scenario.status.value}")
-
-                st.write(ubiome_state.get_selected_scenario().get_short_name())
             else :
                 selected_scenario = None
 
@@ -301,6 +306,8 @@ def render_analysis_page():
                 render_qc_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
                 render_feature_inference_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RAREFACTION):
+                render_rarefaction_step(selected_scenario, ubiome_state)
 
 
 

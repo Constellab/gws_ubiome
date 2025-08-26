@@ -32,6 +32,7 @@ class State:
     # Tags unique ids
     TAG_UBIOME_PIPELINE_ID = "ubiome_pipeline_id"
     TAG_FEATURE_INFERENCE_ID = "feature_inference_id"
+    TAG_RAREFACTION_ID = "rarefaction_id"
     TAG_TAXONOMY_ID = "taxonomy_id"
     TAG_16S_ID = "16S_id"
 
@@ -53,6 +54,7 @@ class State:
     # Config keys
     QIIME2_METADATA_CONFIG_KEY = "qiime2_metadata_config"
     FEATURE_INFERENCE_CONFIG_KEY = "feature_inference_config"
+    RAREFACTION_CONFIG_KEY = "rarefaction_config"
 
     @classmethod
     def reset_tree_analysis(cls) -> None:
@@ -113,6 +115,14 @@ class State:
         return cls.get_current_tag_value_by_key(cls.TAG_FASTQ)
 
     @classmethod
+    def set_current_feature_scenario_id_parent(cls, scenario_id: str):
+        st.session_state[cls.TAG_FEATURE_INFERENCE_ID] = scenario_id
+
+    @classmethod
+    def get_current_feature_scenario_id_parent(cls) -> str:
+        return st.session_state.get(cls.TAG_FEATURE_INFERENCE_ID)
+
+    @classmethod
     def get_resource_id_fastq(cls) -> str:
         return st.session_state.get(cls.RESOURCE_ID_FASTQ_KEY)
 
@@ -153,6 +163,10 @@ class State:
     @classmethod
     def get_feature_inference_config(cls) -> Dict:
         return st.session_state.get(cls.FEATURE_INFERENCE_CONFIG_KEY, {})
+
+    @classmethod
+    def get_rarefaction_config(cls) -> Dict:
+        return st.session_state.get(cls.RAREFACTION_CONFIG_KEY, {})
 
     @classmethod
     def get_sequencing_type(cls) -> str:
@@ -222,3 +236,20 @@ class State:
         tree_menu = cls.get_tree_menu_object()
         if tree_menu:
             tree_menu.set_selected_item(item_key)
+
+    @classmethod
+    def get_parent_feature_inference_scenario_id_from_step(cls) -> str:
+        """Extract the parent feature inference scenario ID from the current step pipeline."""
+        step = cls.get_step_pipeline()
+        if step and step.startswith(cls.TAG_RAREFACTION + "_"):
+            # Extract the scenario ID from the step name like "rarefaction_scenario_id"
+            return step.replace(cls.TAG_RAREFACTION + "_", "")
+        return None
+
+    @classmethod
+    def get_parent_feature_inference_scenario_from_step(cls) -> 'Scenario':
+        """Get the parent feature inference scenario from the current step pipeline."""
+        scenario_id = cls.get_parent_feature_inference_scenario_id_from_step()
+        if scenario_id:
+            return Scenario.get_by_id(scenario_id)
+        return None
