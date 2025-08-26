@@ -18,6 +18,10 @@
       {
         "name": "gws_omix",
         "version": "0.11.11"
+      }, 
+      {
+        "name": "gws_gaia",
+        "version": "0.8.1"
       }
     ],
     "pip": [
