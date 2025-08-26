@@ -55,6 +55,7 @@ class State:
     QIIME2_METADATA_CONFIG_KEY = "qiime2_metadata_config"
     FEATURE_INFERENCE_CONFIG_KEY = "feature_inference_config"
     RAREFACTION_CONFIG_KEY = "rarefaction_config"
+    TAXONOMY_CONFIG_KEY = "taxonomy_config"
 
     @classmethod
     def reset_tree_analysis(cls) -> None:
@@ -169,6 +170,10 @@ class State:
         return st.session_state.get(cls.RAREFACTION_CONFIG_KEY, {})
 
     @classmethod
+    def get_taxonomy_config(cls) -> Dict:
+        return st.session_state.get(cls.TAXONOMY_CONFIG_KEY, {})
+
+    @classmethod
     def get_sequencing_type(cls) -> str:
         return st.session_state.get(cls.TAG_SEQUENCING_TYPE)
 
@@ -244,6 +249,8 @@ class State:
         if step and step.startswith(cls.TAG_RAREFACTION + "_"):
             # Extract the scenario ID from the step name like "rarefaction_scenario_id"
             return step.replace(cls.TAG_RAREFACTION + "_", "")
+        if step and step.startswith(cls.TAG_TAXONOMY + "_"):
+            return step.replace(cls.TAG_TAXONOMY + "_", "")
         return None
 
     @classmethod

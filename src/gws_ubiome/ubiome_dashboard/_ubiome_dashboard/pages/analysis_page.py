@@ -4,7 +4,7 @@ from typing import List
 from state import State
 from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step
 import pandas as pd
 from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
@@ -123,36 +123,43 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                 # 4) Taxonomy sub-step
                 taxonomy_item = StreamlitTreeMenuItem(
                     label="4) Taxonomy",
-                    key=ubiome_state.TAG_TAXONOMY,
+                    key=f"{ubiome_state.TAG_TAXONOMY}_{scenario.id}",  # Include parent scenario ID
                     material_icon='account_tree'
                 )
-                if "Taxonomy" in scenarios_by_step:
-                    for tax_scenario in scenarios_by_step["Taxonomy"]:
-                        tax_item = StreamlitTreeMenuItem(
-                            label=tax_scenario.get_short_name(),
-                            key=tax_scenario.id,
-                            material_icon='description'
-                        )
+                if ubiome_state.TAG_TAXONOMY in scenarios_by_step:
+                    for tax_scenario in scenarios_by_step[ubiome_state.TAG_TAXONOMY]:
+                        # Check if this taxonomy scenario belongs to this feature inference scenario
+                        tax_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, tax_scenario.id)
+                        tax_feature_id_tags = tax_entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+                        scenario_feature_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id).get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
 
-                        # Sub-analysis items under taxonomy
-                        pcoa_item = StreamlitTreeMenuItem(
-                            label="5) PCOA diversity",
-                            key=f"pcoa_{tax_scenario.id}", # TODO voir si key juste
-                            material_icon='scatter_plot'
-                        )
-                        ancom_item = StreamlitTreeMenuItem(
-                            label="6) ANCOM",
-                            key=f"ancom_{tax_scenario.id}",  # TODO voir si key juste
-                            material_icon='biotech'
-                        )
-                        taxa_comp_item = StreamlitTreeMenuItem(
-                            label="5) Taxa Composition",
-                            key=f"taxa_comp_{tax_scenario.id}", # TODO voir si key juste
-                            material_icon='pie_chart'
-                        )
+                        if (tax_feature_id_tags and scenario_feature_id_tags and
+                            tax_feature_id_tags[0].to_simple_tag().value == scenario_feature_id_tags[0].to_simple_tag().value):
+                            tax_item = StreamlitTreeMenuItem(
+                                label=tax_scenario.get_short_name(),
+                                key=tax_scenario.id,
+                                material_icon='description'
+                            )
 
-                        tax_item.add_children([pcoa_item, ancom_item, taxa_comp_item])
-                        taxonomy_item.add_children([tax_item])
+                            # Sub-analysis items under taxonomy
+                            pcoa_item = StreamlitTreeMenuItem(
+                                label="5) PCOA diversity",
+                                key=f"pcoa_{tax_scenario.id}",# TODO voir si key juste
+                                material_icon='scatter_plot'
+                            )
+                            ancom_item = StreamlitTreeMenuItem(
+                                label="6) ANCOM",
+                                key=f"ancom_{tax_scenario.id}",# TODO voir si key juste
+                                material_icon='biotech'
+                            )
+                            taxa_comp_item = StreamlitTreeMenuItem(
+                                label="5) Taxa Composition",
+                                key=f"taxa_comp_{tax_scenario.id}",# TODO voir si key juste
+                                material_icon='pie_chart'
+                            )
+
+                            tax_item.add_children([pcoa_item, ancom_item, taxa_comp_item])
+                            taxonomy_item.add_children([tax_item])
 
                 # 8) 16S sub-step
                 s16_item = StreamlitTreeMenuItem(
@@ -308,6 +315,8 @@ def render_analysis_page():
                 render_feature_inference_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RAREFACTION):
                 render_rarefaction_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_TAXONOMY):
+                render_taxonomy_step(selected_scenario, ubiome_state)
 
 
 
