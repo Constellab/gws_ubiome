@@ -4,7 +4,7 @@ from typing import List
 from state import State
 from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step
 import pandas as pd
 from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
@@ -142,19 +142,35 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                             )
 
                             # Sub-analysis items under taxonomy
-                            pcoa_item = StreamlitTreeMenuItem(
+                            pcoa_diversity_item = StreamlitTreeMenuItem(
                                 label="5) PCOA diversity",
-                                key=f"pcoa_{tax_scenario.id}",# TODO voir si key juste
+                                key=f"{ubiome_state.TAG_PCOA}_{tax_scenario.id}",
                                 material_icon='scatter_plot'
                             )
+                            if ubiome_state.TAG_PCOA in scenarios_by_step:
+                                for pcoa_scenario in scenarios_by_step[ubiome_state.TAG_PCOA]:
+                                    # Check if this pcoa scenario belongs to this taxonomy scenario
+                                    pcoa_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, pcoa_scenario.id)
+                                    pcoa_taxonomy_id_tags = pcoa_entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+                                    scenario_taxonomy_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, tax_scenario.id).get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+
+                                    if (pcoa_taxonomy_id_tags and scenario_taxonomy_id_tags and
+                                        pcoa_taxonomy_id_tags[0].to_simple_tag().value == scenario_taxonomy_id_tags[0].to_simple_tag().value):
+                                        pcoa_item = StreamlitTreeMenuItem(
+                                            label=pcoa_scenario.get_short_name(),
+                                            key=pcoa_scenario.id,
+                                            material_icon='description'
+                                        )
+                                        pcoa_diversity_item.add_children([pcoa_item])
+
                             ancom_item = StreamlitTreeMenuItem(
                                 label="6) ANCOM",
-                                key=f"ancom_{tax_scenario.id}",# TODO voir si key juste
+                                key=f"{ubiome_state.TAG_ANCOM}_{tax_scenario.id}",
                                 material_icon='biotech'
                             )
                             taxa_comp_item = StreamlitTreeMenuItem(
                                 label="5) Taxa Composition",
-                                key=f"taxa_comp_{tax_scenario.id}",# TODO voir si key juste
+                                key=f"{ubiome_state.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
                                 material_icon='pie_chart'
                             )
 
@@ -164,13 +180,13 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                 # 8) 16S sub-step
                 s16_item = StreamlitTreeMenuItem(
                     label="8) 16S",
-                    key=f"16s_{scenario.id}",
+                    key=f"{ubiome_state.TAG_16S}_{scenario.id}",
                     material_icon='dna'
                 )
-                if "16S" in scenarios_by_step or "ggpicrust" in scenarios_by_step:
+                if ubiome_state.TAG_16S in scenarios_by_step or ubiome_state.TAG_16S_VISU in scenarios_by_step:
                     ggpicrust_item = StreamlitTreeMenuItem(
                         label="16s ggpicrust",
-                        key=f"ggpicrust_{scenario.id}",
+                        key=f"{ubiome_state.TAG_16S_VISU}_{scenario.id}",
                         material_icon='insights'
                     )
                     s16_item.add_children([ggpicrust_item])
@@ -317,8 +333,14 @@ def render_analysis_page():
                 render_rarefaction_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_TAXONOMY):
                 render_taxonomy_step(selected_scenario, ubiome_state)
-
-
-
-
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_PCOA_DIVERSITY):
+                render_pcoa_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_ANCOM):
+                render_ancom_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_DB_ANNOTATOR):
+                render_db_annotator_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S_VISU):
+                render_16s_visu_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S):
+                render_16s_step(selected_scenario, ubiome_state)
 

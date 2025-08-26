@@ -20,6 +20,7 @@ from streamlit_slickgrid import (
 )
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
+from gws_gaia.src.gws_gaia.skbio.pcoa import PCoATrainer
 
 
 # Generic helper functions
@@ -590,10 +591,47 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
                 taxonomy_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('taxonomy_tables')
                 if taxonomy_resource_set:
                     resource_set_result_dict = taxonomy_resource_set.get_resources()
-                    selected_result = st.selectbox("Select a taxonomy table to display", options=resource_set_result_dict.keys(), key="taxonomy_select")
+                    selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys(), key="taxonomy_select")
                     if selected_result:
                         selected_resource = resource_set_result_dict.get(selected_result)
                         if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
                             st.dataframe(selected_resource.get_data())
                         elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
                             st.plotly_chart(selected_resource.get_figure())
+
+
+@st.dialog("PCOA parameters")
+def dialog_pcoa_params(ubiome_state: State):
+    pass
+
+
+def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    pass
+
+@st.dialog("ANCOM parameters")
+def dialog_ancom_params(ubiome_state: State):
+    pass
+
+def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    pass
+
+@st.dialog("DB annotator parameters")
+def dialog_db_annotator_params(ubiome_state: State):
+    pass
+
+def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    pass
+
+@st.dialog("16S parameters")
+def dialog_16s_params(ubiome_state: State):
+    pass
+
+def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    pass
+
+@st.dialog("16S visualization parameters")
+def dialog_16s_visu_params(ubiome_state: State):
+    pass
+
+def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    pass

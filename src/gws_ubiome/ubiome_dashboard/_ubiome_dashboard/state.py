@@ -12,6 +12,9 @@ class State:
 
     TAG_BRICK = "brick"
     TAG_UBIOME = "ubiome"
+    TAG_SEQUENCING_TYPE = "sequencing_type"
+    TAG_FASTQ = "fastq_name"
+    TAG_ANALYSIS_NAME = "analysis_name"
 
     # step tags
     TAG_METADATA = "metadata"
@@ -25,15 +28,12 @@ class State:
     TAG_16S = "16S"
     TAG_16S_VISU = "16S_visualization"
 
-    TAG_SEQUENCING_TYPE = "sequencing_type"
-    TAG_FASTQ = "fastq_name"
-    TAG_ANALYSIS_NAME = "analysis_name"
-
     # Tags unique ids
     TAG_UBIOME_PIPELINE_ID = "ubiome_pipeline_id"
     TAG_FEATURE_INFERENCE_ID = "feature_inference_id"
     TAG_RAREFACTION_ID = "rarefaction_id"
     TAG_TAXONOMY_ID = "taxonomy_id"
+    TAG_PCOA_ID = "pcoa_id"
     TAG_16S_ID = "16S_id"
 
     SELECTED_SCENARIO_KEY = "selected_scenario"
@@ -43,19 +43,21 @@ class State:
     RESOURCE_ID_FASTQ_KEY = "resource_id_fastq"
     RESOURCE_ID_METADATA_TABLE_KEY = "resource_id_metadata_table"
     TAG_METADATA_UPDATED = "metadata_table_updated"
-    TREE_ANALYSIS_KEY = "analysis_tree_menu"
     SCENARIOS_BY_STEP_KEY = "scenarios_by_step"
 
     RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
     ANALYSIS_NAME_USER = "analysis_name_user"
 
+    # Tree
     TREE_ANALYSIS_OBJECT = "analysis_tree_menu_object"
+    TREE_ANALYSIS_KEY = "analysis_tree_menu"
 
     # Config keys
     QIIME2_METADATA_CONFIG_KEY = "qiime2_metadata_config"
     FEATURE_INFERENCE_CONFIG_KEY = "feature_inference_config"
     RAREFACTION_CONFIG_KEY = "rarefaction_config"
     TAXONOMY_CONFIG_KEY = "taxonomy_config"
+    PCOA_CONFIG_KEY = "pcoa_config"
 
     @classmethod
     def reset_tree_analysis(cls) -> None:
@@ -174,6 +176,10 @@ class State:
         return st.session_state.get(cls.TAXONOMY_CONFIG_KEY, {})
 
     @classmethod
+    def get_pcoa_config(cls) -> Dict:
+        return st.session_state.get(cls.PCOA_CONFIG_KEY, {})
+
+    @classmethod
     def get_sequencing_type(cls) -> str:
         return st.session_state.get(cls.TAG_SEQUENCING_TYPE)
 
@@ -211,6 +217,10 @@ class State:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_TAXONOMY)
 
     @classmethod
+    def get_scenario_step_pcoa(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_PCOA)
+
+    @classmethod
     def get_scenario_step_ancom(cls) -> List[Scenario]:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_ANCOM)
 
@@ -242,6 +252,8 @@ class State:
         if tree_menu:
             tree_menu.set_selected_item(item_key)
 
+    ### Get parent id
+    # Retrieve feature inference
     @classmethod
     def get_parent_feature_inference_scenario_id_from_step(cls) -> str:
         """Extract the parent feature inference scenario ID from the current step pipeline."""
@@ -251,12 +263,35 @@ class State:
             return step.replace(cls.TAG_RAREFACTION + "_", "")
         if step and step.startswith(cls.TAG_TAXONOMY + "_"):
             return step.replace(cls.TAG_TAXONOMY + "_", "")
+        if step and step.startswith(cls.TAG_16S + "_"):
+            return step.replace(cls.TAG_16S + "_", "")
         return None
 
     @classmethod
     def get_parent_feature_inference_scenario_from_step(cls) -> 'Scenario':
         """Get the parent feature inference scenario from the current step pipeline."""
         scenario_id = cls.get_parent_feature_inference_scenario_id_from_step()
+        if scenario_id:
+            return Scenario.get_by_id(scenario_id)
+        return None
+
+    # Retrieve taxonomy
+    @classmethod
+    def get_parent_taxonomy_scenario_id_from_step(cls) -> str:
+        """Extract the parent taxonomy scenario ID from the current step pipeline."""
+        step = cls.get_step_pipeline()
+        if step and step.startswith(cls.TAG_PCOA_DIVERSITY + "_"):
+            return step.replace(cls.TAG_PCOA_DIVERSITY + "_", "")
+        if step and step.startswith(cls.TAG_ANCOM + "_"):
+            return step.replace(cls.TAG_ANCOM + "_", "")
+        if step and step.startswith(cls.TAG_DB_ANNOTATOR + "_"):
+            return step.replace(cls.TAG_DB_ANNOTATOR + "_", "")
+        return None
+
+    @classmethod
+    def get_parent_taxonomy_scenario_from_step(cls) -> 'Scenario':
+        """Get the parent taxonomy scenario from the current step pipeline."""
+        scenario_id = cls.get_parent_taxonomy_scenario_id_from_step()
         if scenario_id:
             return Scenario.get_by_id(scenario_id)
         return None
