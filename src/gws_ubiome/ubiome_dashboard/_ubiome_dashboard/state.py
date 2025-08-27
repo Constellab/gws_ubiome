@@ -1,5 +1,6 @@
 from typing import List, Dict
 import streamlit as st
+import pandas as pd
 
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
@@ -46,6 +47,9 @@ class State:
     SCENARIOS_BY_STEP_KEY = "scenarios_by_step"
     PCOA_DIVERSITY_TABLE_SELECT_KEY = "pcoa_diversity_table_select"
     SELECTED_ANNOTATION_TABLE_KEY = "selected_annotation_table"
+    NEW_COLUMN_INPUT_KEY = "new_column_input"
+
+    EDITED_DF_METADATA = "edited_df_metadata"
 
     RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
     ANALYSIS_NAME_USER = "analysis_name_user"
@@ -73,6 +77,18 @@ class State:
         if not valeur:
             return False
         return True
+
+    @classmethod
+    def get_edited_df_metadata(cls)-> str:
+        return st.session_state.get(cls.EDITED_DF_METADATA, None)
+
+    @classmethod
+    def set_edited_df_metadata(cls, df_metadata : pd.DataFrame) -> None:
+        st.session_state[cls.EDITED_DF_METADATA] = df_metadata
+
+    @classmethod
+    def get_new_column_name(cls) -> str:
+        return st.session_state.get(cls.NEW_COLUMN_INPUT_KEY, None)
 
     @classmethod
     def get_resource_selector_fastq(cls) -> ResourceModel:

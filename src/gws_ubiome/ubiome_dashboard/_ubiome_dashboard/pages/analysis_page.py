@@ -258,7 +258,9 @@ def render_analysis_page():
     tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
     ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
-    #TODO ajouter un warning ou faire en sorte que ça marche même quand le scénario est en cours
+    if selected_analysis.status != ScenarioStatus.SUCCESS:
+        st.info("The first step for this analysis is not completed successfully. Please check back later.")
+        return
 
     # Get fastq and metadata table
     scenario_proxy = ScenarioProxy.from_existing_scenario(selected_analysis.id)

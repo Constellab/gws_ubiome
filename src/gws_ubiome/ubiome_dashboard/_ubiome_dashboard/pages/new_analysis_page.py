@@ -78,7 +78,7 @@ def render_new_analysis_page():
             analysis_name_parsed = Tag.parse_tag(analysis_name)
 
             # Set sequencing_type as tag
-            sequencing_type = ubiome_state.get_qiime2_metadata_config().get("sequencing_type")
+            sequencing_type = ubiome_state.get_qiime2_metadata_config()["config"].get("sequencing_type")
 
             # Add tags to the scenario
             scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, name_fastq_parsed, is_propagable=True, auto_parse=True))

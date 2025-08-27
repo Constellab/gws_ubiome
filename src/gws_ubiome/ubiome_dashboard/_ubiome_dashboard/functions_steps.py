@@ -1,6 +1,7 @@
 import os
 from typing import List, Dict
 import streamlit as st
+import numpy as np
 import pandas as pd
 import plotly.express as px
 from state import State
@@ -11,6 +12,7 @@ from gws_core import Resource, Task, ResourceSet, Folder, Settings, ResourceMode
 from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE, Qiime2RarefactionAnalysis, Qiime2TaxonomyDiversity, Qiime2DifferentialAnalysis, Qiime2TableDbAnnotator
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
+
 import streamlit.components.v1 as components
 from streamlit_slickgrid import (
     slickgrid,
@@ -21,6 +23,8 @@ from streamlit_slickgrid import (
 )
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
+from gws_core.tag.entity_tag import EntityTag
+from gws_core.tag.tag import TagOrigin
 from gws_gaia import PCoATrainer
 
 
@@ -174,14 +178,144 @@ def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title_suf
 
     return scenario
 
+def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome_state: State) -> None:
+    """
+    Helper function to save metadata table to resource.
+    """
+
+    # Search for existing updated metadata resource
+    pipeline_id_entities = EntityTag.select().where(
+        (EntityTag.entity_type == TagEntityType.RESOURCE) &
+        (EntityTag.tag_key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
+        (EntityTag.tag_value == ubiome_state.get_current_ubiome_pipeline_id())
+    )
+
+    metadata_updated_entities = EntityTag.select().where(
+        (EntityTag.entity_type == TagEntityType.RESOURCE) &
+        (EntityTag.tag_key == ubiome_state.TAG_UBIOME) &
+        (EntityTag.tag_value == ubiome_state.TAG_METADATA_UPDATED)
+    )
+
+    pipeline_id_entity_ids = [entity.entity_id for entity in pipeline_id_entities]
+    metadata_updated_entity_ids = [entity.entity_id for entity in metadata_updated_entities]
+    common_entity_ids = list(set(pipeline_id_entity_ids) & set(metadata_updated_entity_ids))
+
+    existing_resource = None
+    if common_entity_ids:
+        metadata_table_resource_search = ResourceModel.select().where(
+            (ResourceModel.id.in_(common_entity_ids)) &
+            (ResourceModel.resource_typing_name.contains('File'))
+        )
+        existing_resource = metadata_table_resource_search.first()
+
+    # If there's an existing resource, delete it first
+    if existing_resource:
+        existing_resource.delete_instance()
+
+    # Create a new file with the updated content
+    path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
+    full_path = os.path.join(path_temp, f"Metadata_updated.txt")
+
+    # Prepare content to save
+    content_to_save = ""
+    if header_lines:
+        content_to_save = '\n'.join(header_lines) + '\n'
+    content_to_save += edited_df.to_csv(index=False, sep='\t')
+
+    # Write content to file
+    with open(full_path, 'w') as f:
+        f.write(content_to_save)
+
+    # Create File resource and save it properly using save_from_resource
+    metadata_file = File(full_path)
+
+    # Use save_from_resource which properly handles fs_node creation
+    resource_model = ResourceModel.save_from_resource(
+        metadata_file,
+        origin=ResourceOrigin.UPLOADED,
+        flagged=True
+    )
+
+    # Add tags using EntityTagList
+    user_origin = TagOrigin.current_user_origin()
+    entity_tags = EntityTagList(TagEntityType.RESOURCE, resource_model.id, default_origin=user_origin)
+
+    # Add the required tags
+    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=True))
+    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=True))
+
+    ubiome_state.set_resource_id_metadata_table(resource_model.id)
+
+@st.dialog("Add New Metadata Column")
+def add_new_column_dialog(ubiome_state: State, header_lines: List[str]):
+    st.text_input("New column name:", placeholder="Enter column name", key=ubiome_state.NEW_COLUMN_INPUT_KEY)
+    if st.button("Add Column", use_container_width=True, key="add_column_btn"):
+        df_metadata = ubiome_state.get_edited_df_metadata()
+        if not ubiome_state.get_new_column_name():
+            st.warning("Please enter a column name")
+            return
+
+        column_name = ubiome_state.get_new_column_name()
+        if column_name in df_metadata.columns:
+            st.warning(f"Column '{column_name}' already exists.")
+            return
+
+        with StreamlitAuthenticateUser():
+            # Add new column with NaN values
+            df_metadata[column_name] = np.nan
+
+            # Use the helper function to save
+            save_metadata_table(df_metadata, header_lines, ubiome_state)
+
+            st.rerun()
+
+def search_updated_metadata_table(ubiome_state: State) -> File | None:
+    """
+    Helper function to search for updated metadata table resource.
+    Returns the File resource if found, None otherwise.
+    """
+    try:
+        # Search for existing updated metadata resource
+        pipeline_id_entities = EntityTag.select().where(
+            (EntityTag.entity_type == TagEntityType.RESOURCE) &
+            (EntityTag.tag_key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
+            (EntityTag.tag_value == ubiome_state.get_current_ubiome_pipeline_id())
+        )
+
+        metadata_updated_entities = EntityTag.select().where(
+            (EntityTag.entity_type == TagEntityType.RESOURCE) &
+            (EntityTag.tag_key == ubiome_state.TAG_UBIOME) &
+            (EntityTag.tag_value == ubiome_state.TAG_METADATA_UPDATED)
+        )
+
+        pipeline_id_entity_ids = [entity.entity_id for entity in pipeline_id_entities]
+        metadata_updated_entity_ids = [entity.entity_id for entity in metadata_updated_entities]
+        common_entity_ids = list(set(pipeline_id_entity_ids) & set(metadata_updated_entity_ids))
+
+        if common_entity_ids:
+            metadata_table_resource_search = ResourceModel.select().where(
+                (ResourceModel.id.in_(common_entity_ids)) &
+                (ResourceModel.resource_typing_name.contains('File'))
+            )
+            updated_resource = metadata_table_resource_search.first()
+
+            if updated_resource:
+                return updated_resource.get_resource()
+
+    except Exception:
+        pass
+
+    return None
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
-    scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-    # Retrieve the protocol
-    protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
+    # Check if there's an updated metadata table first
+    file_metadata = search_updated_metadata_table(ubiome_state)
 
-    # Retrieve outputs
-    file_metadata : File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
+    # If no updated table found, use the original scenario output
+    if file_metadata is None:
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
+        file_metadata: File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
 
     # Read the raw file content to capture header lines
     raw_content = file_metadata.read()
@@ -205,34 +339,85 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
     # Import the file with Table importer
     table_metadata = TableImporter.call(file_metadata)
     df_metadata = table_metadata.get_data()
-    # TODO : faire que l'user puisse modifier : ajouter colonne, supprimer ligne etc
-    st.dataframe(df_metadata, use_container_width=True)
+    # Define that all columns types must be string
+    df_metadata = df_metadata.astype(str)
+
+    st.write("### Metadata Table Editor")
+
+
+    if not ubiome_state.get_scenario_step_qc():
+        st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis.")
+
+        if st.button("Add Column", use_container_width=False):
+            add_new_column_dialog(ubiome_state, header_lines)
+
+        # Create column configuration for all columns
+        column_config = {}
+
+        # Configure all data columns
+        for column in df_metadata.columns:
+            column_config[column] = st.column_config.TextColumn(
+                label=column,
+                max_chars=200
+            )
+
+        # Use data editor for editing capabilities
+        st.session_state[ubiome_state.EDITED_DF_METADATA] = st.data_editor(
+            df_metadata,
+            hide_index=True,
+            use_container_width=True,
+            num_rows="dynamic",
+            column_config=column_config,
+            key="data_editor"
+        )
+    else:
+        st.dataframe(df_metadata, use_container_width=True, hide_index=True)
 
     # Save button only appear if QC task have not been created
     if not ubiome_state.get_scenario_step_qc():
-        if st.button("Save"):
-            path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
-            full_path = os.path.join(path_temp, f"Metadata_updated.txt")
-            metadata_manually: File = File(full_path)
 
-            # Combine header lines with updated table data
-            content_to_save = ""
-            if header_lines:
-                content_to_save = '\n'.join(header_lines) + '\n'
-            content_to_save += df_metadata.to_csv(index=False, sep='\t')
+        # Validation
+        validation_errors = []
 
-            metadata_manually.write(content_to_save)
-            # Add the metadata_updated tag to this resource
-            metadata_manually.tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=True))
-            selected_metadata = ResourceModel.save_from_resource(
-                metadata_manually, ResourceOrigin.UPLOADED, flagged=True)
-            ubiome_state.set_resource_id_metadata_table(metadata_manually.get_model_id())
+        # Check if at least one new column was added
+        if len(ubiome_state.get_edited_df_metadata().columns) == 3:
+            validation_errors.append("⚠️ You must add at least one new metadata column for ANCOM analysis.")
 
+        # Check if all columns are completely filled
+        for col in ubiome_state.get_edited_df_metadata().columns:
+            if ubiome_state.get_edited_df_metadata()[col].isna().any() or (ubiome_state.get_edited_df_metadata()[col] == "").any():
+                validation_errors.append(f"⚠️ Column '{col}' must be completely filled (no empty values).")
+
+        # Check if there are any rows left
+        if len(ubiome_state.get_edited_df_metadata()) == 0:
+            validation_errors.append("⚠️ At least one sample must remain in the table.")
+
+        # Display validation results
+        if validation_errors:
+            for error in validation_errors:
+                st.error(error)
+            save_disabled = True
+        else:
+            save_disabled = False
+
+        if st.button("Save", disabled=save_disabled, use_container_width=True):
+            with StreamlitAuthenticateUser():
+                # Use the helper function to save
+                save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state)
+                st.rerun()
+    else:
+        st.info("ℹ️ Metadata table is locked because QC analysis has already been run.")
 
 def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
     if not selected_scenario:
-        if st.button("Run new QC", icon=":material/play_arrow:", use_container_width=False):
+        # If a metadata table has been saved, allow running QC
+        # Check if there's an updated metadata table first
+        file_metadata = search_updated_metadata_table(ubiome_state)
+        if not file_metadata:
+            st.info("Please save a metadata table with at least one new metadata column to proceed.")
+
+        if st.button("Run quality check", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario in the lab
             folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
             scenario: ScenarioProxy = ScenarioProxy(
