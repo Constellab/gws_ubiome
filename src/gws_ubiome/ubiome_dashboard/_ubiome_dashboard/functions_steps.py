@@ -170,11 +170,11 @@ def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title_suf
     )
 
     # Add base tags
-    scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=True, auto_parse=True))
-    scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=True, auto_parse=True))
-    scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, step_tag, is_propagable=True))
-    scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=True, auto_parse=True))
-    scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=True, auto_parse=True))
+    scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
+    scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
+    scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, step_tag, is_propagable=False))
+    scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=False, auto_parse=True))
+    scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
 
     return scenario
 
@@ -184,11 +184,11 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
     """
 
     # Search for existing updated metadata resource
-    existing_resource = ubiome_state.search_updated_metadata_table(ubiome_state)
+    existing_resource = search_updated_metadata_table(ubiome_state)
 
     # If there's an existing resource, delete it first
     if existing_resource:
-        existing_resource.delete_instance()
+        ResourceModel.get_by_id(existing_resource.id).delete_instance()
 
     # Create a new file with the updated content
     path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
@@ -219,8 +219,8 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
     entity_tags = EntityTagList(TagEntityType.RESOURCE, resource_model.id, default_origin=user_origin)
 
     # Add the required tags
-    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=True))
-    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=True))
+    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=False))
+    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False))
 
     ubiome_state.set_resource_id_metadata_table(resource_model.id)
 
@@ -414,11 +414,11 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
 
             # Add tags to the scenario
-            scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_QC, is_propagable=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_QC, is_propagable=False))
+            scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
 
             # Step 2 : QC task
             qc_process : ProcessProxy = protocol.add_process(Qiime2QualityCheck, 'qc_process') # TODO : mettre param depending of single or paired
@@ -520,7 +520,7 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
 
         with StreamlitAuthenticateUser():
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_FEATURE_INFERENCE, "Feature Inference")
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, scenario.get_model_id(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
             # Add feature inference process
@@ -601,7 +601,7 @@ def dialog_rarefaction_params(ubiome_state: State):
         with StreamlitAuthenticateUser():
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_RAREFACTION, "Rarefaction")
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
             # Add rarefaction process
@@ -680,8 +680,8 @@ def dialog_taxonomy_params(ubiome_state: State):
         with StreamlitAuthenticateUser():
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_TAXONOMY, "Taxonomy")
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, scenario.get_model_id(), is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
             # Add taxonomy process
@@ -802,8 +802,8 @@ def dialog_pcoa_params(ubiome_state: State):
         with StreamlitAuthenticateUser():
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_PCOA_DIVERSITY, "PCOA")
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
             # Add PCOA process
@@ -944,8 +944,8 @@ def dialog_ancom_params(ubiome_state: State):
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_ANCOM, "ANCOM")
             taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
 
@@ -1096,8 +1096,8 @@ def dialog_db_annotator_params(ubiome_state: State):
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_DB_ANNOTATOR, "Taxa Composition")
             taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=True, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=True, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
             # Add DB annotator process
