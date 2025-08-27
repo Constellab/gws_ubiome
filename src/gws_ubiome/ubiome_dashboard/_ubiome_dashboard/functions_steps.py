@@ -184,29 +184,7 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
     """
 
     # Search for existing updated metadata resource
-    pipeline_id_entities = EntityTag.select().where(
-        (EntityTag.entity_type == TagEntityType.RESOURCE) &
-        (EntityTag.tag_key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
-        (EntityTag.tag_value == ubiome_state.get_current_ubiome_pipeline_id())
-    )
-
-    metadata_updated_entities = EntityTag.select().where(
-        (EntityTag.entity_type == TagEntityType.RESOURCE) &
-        (EntityTag.tag_key == ubiome_state.TAG_UBIOME) &
-        (EntityTag.tag_value == ubiome_state.TAG_METADATA_UPDATED)
-    )
-
-    pipeline_id_entity_ids = [entity.entity_id for entity in pipeline_id_entities]
-    metadata_updated_entity_ids = [entity.entity_id for entity in metadata_updated_entities]
-    common_entity_ids = list(set(pipeline_id_entity_ids) & set(metadata_updated_entity_ids))
-
-    existing_resource = None
-    if common_entity_ids:
-        metadata_table_resource_search = ResourceModel.select().where(
-            (ResourceModel.id.in_(common_entity_ids)) &
-            (ResourceModel.resource_typing_name.contains('File'))
-        )
-        existing_resource = metadata_table_resource_search.first()
+    existing_resource = ubiome_state.search_updated_metadata_table(ubiome_state)
 
     # If there's an existing resource, delete it first
     if existing_resource:
@@ -911,6 +889,19 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
                         fig.update_xaxes(title=f'PC1 ({pc1_var:.2f}%)')
                         fig.update_yaxes(title=f'PC2 ({pc2_var:.2f}%)')
+
+                        fig.update_layout(
+                            xaxis={
+                                "showline": True,
+                                "linecolor": 'black',
+                                "linewidth": 1,
+                                "zeroline": False
+                            },
+                            yaxis={
+                                "showline": True,
+                                "linecolor": 'black',
+                                "linewidth": 1
+                            })
 
                         st.plotly_chart(fig)
                 with tab_table:

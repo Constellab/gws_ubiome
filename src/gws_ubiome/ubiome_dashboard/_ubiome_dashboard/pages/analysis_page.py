@@ -4,7 +4,7 @@ from typing import List
 from state import State
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table
 import pandas as pd
 from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
@@ -273,43 +273,10 @@ def render_analysis_page():
     ubiome_state.set_resource_id_fastq(file_fastq.get_model_id())
 
     ##### Metadata table
-
-    # Find resources that have both required tags
-    metadata_updated = None
-
-    try:
-        # Search for resources with the pipeline ID tag
-        pipeline_id_entities = EntityTag.select().where(
-            (EntityTag.entity_type == TagEntityType.RESOURCE) &
-            (EntityTag.tag_key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
-            (EntityTag.tag_value == ubiome_state.get_current_ubiome_pipeline_id())
-        )
-
-        # Search for resources with the metadata updated tag
-        metadata_updated_entities = EntityTag.select().where(
-            (EntityTag.entity_type == TagEntityType.RESOURCE) &
-            (EntityTag.tag_key == ubiome_state.TAG_UBIOME) &
-            (EntityTag.tag_value == ubiome_state.TAG_METADATA_UPDATED)
-        )
-
-        # Find common entity IDs
-        pipeline_id_entity_ids = [entity.entity_id for entity in pipeline_id_entities]
-        metadata_updated_entity_ids = [entity.entity_id for entity in metadata_updated_entities]
-        common_entity_ids = list(set(pipeline_id_entity_ids) & set(metadata_updated_entity_ids))
-
-        # Search for ResourceModel with those entity IDs and File type
-        if common_entity_ids:
-            metadata_table_resource_search = ResourceModel.select().where(
-                (ResourceModel.id.in_(common_entity_ids)) &
-                (ResourceModel.resource_typing_name.contains('File'))
-            )
-            metadata_updated = metadata_table_resource_search.first()
-    except Exception as e:
-        # If there's an error with the tag search, just use the original metadata
-        pass
+    metadata_updated = search_updated_metadata_table(ubiome_state)
 
     if metadata_updated:
-        ubiome_state.set_resource_id_metadata_table(metadata_updated.id)
+        ubiome_state.set_resource_id_metadata_table(metadata_updated.get_model_id())
     else : # Get the table from initial scenario
         metadata_output : File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
         ubiome_state.set_resource_id_metadata_table(metadata_output.get_model_id())
