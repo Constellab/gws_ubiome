@@ -2,7 +2,7 @@ import streamlit as st
 from typing import List
 from state import State
 from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table, render_multiqc_step
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
@@ -54,7 +54,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     else:
         key_metadata = ubiome_state.TAG_METADATA
     metadata_item = StreamlitTreeMenuItem(
-        label="1) Metadata table",
+        label="Metadata table",
         key=key_metadata,
         material_icon='table_chart'
     )
@@ -71,17 +71,32 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         else:
             key_qc = ubiome_state.TAG_QC
         qc_item = StreamlitTreeMenuItem(
-            label="2) QC",
+            label="Quality check",
             key=key_qc,
             material_icon='check_circle'
         )
 
         button_menu.add_item(qc_item)
 
+    # MultiQC - only if QC is successful
+    if has_successful_scenario(ubiome_state.TAG_QC, scenarios_by_step) or ubiome_state.TAG_MULTIQC in scenarios_by_step:
+        if ubiome_state.TAG_MULTIQC in scenarios_by_step:
+            # Use the first MultiQC scenario's ID
+            key_multiqc = ubiome_state.get_scenario_step_multiqc()[0].id
+        else:
+            key_multiqc = ubiome_state.TAG_MULTIQC
+        multiqc_item = StreamlitTreeMenuItem(
+            label="MultiQC",
+            key=key_multiqc,
+            material_icon='assessment'
+        )
+
+        button_menu.add_item(multiqc_item)
+
     # 3) Feature inference - only if QC is successful
     if has_successful_scenario(ubiome_state.TAG_QC, scenarios_by_step) or ubiome_state.TAG_FEATURE_INFERENCE in scenarios_by_step:
         feature_item = StreamlitTreeMenuItem(
-            label="3) Feature inference",
+            label="Feature inference",
             key=ubiome_state.TAG_FEATURE_INFERENCE,
             material_icon='analytics'
         )
@@ -96,7 +111,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
                 # 4) Rarefaction sub-step - use a key that includes the parent scenario ID
                 rarefaction_item = StreamlitTreeMenuItem(
-                    label="4) Rarefaction",
+                    label="Rarefaction",
                     key=f"{ubiome_state.TAG_RAREFACTION}_{scenario.id}",  # Include parent scenario ID
                     material_icon='trending_down'
                 )
@@ -118,7 +133,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
                 # 4) Taxonomy sub-step
                 taxonomy_item = StreamlitTreeMenuItem(
-                    label="4) Taxonomy",
+                    label="Taxonomy",
                     key=f"{ubiome_state.TAG_TAXONOMY}_{scenario.id}",  # Include parent scenario ID
                     material_icon='account_tree'
                 )
@@ -139,7 +154,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
                             # Sub-analysis items under taxonomy
                             pcoa_diversity_item = StreamlitTreeMenuItem(
-                                label="5) PCOA diversity",
+                                label="PCOA diversity",
                                 key=f"{ubiome_state.TAG_PCOA_DIVERSITY}_{tax_scenario.id}",
                                 material_icon='scatter_plot'
                             )
@@ -160,7 +175,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                                         pcoa_diversity_item.add_children([pcoa_item])
 
                             ancom_item = StreamlitTreeMenuItem(
-                                label="6) ANCOM",
+                                label="ANCOM",
                                 key=f"{ubiome_state.TAG_ANCOM}_{tax_scenario.id}",
                                 material_icon='biotech'
                             )
@@ -182,7 +197,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                                         ancom_item.add_children([ancom_item_child])
 
                             taxa_comp_item = StreamlitTreeMenuItem(
-                                label="7) Taxa Composition",
+                                label="Taxa Composition",
                                 key=f"{ubiome_state.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
                                 material_icon='pie_chart'
                             )
@@ -208,7 +223,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
                 # 8) 16S sub-step
                 s16_item = StreamlitTreeMenuItem(
-                    label="8) 16S",
+                    label="16S",
                     key=f"{ubiome_state.TAG_16S}_{scenario.id}",
                     material_icon='dna'
                 )
@@ -229,7 +244,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
                             # Sub-analysis items under 16S
                             ggpicrust_item = StreamlitTreeMenuItem(
-                                label="9) 16s ggpicrust",
+                                label="16s ggpicrust",
                                 key=f"{ubiome_state.TAG_16S_VISU}_{functional_16s_scenario.id}",
                                 material_icon='insights'
                             )
@@ -267,7 +282,7 @@ def get_status_emoji(status: ScenarioStatus) -> str:
         ScenarioStatus.RUNNING: "🔄",
         ScenarioStatus.SUCCESS: "✅",
         ScenarioStatus.ERROR: "❌",
-        ScenarioStatus.PARTIALLY_RUN: "⚠️"
+        ScenarioStatus.PARTIALLY_RUN: "✔️"
     }
     return emoji_map.get(status, "")
 
@@ -375,13 +390,15 @@ def render_analysis_page():
                 selected_scenario : Scenario = ubiome_state.get_selected_scenario()
 
                 # Write the status of the scenario at the top right
-                col_empty, col_status = StreamlitContainers.columns_with_fit_content(
+                col_title, col_status = StreamlitContainers.columns_with_fit_content(
                         key="container_status",
                         cols=[1, 'fit-content'], vertical_align_items='center')
+                with col_title:
+                    st.markdown(f"#### {selected_scenario.get_short_name()}")
 
                 with col_status:
                     status_emoji = get_status_emoji(selected_scenario.status)
-                    st.write(f"**Status:** {status_emoji} {selected_scenario.status.value}")
+                    st.markdown(f"#### **Status:** {status_emoji} {selected_scenario.status.value}")
             else :
                 selected_scenario = None
 
@@ -390,6 +407,8 @@ def render_analysis_page():
                 render_metadata_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
                 render_qc_step(selected_scenario, ubiome_state)
+            elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_MULTIQC:
+                render_multiqc_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
                 render_feature_inference_step(selected_scenario, ubiome_state)
             elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RAREFACTION):

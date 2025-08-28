@@ -301,20 +301,13 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
         else:
             break
 
-    # Display header lines if they exist
-    if header_lines:
-        st.write("### File Header Information")
-        for line in header_lines:
-            st.text(line)
-        st.divider()
-
     # Import the file with Table importer
     table_metadata = TableImporter.call(file_metadata)
     df_metadata = table_metadata.get_data()
     # Define that all columns types must be string
     df_metadata = df_metadata.astype(str)
 
-    st.write("### Metadata Table Editor")
+    st.markdown("##### Metadata Table Editor")
 
 
     if not ubiome_state.get_scenario_step_qc():
@@ -407,7 +400,6 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                 InputTask, 'fastq_resource',
                 {InputTask.config_name: ubiome_state.get_resource_id_fastq()})
 
-
             # Add tags to the scenario
             scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
             scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
@@ -429,76 +421,106 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
             ubiome_state.reset_tree_analysis()
             st.rerun()
 
-
     else :
         # Visualize QC results
-        st.write("### Quality Control Results")
+        st.markdown("##### Quality Control Results")
 
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
 
-        # Does the scenario contains the multiqc task ?
-        try:
-            multiqc_process = protocol_proxy.get_process('multiqc_process')
-            multiqc_already_run = True
-        except:
-            multiqc_already_run = False
+        # Retrieve the resource set and save in a variable each visu
+        # Retrieve outputs
+        resource_set_output : ResourceSet = protocol_proxy.get_process('qc_process').get_output('quality_table')
+        resource_set_result_dict = resource_set_output.get_resources()
 
-        tabqc, tabmultiqc = st.tabs(["QC", "MultiQC"])
+        # Create tabs for each result
 
-        with tabqc:
+        tab_names = list(resource_set_result_dict.keys())
+        tabs = st.tabs(tab_names)
 
-            # Retrieve the resource set and save in a variable each visu
-            # Retrieve outputs
-            resource_set_output : ResourceSet = protocol_proxy.get_process('qc_process').get_output('quality_table')
-            resource_set_result_dict = resource_set_output.get_resources()
-
-            # Give the user the posibility to choose the result to display
-            selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys())
-            if selected_result:
-                selected_resource = resource_set_result_dict.get(selected_result)
+        for tab, result_name in zip(tabs, tab_names):
+            with tab:
+                selected_resource = resource_set_result_dict.get(result_name)
                 if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
                     st.dataframe(selected_resource.get_data())
                 elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
                     st.plotly_chart(selected_resource.get_figure())
 
-        with tabmultiqc:
-            if not multiqc_already_run:
-                if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
-                    scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-                    protocol: ProtocolProxy = scenario_proxy.get_protocol()
+def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
-                    # Step 2 bis : FastQC task and MultiQC task
-                    fastqc_process : ProcessProxy = protocol.add_process(FastqcInit, 'fastqc_process')
-                    fastq_resource = protocol.get_process('fastq_resource')
-                    metadata_resource = protocol.get_process('metadata_resource')
+    if not selected_scenario:
+        # Check if QC has been run successfully
+        qc_scenarios = ubiome_state.get_scenario_step_qc()
+        if not qc_scenarios or qc_scenarios[0].status != ScenarioStatus.SUCCESS:
+            st.info("Please run the QC step successfully before running MultiQC.")
+            return
 
-                    protocol.add_connector(out_port=fastq_resource >> 'resource',
-                                            in_port=fastqc_process << 'fastq_folder')
-                    protocol.add_connector(out_port=metadata_resource >> 'resource',
-                                        in_port=fastqc_process << 'metadata')
+        if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
+            # Get the QC scenario
+            qc_scenario_id = qc_scenarios[0].id
+            scenario_proxy_qc = ScenarioProxy.from_existing_scenario(qc_scenario_id)
+            protocol_qc: ProtocolProxy = scenario_proxy_qc.get_protocol()
 
-                    multiqc_process : ProcessProxy = protocol.add_process(MultiQc, 'multiqc_process')
-                    protocol.add_connector(out_port=fastqc_process >> 'output',
-                                            in_port=multiqc_process << 'fastqc_reports_folder')
+            # Create a new scenario for MultiQC
+            folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
+            scenario: ScenarioProxy = ScenarioProxy(
+                None, folder=folder, title=f"{ubiome_state.get_current_analysis_name()} - MultiQC",
+                creation_type=ScenarioCreationType.MANUAL,
+            )
+            protocol: ProtocolProxy = scenario.get_protocol()
 
+            # Add tags to the scenario
+            scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_MULTIQC, is_propagable=False))
+            scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=False, auto_parse=True))
+            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
 
-                    # Add output
-                    protocol.add_output('multiqc_process_output_folder', multiqc_process >> 'output', flag_resource=False)
-                    scenario_proxy.add_to_queue()
+            # Get input resources from the current MultiQC scenario or create new ones
+            fastq_resource = protocol.add_process(
+                InputTask, 'fastq_resource',
+                {InputTask.config_name: ubiome_state.get_resource_id_fastq()})
 
-                    ubiome_state.reset_tree_analysis()
-                    st.rerun()
-            else :
-                st.write("### MultiQC Results")
-                # Retrieve html output
-                multiqc_output : Folder = protocol_proxy.get_process('multiqc_process').get_output('output')
-                # Get the html file multiqc_combined.html
-                path_full = os.path.join(multiqc_output.path, "multiqc_combined.html")
-                with open(path_full,'r') as f:
-                    html_data = f.read()
+            metadata_resource = protocol.add_process(
+                InputTask, 'metadata_resource',
+                {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
 
-                st.components.v1.html(html_data, scrolling=True, height=500)
+            # FastQC and MultiQC tasks
+            fastqc_process : ProcessProxy = protocol.add_process(FastqcInit, 'fastqc_process')
+            protocol.add_connector(out_port=fastq_resource >> 'resource',
+                                    in_port=fastqc_process << 'fastq_folder')
+            protocol.add_connector(out_port=metadata_resource >> 'resource',
+                                in_port=fastqc_process << 'metadata')
+
+            multiqc_process : ProcessProxy = protocol.add_process(MultiQc, 'multiqc_process')
+            protocol.add_connector(out_port=fastqc_process >> 'output',
+                                    in_port=multiqc_process << 'fastqc_reports_folder')
+
+            # Add output
+            protocol.add_output('multiqc_process_output_folder', multiqc_process >> 'output', flag_resource=False)
+            scenario.add_to_queue()
+
+            ubiome_state.reset_tree_analysis()
+            st.rerun()
+
+    else:
+        # Visualize MultiQC results
+        st.markdown("##### MultiQC Results")
+
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
+
+        # Retrieve html output
+        multiqc_output : Folder = protocol_proxy.get_process('multiqc_process').get_output('output')
+        # Get the html file multiqc_combined.html
+        path_full = os.path.join(multiqc_output.path, "multiqc_combined.html")
+
+        if os.path.exists(path_full):
+            with open(path_full,'r') as f:
+                html_data = f.read()
+            st.components.v1.html(html_data, scrolling=True, height=500)
+        else:
+            st.error("MultiQC HTML report not found.")
 
 @st.dialog("Feature inference parameters")
 def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: State):
@@ -558,7 +580,7 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
         render_scenario_table(list_scenario_fi, 'feature_process', 'feature_inference_grid', ubiome_state)
     else:
         # Display details about scenario feature inference
-        st.write("### Feature Inference Scenario Results")
+        st.markdown("##### Feature Inference Scenario Results")
         display_scenario_parameters(selected_scenario, 'feature_process')
 
         # Display results if scenario is successful
@@ -639,7 +661,7 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
         render_scenario_table(list_scenario_rarefaction, 'rarefaction_process', 'rarefaction_grid', ubiome_state)
     else:
         # Display details about scenario rarefaction
-        st.write("### Rarefaction Scenario Results")
+        st.markdown("##### Rarefaction Scenario Results")
         display_scenario_parameters(selected_scenario, 'rarefaction_process')
 
         # Display results if scenario is successful
@@ -721,7 +743,7 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
         render_scenario_table(list_scenario_taxonomy, 'taxonomy_process', 'taxonomy_grid', ubiome_state)
     else:
         # Display details about scenario taxonomy
-        st.write("### Taxonomy Scenario Results")
+        st.markdown("##### Taxonomy Scenario Results")
         display_scenario_parameters(selected_scenario, 'taxonomy_process')
 
         # Display results if scenario is successful
@@ -846,7 +868,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         render_scenario_table(list_scenario_pcoa, 'pcoa_process', 'pcoa_grid', ubiome_state)
     else:
         # Display details about scenario PCOA
-        st.write("### PCOA Scenario Results")
+        st.markdown("##### PCOA Scenario Results")
         display_scenario_parameters(selected_scenario, 'pcoa_process')
 
         # Display results if scenario is successful
@@ -904,7 +926,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                         st.dataframe(transformed_table.get_data())
 
                     # Also show variance table
-                    st.write("### Variance Explained")
+                    st.markdown("##### Variance Explained")
                     if variance_table:
                         st.dataframe(variance_table.get_data())
 
@@ -919,7 +941,7 @@ def dialog_ancom_params(ubiome_state: State):
     table_metadata = TableImporter.call(metadata_file)
     df_metadata = table_metadata.get_data()
 
-    st.write("### Metadata File")
+    st.markdown("##### Metadata File")
     if metadata_table:
         # Display only column names and first 3 rows
         st.dataframe(df_metadata.head(3))
@@ -997,7 +1019,7 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
     else:
         # Display details about scenario ANCOM
-        st.write("### ANCOM Scenario Results")
+        st.markdown("##### ANCOM Scenario Results")
         display_scenario_parameters(selected_scenario, 'ancom_process')
 
         # Display results if scenario is successful
@@ -1027,7 +1049,7 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                 tab_stats, tab_volcano, tab_percentile = st.tabs(["ANCOM Statistics", "Volcano Plots", "Percentile Abundances"])
 
                 with tab_stats:
-                    st.write("#### ANCOM Statistical Results")
+                    st.markdown("##### ANCOM Statistical Results")
                     if ancom_stats:
                         selected_stat = st.selectbox("Select taxonomic level for ANCOM stats:",
                                                    options=list(ancom_stats.keys()),
@@ -1038,7 +1060,7 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                         st.info("No ANCOM statistics available.")
 
                 with tab_volcano:
-                    st.write("#### Volcano Plot Data")
+                    st.markdown("##### Volcano Plot Data")
                     if volcano_plots:
                         selected_volcano = st.selectbox("Select taxonomic level for volcano plot:",
                                                       options=list(volcano_plots.keys()),
@@ -1061,7 +1083,7 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                         st.info("No volcano plot data available.")
 
                 with tab_percentile:
-                    st.write("#### Percentile Abundances")
+                    st.markdown("##### Percentile Abundances")
                     if percentile_abundances:
                         selected_percentile = st.selectbox("Select taxonomic level for percentile abundances:",
                                                          options=list(percentile_abundances.keys()),
@@ -1074,7 +1096,7 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 @st.dialog("DB annotator parameters")
 def dialog_db_annotator_params(ubiome_state: State):
     # Display available annotation tables for user selection
-    st.write("### Select Annotation Table")
+    st.markdown("##### Select Annotation Table")
     # Use StreamlitResourceSelect to let user choose an annotation table
     resource_select = StreamlitResourceSelect()
     resource_select.select_resource(
@@ -1150,7 +1172,7 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
 
     else:
         # Display details about scenario DB annotator
-        st.write("### Taxa Composition Scenario Results")
+        st.markdown("##### Taxa Composition Scenario Results")
         display_scenario_parameters(selected_scenario, 'db_annotator_process')
 
         # Display results if scenario is successful
@@ -1162,24 +1184,24 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
 
             with tab_relative:
                 # Display relative abundance table and plot
-                st.write("#### Relative Abundance Table")
+                st.markdown("##### Relative Abundance Table")
                 relative_table_output = protocol_proxy.get_process('db_annotator_process').get_output('relative_abundance_table')
                 if relative_table_output:
                     st.dataframe(relative_table_output.get_data())
 
-                st.write("#### Relative Abundance Plot")
+                st.markdown("##### Relative Abundance Plot")
                 relative_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('relative_abundance_plotly_resource')
                 if relative_plot_output:
                     st.plotly_chart(relative_plot_output.get_figure())
 
             with tab_absolute:
                 # Display absolute abundance table and plot
-                st.write("#### Absolute Abundance Table")
+                st.markdown("##### Absolute Abundance Table")
                 absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_table')
                 if absolute_table_output:
                     st.dataframe(absolute_table_output.get_data())
 
-                st.write("#### Absolute Abundance Plot")
+                st.markdown("##### Absolute Abundance Plot")
                 absolute_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_plotly_resource')
                 if absolute_plot_output:
                     st.plotly_chart(absolute_plot_output.get_figure())
@@ -1251,7 +1273,7 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         render_scenario_table(list_scenario_16s, 'functional_analysis_process', '16s_functional_grid', ubiome_state)
     else:
         # Display details about scenario 16S functional analysis
-        st.write("### 16S Functional Analysis Scenario Results")
+        st.markdown("##### 16S Functional Analysis Scenario Results")
         display_scenario_parameters(selected_scenario, 'functional_analysis_process')
 
         # Display results if scenario is successful
@@ -1263,10 +1285,10 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
             functional_result_folder = protocol_proxy.get_process('functional_analysis_process').get_output('Folder_result')
 
             if functional_result_folder:
-                st.write("### PICRUSt2 Functional Analysis Results")
+                st.markdown("##### PICRUSt2 Functional Analysis Results")
 
                 # Display folder contents
-                st.write("#### Result Folder Contents")
+                st.markdown("##### Result Folder Contents")
                 folder_path = functional_result_folder.path
 
                 if os.path.exists(folder_path):
@@ -1328,7 +1350,7 @@ def dialog_16s_visu_params(ubiome_state: State):
     table_metadata = TableImporter.call(metadata_file)
     df_metadata = table_metadata.get_data()
 
-    st.write("### Metadata File Preview")
+    st.markdown("##### Metadata File Preview")
     if metadata_table:
         # Display only column names and first 3 rows
         st.dataframe(df_metadata.head(3))
@@ -1433,7 +1455,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         render_scenario_table(list_scenario_16s_visu, 'functional_visu_process', '16s_visu_grid', ubiome_state)
     else:
         # Display details about scenario 16S visualization
-        st.write("### 16S Visualization Scenario Results")
+        st.markdown("##### 16S Visualization Scenario Results")
         display_scenario_parameters(selected_scenario, 'functional_visu_process')
 
         # Display results if scenario is successful
@@ -1445,14 +1467,14 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
             with tab_pca:
                 # Display PCA plot
-                st.write("### Principal Component Analysis")
+                st.markdown("##### Principal Component Analysis")
                 plotly_result = protocol_proxy.get_process('functional_visu_process').get_output('plotly_result')
                 if plotly_result:
                     st.plotly_chart(plotly_result.get_figure())
 
             with tab_results:
                 # Display resource set results
-                st.write("### Differential Abundance Analysis Results")
+                st.markdown("##### Differential Abundance Analysis Results")
                 resource_set_output = protocol_proxy.get_process('functional_visu_process').get_output('resource_set')
 
                 if resource_set_output:
@@ -1490,7 +1512,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                         # Analysis Tables
                         if analysis_tables:
                             with tab_tables if len(sub_tabs) > 1 else st.container():
-                                st.write("#### Differential Abundance Analysis Tables")
+                                st.markdown("##### Differential Abundance Analysis Tables")
                                 selected_table = st.selectbox("Select analysis table:",
                                                              options=list(analysis_tables.keys()),
                                                              key="analysis_table_select")
@@ -1500,7 +1522,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                         # Error Bar Plots
                         if error_bar_plots and other_tabs:
                             with other_tabs[0]:
-                                st.write("#### Pathway Error Bar Plots")
+                                st.markdown("##### Pathway Error Bar Plots")
                                 selected_errorbar = st.selectbox("Select error bar plot:",
                                                                options=list(error_bar_plots.keys()),
                                                                key="errorbar_select")
@@ -1513,7 +1535,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                         # Heatmap Plots
                         if heatmap_plots and len(other_tabs) > 1:
                             with other_tabs[1]:
-                                st.write("#### Pathway Heatmap Plots")
+                                st.markdown("##### Pathway Heatmap Plots")
                                 selected_heatmap = st.selectbox("Select heatmap plot:",
                                                               options=list(heatmap_plots.keys()),
                                                               key="heatmap_select")

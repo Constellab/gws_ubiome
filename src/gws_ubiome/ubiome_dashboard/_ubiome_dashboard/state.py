@@ -19,6 +19,7 @@ class State:
     # step tags
     TAG_METADATA = "metadata"
     TAG_QC = "quality_control"
+    TAG_MULTIQC = "multiqc"
     TAG_FEATURE_INFERENCE = "feature_inference"
     TAG_RAREFACTION = "rarefaction"
     TAG_TAXONOMY = "taxonomy"
@@ -259,6 +260,10 @@ class State:
     @classmethod
     def get_scenario_step_qc(cls) -> List[Scenario]:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_QC)
+
+    @classmethod
+    def get_scenario_step_multiqc(cls) -> List[Scenario]:
+        return cls.get_scenarios_by_step_dict().get(cls.TAG_MULTIQC)
 
     @classmethod
     def get_scenario_step_feature_inference(cls) -> List[Scenario]:
