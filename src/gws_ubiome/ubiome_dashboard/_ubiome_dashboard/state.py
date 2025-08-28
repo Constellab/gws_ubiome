@@ -2,10 +2,9 @@ from typing import List, Dict
 import streamlit as st
 import pandas as pd
 
+from gws_core import Scenario, ResourceModel
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
-
-from gws_core import Scenario, ResourceModel
 
 class State:
     """Class to manage the state of the app.

@@ -1,15 +1,11 @@
-import os
 import streamlit as st
 from typing import List
 from state import State
-from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
+from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table
-import pandas as pd
-from gws_core import TableImporter, Tag, ResourceModel, ResourceOrigin, Settings, File, Folder, StringHelper, InputTask, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
-from gws_core.tag.entity_tag import EntityTag
 
 # Check if steps are completed (have successful scenarios)
 def has_successful_scenario(step_name, scenarios_by_step):
@@ -260,14 +256,6 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                 feature_item.add_children([scenario_item])
 
         button_menu.add_item(feature_item)
-
-    # Rapport - final step
-    rapport_item = StreamlitTreeMenuItem(
-        label="Rapport",
-        key="rapport",
-        material_icon='description'
-    )
-    button_menu.add_item(rapport_item)
 
     return button_menu, key_metadata
 

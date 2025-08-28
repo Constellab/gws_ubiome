@@ -1,25 +1,18 @@
 import streamlit as st
 from state import State
-from typing import List, Dict
+from typing import List
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-import pandas as pd
-from gws_core import Tag, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, StringHelper
+from gws_core import Tag, ScenarioSearchBuilder, Scenario
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 from streamlit_slickgrid import (
     slickgrid,
-    Formatters,
-    Filters,
     FieldType,
     ExportServices,
 )
 
 def render_first_page():
-    # Get the config instance
-    ubiome_config = UbiomeConfig.get_instance()
     ubiome_state = State()
-
 
     # Add a button create new analysis using config
     # Create a container for the header with project title and action buttons

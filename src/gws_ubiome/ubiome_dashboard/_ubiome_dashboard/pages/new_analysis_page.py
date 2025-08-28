@@ -1,14 +1,11 @@
 import streamlit as st
 from state import State
-from gws_core.streamlit import StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTaskRunner
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-import pandas as pd
-from gws_core import ResourceModel, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core.streamlit import StreamlitResourceSelect, StreamlitRouter, StreamlitTaskRunner
+from gws_core import ResourceModel, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_ubiome import Qiime2MetadataTableMaker
 
 def render_new_analysis_page():
     # Add a return button
-    ubiome_config = UbiomeConfig.get_instance()
     router = StreamlitRouter.load_from_session()
     ubiome_state = State()
 

@@ -4,23 +4,17 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from state import State
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitContainers, StreamlitResourceSelect, StreamlitRouter, StreamlitTaskRunner
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.ubiome_config import UbiomeConfig
-import pandas as pd
-from gws_core import FsNodeExtractor, Resource, Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioSearchBuilder, TagValueModel, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
-from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE, Qiime2RarefactionAnalysis, Qiime2TaxonomyDiversity, Qiime2DifferentialAnalysis, Qiime2TableDbAnnotator, Picrust2FunctionalAnalysis, Ggpicrust2FunctionalAnalysis
-from gws_omix.rna_seq.multiqc.multiqc import MultiQc
-from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
-
-import streamlit.components.v1 as components
 from streamlit_slickgrid import (
     slickgrid,
-    Formatters,
-    Filters,
     FieldType,
     ExportServices,
 )
+from state import State
+from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitResourceSelect, StreamlitTaskRunner
+from gws_core import FsNodeExtractor, Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, Tag, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE, Qiime2RarefactionAnalysis, Qiime2TaxonomyDiversity, Qiime2DifferentialAnalysis, Qiime2TableDbAnnotator, Picrust2FunctionalAnalysis, Ggpicrust2FunctionalAnalysis
+from gws_omix.rna_seq.multiqc.multiqc import MultiQc
+from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.entity_tag import EntityTag
