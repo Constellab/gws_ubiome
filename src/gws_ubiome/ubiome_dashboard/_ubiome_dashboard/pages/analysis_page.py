@@ -258,6 +258,19 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
     return button_menu, key_metadata
 
+def get_status_emoji(status: ScenarioStatus) -> str:
+    """Return appropriate emoji for scenario status"""
+    emoji_map = {
+        ScenarioStatus.DRAFT: "📝",
+        ScenarioStatus.IN_QUEUE: "⏳",
+        ScenarioStatus.WAITING_FOR_CLI_PROCESS: "⏸️",
+        ScenarioStatus.RUNNING: "🔄",
+        ScenarioStatus.SUCCESS: "✅",
+        ScenarioStatus.ERROR: "❌",
+        ScenarioStatus.PARTIALLY_RUN: "⚠️"
+    }
+    return emoji_map.get(status, "")
+
 def render_analysis_page():
     router = StreamlitRouter.load_from_session()
     ubiome_state = State()
@@ -367,7 +380,8 @@ def render_analysis_page():
                         cols=[1, 'fit-content'], vertical_align_items='center')
 
                 with col_status:
-                    st.write(f"**Status:** {selected_scenario.status.value}")
+                    status_emoji = get_status_emoji(selected_scenario.status)
+                    st.write(f"**Status:** {status_emoji} {selected_scenario.status.value}")
             else :
                 selected_scenario = None
 
