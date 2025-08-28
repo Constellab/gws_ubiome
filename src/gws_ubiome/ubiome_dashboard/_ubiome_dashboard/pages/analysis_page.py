@@ -217,13 +217,44 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                     key=f"{ubiome_state.TAG_16S}_{scenario.id}",
                     material_icon='dna'
                 )
-                if ubiome_state.TAG_16S in scenarios_by_step or ubiome_state.TAG_16S_VISU in scenarios_by_step:
-                    ggpicrust_item = StreamlitTreeMenuItem(
-                        label="16s ggpicrust",
-                        key=f"{ubiome_state.TAG_16S_VISU}_{scenario.id}",
-                        material_icon='insights'
-                    )
-                    s16_item.add_children([ggpicrust_item])
+                if ubiome_state.TAG_16S in scenarios_by_step:
+                    for functional_16s_scenario in scenarios_by_step[ubiome_state.TAG_16S]:
+                        # Check if this 16S scenario belongs to this feature inference scenario
+                        s16_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, functional_16s_scenario.id)
+                        s16_feature_id_tags = s16_entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+                        scenario_feature_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id).get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+
+                        if (s16_feature_id_tags and scenario_feature_id_tags and
+                            s16_feature_id_tags[0].to_simple_tag().value == scenario_feature_id_tags[0].to_simple_tag().value):
+                            s16_item_child = StreamlitTreeMenuItem(
+                                label=functional_16s_scenario.get_short_name(),
+                                key=functional_16s_scenario.id,
+                                material_icon='description'
+                            )
+
+                            # Sub-analysis items under 16S
+                            ggpicrust_item = StreamlitTreeMenuItem(
+                                label="9) 16s ggpicrust",
+                                key=f"{ubiome_state.TAG_16S_VISU}_{functional_16s_scenario.id}",
+                                material_icon='insights'
+                            )
+                            if ubiome_state.TAG_16S_VISU in scenarios_by_step:
+                                for ggpicrust_scenario in scenarios_by_step[ubiome_state.TAG_16S_VISU]:
+                                    # Check if this visu scenario belongs to this 16s scenario
+                                    ggpicrust_entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, ggpicrust_scenario.id)
+                                    ggpicrust_feature_id_tags = ggpicrust_entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+                                    functional_16s_feature_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, functional_16s_scenario.id).get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+
+                                    if (ggpicrust_feature_id_tags and functional_16s_feature_id_tags and
+                                        ggpicrust_feature_id_tags[0].to_simple_tag().value == functional_16s_feature_id_tags[0].to_simple_tag().value):
+                                        ggpicrust_child_item = StreamlitTreeMenuItem(
+                                            label=ggpicrust_scenario.get_short_name(),
+                                            key=ggpicrust_scenario.id,
+                                            material_icon='description'
+                                        )
+                                        ggpicrust_item.add_children([ggpicrust_child_item])
+
+                            s16_item.add_children([s16_item_child])
 
                 scenario_item.add_children([rarefaction_item, taxonomy_item, s16_item])
                 feature_item.add_children([scenario_item])
