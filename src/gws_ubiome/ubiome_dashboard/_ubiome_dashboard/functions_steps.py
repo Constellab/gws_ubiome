@@ -1407,11 +1407,30 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         feature_inference_id = ubiome_state.get_feature_inference_id_from_16s_scenario(functional_scenario_parent_id)
         ubiome_state.set_current_feature_scenario_id_parent(feature_inference_id)
 
-
     if not selected_scenario:
-        # On click, open a dialog to allow the user to select params of 16S visualization
-        st.button("Run new 16S Visualization", icon=":material/play_arrow:", use_container_width=False,
-                    on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
+        # Check if we have a valid 16S functional analysis scenario to run visualization
+        functional_scenario_id = ubiome_state.get_current_16s_scenario_id_parent()
+
+        # Validate that the required KO metagenome file exists
+        ko_file_available = False
+        if functional_scenario_id:
+            try:
+                scenario_proxy_16s = ScenarioProxy.from_existing_scenario(functional_scenario_id)
+                protocol_proxy_16s = scenario_proxy_16s.get_protocol()
+                functional_result_folder = protocol_proxy_16s.get_process('functional_analysis_process').get_output('Folder_result')
+
+                if functional_result_folder and os.path.exists(functional_result_folder.path):
+                    ko_file_path = os.path.join(functional_result_folder.path, "KO_metagenome_out", "pred_metagenome_unstrat.tsv.gz")
+                    ko_file_available = os.path.exists(ko_file_path)
+            except Exception:
+                ko_file_available = False
+
+        if not ko_file_available:
+            st.warning("⚠️ **Cannot run 16S Visualization**: The required file `KO_metagenome_out/pred_metagenome_unstrat.tsv.gz` is not available from the 16S Functional Analysis results.")
+        else:
+            # On click, open a dialog to allow the user to select params of 16S visualization
+            st.button("Run new 16S Visualization", icon=":material/play_arrow:", use_container_width=False,
+                        on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
 
         # Display table of existing 16S Visualization scenarios
         st.markdown("### Previous 16S Visualizations")
