@@ -11,7 +11,7 @@ from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 
 @task_decorator("ItsPicrust2FunctionalAnalysis", human_name="ITS Functional Analysis Prediction",
                 short_description="this task permit to predict functional analysis of ITS fungal data", hide=True)
-class Picrust2FunctionalAnalysis(Task):
+class ItsPicrust2FunctionalAnalysis(Task):
     """
     This task uses PICRUSt2 : Phylogenetic Investigation of Communities by Reconstruction of Unobserved States(paper can be found <a href="https://www.nature.com/articles/s41587-020-0548-6">here</a>).It wraps a number of tools to generate functional predictions based on ITS gene sequencing data.
     The input files should be a FASTA of amplicon sequences variants (ASVs; i.e. your representative sequences, not your raw reads, which is <b> ASV-sequences.fasta </b> generated using Q2FeatureInference task) and a qza table of the abundance of each ASV across each sample which is <b> table.qza </b> (generated using the same previous task ).
