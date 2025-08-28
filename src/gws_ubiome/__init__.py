@@ -21,3 +21,8 @@ from .table_db_annotator.table_db_annotator import Qiime2TableDbAnnotator
 # > taxonomy/diversity
 from .taxonomy_diversity.qiime2_taxonomy_diversity import \
     Qiime2TaxonomyDiversity
+# > functional_analysis
+from .functional_analysis.picrust2_functional_analysis import \
+    Picrust2FunctionalAnalysis
+from .functional_analysis_visualization.ggpicrust2_visualization import \
+    Ggpicrust2FunctionalAnalysis
