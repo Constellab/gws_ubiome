@@ -1,5 +1,5 @@
 import streamlit as st
-from typing import List
+from typing import List, Dict
 from state import State
 from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table, render_multiqc_step, get_status_emoji
@@ -8,11 +8,16 @@ from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 
 # Check if steps are completed (have successful scenarios)
-def has_successful_scenario(step_name, scenarios_by_step):
+def has_successful_scenario(step_name : str, scenarios_by_step: Dict):
     if step_name not in scenarios_by_step:
         return False
     return any(s.status == ScenarioStatus.SUCCESS for s in scenarios_by_step[step_name])
 
+# Helper function to get icon - check_circle if step has been run, otherwise original icon
+def get_step_icon(step_name: str, scenarios_by_step:Dict) -> str:
+    if step_name in scenarios_by_step:
+        return 'check_circle'
+    return ''
 
 def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     """Build the tree menu for analysis workflow steps"""
@@ -54,9 +59,9 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     else:
         key_metadata = ubiome_state.TAG_METADATA
     metadata_item = StreamlitTreeMenuItem(
-        label="Metadata table",
+        label="**Metadata table**",
         key=key_metadata,
-        material_icon='table_chart'
+        material_icon=get_step_icon(ubiome_state.TAG_METADATA, scenarios_by_step)
     )
 
 
@@ -73,7 +78,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         qc_item = StreamlitTreeMenuItem(
             label="Quality check",
             key=key_qc,
-            material_icon='check_circle'
+            material_icon=get_step_icon(ubiome_state.TAG_QC, scenarios_by_step)
         )
 
         button_menu.add_item(qc_item)
@@ -88,7 +93,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         multiqc_item = StreamlitTreeMenuItem(
             label="MultiQC",
             key=key_multiqc,
-            material_icon='assessment'
+            material_icon=get_step_icon(ubiome_state.TAG_MULTIQC, scenarios_by_step)
         )
 
         button_menu.add_item(multiqc_item)
@@ -98,7 +103,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         feature_item = StreamlitTreeMenuItem(
             label="Feature inference",
             key=ubiome_state.TAG_FEATURE_INFERENCE,
-            material_icon='analytics'
+            material_icon=get_step_icon(ubiome_state.TAG_FEATURE_INFERENCE, scenarios_by_step)
         )
 
         if ubiome_state.TAG_FEATURE_INFERENCE in scenarios_by_step:
@@ -113,7 +118,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                 rarefaction_item = StreamlitTreeMenuItem(
                     label="Rarefaction",
                     key=f"{ubiome_state.TAG_RAREFACTION}_{scenario.id}",  # Include parent scenario ID
-                    material_icon='trending_down'
+                    material_icon=get_step_icon(ubiome_state.TAG_RAREFACTION, scenarios_by_step)
                 )
                 if ubiome_state.TAG_RAREFACTION in scenarios_by_step:
                     for rare_scenario in scenarios_by_step[ubiome_state.TAG_RAREFACTION]:
@@ -135,7 +140,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                 taxonomy_item = StreamlitTreeMenuItem(
                     label="Taxonomy",
                     key=f"{ubiome_state.TAG_TAXONOMY}_{scenario.id}",  # Include parent scenario ID
-                    material_icon='account_tree'
+                    material_icon=get_step_icon(ubiome_state.TAG_TAXONOMY, scenarios_by_step)
                 )
                 if ubiome_state.TAG_TAXONOMY in scenarios_by_step:
                     for tax_scenario in scenarios_by_step[ubiome_state.TAG_TAXONOMY]:
@@ -156,7 +161,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                             pcoa_diversity_item = StreamlitTreeMenuItem(
                                 label="PCOA diversity",
                                 key=f"{ubiome_state.TAG_PCOA_DIVERSITY}_{tax_scenario.id}",
-                                material_icon='scatter_plot'
+                                material_icon=get_step_icon(ubiome_state.TAG_PCOA_DIVERSITY, scenarios_by_step)
                             )
                             if ubiome_state.TAG_PCOA_DIVERSITY in scenarios_by_step:
                                 for pcoa_scenario in scenarios_by_step[ubiome_state.TAG_PCOA_DIVERSITY]:
@@ -177,7 +182,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                             ancom_item = StreamlitTreeMenuItem(
                                 label="ANCOM",
                                 key=f"{ubiome_state.TAG_ANCOM}_{tax_scenario.id}",
-                                material_icon='biotech'
+                                material_icon=get_step_icon(ubiome_state.TAG_ANCOM, scenarios_by_step)
                             )
 
                             # Check if ANCOM scenarios exist for this taxonomy
@@ -199,7 +204,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                             taxa_comp_item = StreamlitTreeMenuItem(
                                 label="Taxa Composition",
                                 key=f"{ubiome_state.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
-                                material_icon='pie_chart'
+                                material_icon=get_step_icon(ubiome_state.TAG_DB_ANNOTATOR, scenarios_by_step)
                             )
 
                             # Check if DB annotator scenarios exist for this taxonomy
@@ -225,7 +230,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                 s16_item = StreamlitTreeMenuItem(
                     label="16S",
                     key=f"{ubiome_state.TAG_16S}_{scenario.id}",
-                    material_icon='dna'
+                    material_icon=get_step_icon(ubiome_state.TAG_16S, scenarios_by_step)
                 )
                 if ubiome_state.TAG_16S in scenarios_by_step:
                     for functional_16s_scenario in scenarios_by_step[ubiome_state.TAG_16S]:
@@ -246,7 +251,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                             ggpicrust_item = StreamlitTreeMenuItem(
                                 label="16s ggpicrust",
                                 key=f"{ubiome_state.TAG_16S_VISU}_{functional_16s_scenario.id}",
-                                material_icon='insights'
+                                material_icon=get_step_icon(ubiome_state.TAG_16S_VISU, scenarios_by_step)
                             )
                             if ubiome_state.TAG_16S_VISU in scenarios_by_step:
                                 for ggpicrust_scenario in scenarios_by_step[ubiome_state.TAG_16S_VISU]:
