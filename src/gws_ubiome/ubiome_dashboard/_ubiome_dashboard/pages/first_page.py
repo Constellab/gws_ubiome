@@ -12,8 +12,7 @@ from streamlit_slickgrid import (
     ExportServices,
 )
 
-def render_first_page():
-    ubiome_state = State()
+def render_first_page(ubiome_state : State):
 
     # Add a button create new analysis using config
     # Create a container for the header with project title and action buttons

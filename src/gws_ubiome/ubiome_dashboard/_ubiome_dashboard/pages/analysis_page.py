@@ -273,9 +273,8 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
     return button_menu, key_metadata
 
-def render_analysis_page():
+def render_analysis_page(ubiome_state : State):
     router = StreamlitRouter.load_from_session()
-    ubiome_state = State()
     # Create two columns
     left_col, right_col = st.columns([1, 4])
 

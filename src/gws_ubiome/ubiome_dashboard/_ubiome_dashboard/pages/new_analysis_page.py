@@ -4,10 +4,9 @@ from gws_core.streamlit import StreamlitResourceSelect, StreamlitRouter, Streaml
 from gws_core import ResourceModel, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_ubiome import Qiime2MetadataTableMaker
 
-def render_new_analysis_page():
+def render_new_analysis_page(ubiome_state : State):
     # Add a return button
     router = StreamlitRouter.load_from_session()
-    ubiome_state = State()
 
     if st.button("Return Home", icon=":material/arrow_back:", use_container_width=False):
         router.navigate("first-page")
