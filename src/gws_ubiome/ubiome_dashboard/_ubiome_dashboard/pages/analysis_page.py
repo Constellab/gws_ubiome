@@ -42,10 +42,9 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
     # Set in the state if data is single-end or paired-end
     metadata_scenario = ubiome_state.get_scenario_step_metadata()[0]
-    entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, metadata_scenario.id)
-    sequencing_type_tag = entity_tag_list.get_tags_by_key(ubiome_state.TAG_SEQUENCING_TYPE)[0].to_simple_tag()
-    sequencing_type = sequencing_type_tag.value
-    ubiome_state.set_sequencing_type(sequencing_type)
+    scenario_metadata_proxy = ScenarioProxy.from_existing_scenario(metadata_scenario.id)
+    config_sequencing_type = scenario_metadata_proxy.get_protocol().get_process('metadata_process').get_param('sequencing_type')
+    ubiome_state.set_sequencing_type(config_sequencing_type)
 
     # 1) Metadata table
     # Always show first step

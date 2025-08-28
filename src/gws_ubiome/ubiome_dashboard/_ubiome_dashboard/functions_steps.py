@@ -388,6 +388,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         file_metadata = search_updated_metadata_table(ubiome_state)
         if not file_metadata:
             st.info("Please save a metadata table with at least one new metadata column to proceed.")
+            return
 
         if st.button("Run quality check", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario in the lab
@@ -415,7 +416,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
             scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
 
             # Step 2 : QC task
-            qc_process : ProcessProxy = protocol.add_process(Qiime2QualityCheck, 'qc_process') # TODO : mettre param depending of single or paired
+            qc_process : ProcessProxy = protocol.add_process(Qiime2QualityCheck, 'qc_process', config_params= {"sequencing_type": ubiome_state.get_sequencing_type()})
             protocol.add_connector(out_port=fastq_resource >> 'resource',
                                        in_port=qc_process << 'fastq_folder')
             protocol.add_connector(out_port=metadata_resource >> 'resource',
@@ -466,7 +467,6 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                 if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
                     scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
                     protocol: ProtocolProxy = scenario_proxy.get_protocol()
-
 
                     # Step 2 bis : FastQC task and MultiQC task
                     fastqc_process : ProcessProxy = protocol.add_process(FastqcInit, 'fastqc_process')

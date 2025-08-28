@@ -83,7 +83,6 @@ def render_new_analysis_page():
             scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA, is_propagable=False))
             scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, analysis_name_parsed, is_propagable=False, auto_parse=True))
             scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, StringHelper.generate_uuid(), is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_SEQUENCING_TYPE, sequencing_type, is_propagable=False, auto_parse=True))
 
             # Step 1 : Metadata task
             metadata_process : ProcessProxy = protocol.add_process(Qiime2MetadataTableMaker, 'metadata_process', config_params=ubiome_state.get_qiime2_metadata_config()["config"])
