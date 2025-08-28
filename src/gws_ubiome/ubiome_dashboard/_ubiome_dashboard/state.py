@@ -37,6 +37,16 @@ class State:
     TAG_PCOA_ID = "pcoa_id"
     TAG_16S_ID = "16S_id"
 
+    # Scenario names
+    FEATURE_SCENARIO_NAME_INPUT_KEY = "feature_scenario_name_input"
+    RAREFACTION_SCENARIO_NAME_INPUT_KEY = "rarefaction_scenario_name_input"
+    TAXONOMY_SCENARIO_NAME_INPUT_KEY = "taxonomy_scenario_name_input"
+    PCOA_SCENARIO_NAME_INPUT_KEY = "pcoa_scenario_name_input"
+    ANCOM_SCENARIO_NAME_INPUT_KEY = "ancom_scenario_name_input"
+    DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY = "db_annotator_scenario_name_input"
+    FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY = "functional_analysis_scenario_name_input"
+    FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY = "functional_analysis_visu_scenario_name_input"
+
     SELECTED_SCENARIO_KEY = "selected_scenario"
     SELECTED_ANALYSIS_KEY = "selected_analysis"
     STEP_PIPELINE_KEY = "step_pipeline"
@@ -201,6 +211,10 @@ class State:
     @classmethod
     def get_selected_folder_id(cls) -> str:
         return st.session_state.get(cls.SELECTED_FOLDER_ID_KEY)
+
+    @classmethod
+    def get_scenario_user_name(cls, key: str) -> str:
+        return st.session_state.get(key, "")
 
     # Functions get config
 

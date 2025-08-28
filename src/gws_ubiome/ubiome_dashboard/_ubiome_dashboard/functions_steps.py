@@ -154,12 +154,12 @@ def display_scenario_parameters(scenario: Scenario, process_name: str) -> None:
             param_df = pd.DataFrame(param_data)
             st.dataframe(param_df, use_container_width=True, hide_index=True)
 
-def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title_suffix: str) -> ScenarioProxy:
+def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title: str) -> ScenarioProxy:
     """Generic function to create a scenario with base tags."""
     folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
     scenario: ScenarioProxy = ScenarioProxy(
         None, folder=folder,
-        title=f"{ubiome_state.get_current_analysis_name()} - {title_suffix}",
+        title=title,
         creation_type=ScenarioCreationType.MANUAL,
     )
 
@@ -385,7 +385,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
         if st.button("Run quality check", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario in the lab
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, "Quality check")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, f"{ubiome_state.get_current_analysis_name()} - Quality check")
             protocol: ProtocolProxy = scenario.get_protocol()
 
             metadata_resource = protocol.add_process(
@@ -447,7 +447,7 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
 
         if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario for MultiQC
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_MULTIQC, "MultiQC")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_MULTIQC, f"{ubiome_state.get_current_analysis_name()} - MultiQC")
             protocol: ProtocolProxy = scenario.get_protocol()
 
             # Get input resources from the current MultiQC scenario or create new ones
@@ -498,6 +498,7 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
 
 @st.dialog("Feature inference parameters")
 def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: State):
+    st.text_input("Feature inference scenario name:", placeholder="Enter feature inference scenario name", value=f"{ubiome_state.get_current_analysis_name()} - Feature Inference", key=ubiome_state.FEATURE_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(task_feature_inference)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.FEATURE_INFERENCE_CONFIG_KEY,
@@ -509,7 +510,7 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_FEATURE_INFERENCE, "Feature Inference")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_FEATURE_INFERENCE, ubiome_state.get_scenario_user_name(ubiome_state.FEATURE_SCENARIO_NAME_INPUT_KEY))
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
 
@@ -578,6 +579,7 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
 
 @st.dialog("Rarefaction parameters")
 def dialog_rarefaction_params(ubiome_state: State):
+    st.text_input("Rarefaction scenario name:", placeholder="Enter rarefaction scenario name", value=f"{ubiome_state.get_current_analysis_name()} - Rarefaction", key=ubiome_state.RAREFACTION_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(Qiime2RarefactionAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.RAREFACTION_CONFIG_KEY,
@@ -589,7 +591,7 @@ def dialog_rarefaction_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_RAREFACTION, "Rarefaction")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_RAREFACTION, ubiome_state.get_scenario_user_name(ubiome_state.RAREFACTION_SCENARIO_NAME_INPUT_KEY))
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
             protocol = scenario.get_protocol()
@@ -657,6 +659,7 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
 
 @st.dialog("Taxonomy parameters")
 def dialog_taxonomy_params(ubiome_state: State):
+    st.text_input("Taxonomy scenario name:", placeholder="Enter taxonomy scenario name", value=f"{ubiome_state.get_current_analysis_name()} - Taxonomy", key=ubiome_state.TAXONOMY_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(Qiime2TaxonomyDiversity)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.TAXONOMY_CONFIG_KEY,
@@ -668,7 +671,7 @@ def dialog_taxonomy_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_TAXONOMY, "Taxonomy")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_TAXONOMY, ubiome_state.get_scenario_user_name(ubiome_state.TAXONOMY_SCENARIO_NAME_INPUT_KEY))
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
             scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
@@ -756,6 +759,7 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
 @st.dialog("PCOA parameters")
 def dialog_pcoa_params(ubiome_state: State):
+    st.text_input("PCOA scenario name:", placeholder="Enter PCOA scenario name", value=f"{ubiome_state.get_current_analysis_name()} - PCOA", key=ubiome_state.PCOA_SCENARIO_NAME_INPUT_KEY)
     taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
 
     # Get available diversity tables from taxonomy results
@@ -790,7 +794,7 @@ def dialog_pcoa_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_PCOA_DIVERSITY, "PCOA")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_PCOA_DIVERSITY, ubiome_state.get_scenario_user_name(ubiome_state.PCOA_SCENARIO_NAME_INPUT_KEY))
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
             scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
@@ -907,6 +911,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
 @st.dialog("ANCOM parameters")
 def dialog_ancom_params(ubiome_state: State):
+    st.text_input("ANCOM scenario name:", placeholder="Enter ANCOM scenario name", value=f"{ubiome_state.get_current_analysis_name()} - ANCOM", key=ubiome_state.ANCOM_SCENARIO_NAME_INPUT_KEY)
 
     # Show header of metadata file
     metadata_table = ResourceModel.get_by_id(ubiome_state.get_resource_id_metadata_table())
@@ -931,7 +936,7 @@ def dialog_ancom_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_ANCOM, "ANCOM")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_ANCOM, ubiome_state.get_scenario_user_name(ubiome_state.ANCOM_SCENARIO_NAME_INPUT_KEY))
             taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
@@ -1069,6 +1074,7 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
 @st.dialog("DB annotator parameters")
 def dialog_db_annotator_params(ubiome_state: State):
+    st.text_input("Taxa Composition scenario name:", placeholder="Enter taxa composition scenario name", value=f"{ubiome_state.get_current_analysis_name()} - Taxa Composition", key=ubiome_state.DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY)
     # Display available annotation tables for user selection
     st.markdown("##### Select Annotation Table")
     # Use StreamlitResourceSelect to let user choose an annotation table
@@ -1083,7 +1089,7 @@ def dialog_db_annotator_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_DB_ANNOTATOR, "Taxa Composition")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_DB_ANNOTATOR, ubiome_state.get_scenario_user_name(ubiome_state.DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY))
             taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
@@ -1182,6 +1188,7 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
 
 @st.dialog("16S parameters")
 def dialog_16s_params(ubiome_state: State):
+    st.text_input("16S Functional Analysis scenario name:", placeholder="Enter 16S functional analysis scenario name", value=f"{ubiome_state.get_current_analysis_name()} - 16S Functional Analysis", key=ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(Picrust2FunctionalAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.FUNCTIONAL_ANALYSIS_CONFIG_KEY,
@@ -1193,7 +1200,7 @@ def dialog_16s_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S, "16S Functional Analysis")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S, ubiome_state.get_scenario_user_name(ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY))
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
             scenario.add_tag(Tag(ubiome_state.TAG_16S_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
@@ -1317,6 +1324,7 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
 @st.dialog("16S Visualization parameters")
 def dialog_16s_visu_params(ubiome_state: State):
+    st.text_input("16S Visualization scenario name:", placeholder="Enter 16S visualization scenario name", value=f"{ubiome_state.get_current_analysis_name()} - 16S Visualization", key=ubiome_state.FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY)
     # Show metadata file preview
     metadata_table = ResourceModel.get_by_id(ubiome_state.get_resource_id_metadata_table())
     metadata_file = metadata_table.get_resource()
@@ -1342,7 +1350,7 @@ def dialog_16s_visu_params(ubiome_state: State):
             return
 
         with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S_VISU, "16S Visualization")
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S_VISU, ubiome_state.get_scenario_user_name(ubiome_state.FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY))
             feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
             functional_scenario_id = ubiome_state.get_current_16s_scenario_id_parent()
             scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
