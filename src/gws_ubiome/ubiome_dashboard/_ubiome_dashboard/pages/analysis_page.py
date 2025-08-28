@@ -262,6 +262,15 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 def render_analysis_page():
     router = StreamlitRouter.load_from_session()
     ubiome_state = State()
+    # Create two columns
+    left_col, right_col = st.columns([1, 4])
+
+    with left_col:
+        # Button to go home
+        if st.button("Home", use_container_width=True, icon=":material/home:", type="primary"):
+            router = StreamlitRouter.load_from_session()
+            router.navigate("first-page")
+
 
     selected_analysis = ubiome_state.get_selected_analysis()
     if not selected_analysis:
@@ -277,7 +286,8 @@ def render_analysis_page():
     ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
     if selected_analysis.status != ScenarioStatus.SUCCESS:
-        st.info("The first step for this analysis is not completed successfully. Please check back later.")
+        with right_col:
+            st.info("The first step for this analysis is not completed successfully. Please check back later.")
         return
 
     # Get fastq and metadata table
@@ -299,15 +309,8 @@ def render_analysis_page():
         metadata_output : File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
         ubiome_state.set_resource_id_metadata_table(metadata_output.get_model_id())
 
-    # Create two columns
-    left_col, right_col = st.columns([1, 4])
-
     # Left column - Analysis workflow tree
     with left_col:
-        # Button to go home
-        if st.button("Home", use_container_width=True, icon=":material/home:", type="primary"):
-            router = StreamlitRouter.load_from_session()
-            router.navigate("first-page")
 
         st.write(f"**Analysis:** {analysis_name}")
 
