@@ -156,8 +156,8 @@ def display_scenario_parameters(scenario: Scenario, process_name: str) -> None:
 
 def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title_suffix: str) -> ScenarioProxy:
     """Generic function to create a scenario with base tags."""
-    folder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
-    scenario = ScenarioProxy(
+    folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
+    scenario: ScenarioProxy = ScenarioProxy(
         None, folder=folder,
         title=f"{ubiome_state.get_current_analysis_name()} - {title_suffix}",
         creation_type=ScenarioCreationType.MANUAL,
@@ -385,11 +385,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
         if st.button("Run quality check", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario in the lab
-            folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
-            scenario: ScenarioProxy = ScenarioProxy(
-                None, folder=folder, title=f"{ubiome_state.get_current_analysis_name()} - Quality Check",
-                creation_type=ScenarioCreationType.MANUAL,
-            )
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, "Quality check")
             protocol: ProtocolProxy = scenario.get_protocol()
 
             metadata_resource = protocol.add_process(
@@ -400,12 +396,6 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                 InputTask, 'fastq_resource',
                 {InputTask.config_name: ubiome_state.get_resource_id_fastq()})
 
-            # Add tags to the scenario
-            scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_QC, is_propagable=False))
-            scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
 
             # Step 2 : QC task
             qc_process : ProcessProxy = protocol.add_process(Qiime2QualityCheck, 'qc_process', config_params= {"sequencing_type": ubiome_state.get_sequencing_type()})
@@ -456,25 +446,9 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
             return
 
         if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
-            # Get the QC scenario
-            qc_scenario_id = qc_scenarios[0].id
-            scenario_proxy_qc = ScenarioProxy.from_existing_scenario(qc_scenario_id)
-            protocol_qc: ProtocolProxy = scenario_proxy_qc.get_protocol()
-
             # Create a new scenario for MultiQC
-            folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
-            scenario: ScenarioProxy = ScenarioProxy(
-                None, folder=folder, title=f"{ubiome_state.get_current_analysis_name()} - MultiQC",
-                creation_type=ScenarioCreationType.MANUAL,
-            )
+            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_MULTIQC, "MultiQC")
             protocol: ProtocolProxy = scenario.get_protocol()
-
-            # Add tags to the scenario
-            scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_MULTIQC, is_propagable=False))
-            scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
 
             # Get input resources from the current MultiQC scenario or create new ones
             fastq_resource = protocol.add_process(
