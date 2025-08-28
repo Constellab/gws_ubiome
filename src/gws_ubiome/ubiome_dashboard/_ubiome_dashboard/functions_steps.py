@@ -780,11 +780,13 @@ def dialog_pcoa_params(ubiome_state: State):
     diversity_resource_set = protocol_proxy_tax.get_process('taxonomy_process').get_output('diversity_tables')
 
     resource_set_result_dict = diversity_resource_set.get_resources()
+    # Keep only tables "beta diversity" not alpha
+    beta_diversity_tables = {k: v for k, v in resource_set_result_dict.items() if "beta" in k.lower()}
 
     # Let user select which diversity table to use
     st.selectbox(
         "Select a diversity table for PCOA analysis:",
-        options=list(resource_set_result_dict.keys()),
+        options=list(beta_diversity_tables.keys()),
         key=ubiome_state.PCOA_DIVERSITY_TABLE_SELECT_KEY,
     )
 

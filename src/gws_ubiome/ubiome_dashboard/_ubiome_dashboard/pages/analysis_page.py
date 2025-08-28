@@ -59,7 +59,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     else:
         key_metadata = ubiome_state.TAG_METADATA
     metadata_item = StreamlitTreeMenuItem(
-        label="**Metadata table**",
+        label="Metadata table",
         key=key_metadata,
         material_icon=get_step_icon(ubiome_state.TAG_METADATA, scenarios_by_step)
     )
