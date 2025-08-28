@@ -163,6 +163,14 @@ class State:
         return st.session_state.get(cls.TAG_TAXONOMY_ID)
 
     @classmethod
+    def get_current_16s_scenario_id_parent(cls) -> str:
+        return st.session_state.get(cls.TAG_16S_ID)
+
+    @classmethod
+    def set_current_16s_scenario_id_parent(cls, scenario_id: str):
+        st.session_state[cls.TAG_16S_ID] = scenario_id
+
+    @classmethod
     def get_resource_id_fastq(cls) -> str:
         return st.session_state.get(cls.RESOURCE_ID_FASTQ_KEY)
 
@@ -353,3 +361,26 @@ class State:
         feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
         return feature_inference_id_tag.value
 
+    @classmethod
+    def get_feature_inference_id_from_16s_scenario(cls, functional_16s_scenario_id: str) -> str:
+        """Get the feature inference ID from a 16S scenario ID."""
+        functional_16s_scenario = Scenario.get_by_id(functional_16s_scenario_id)
+        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, functional_16s_scenario.id)
+        feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
+        return feature_inference_id_tag.value
+
+    @classmethod
+    def get_parent_16s_scenario_id_from_step(cls) -> str:
+        """Extract the parent 16S scenario ID from the current step pipeline."""
+        step = cls.get_step_pipeline()
+        if step and step.startswith(cls.TAG_16S + "_"):
+            return step.replace(cls.TAG_16S + "_", "")
+        return None
+
+    @classmethod
+    def get_parent_16s_scenario_from_step(cls) -> 'Scenario':
+        """Get the parent 16S scenario from the current step pipeline."""
+        scenario_id = cls.get_parent_16s_scenario_id_from_step()
+        if scenario_id:
+            return Scenario.get_by_id(scenario_id)
+        return None
