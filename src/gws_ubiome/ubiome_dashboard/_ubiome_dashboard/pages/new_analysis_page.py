@@ -47,9 +47,11 @@ def render_new_analysis_page():
             list_required_fields_filled.append(ubiome_state.check_if_required_is_filled(ubiome_state.get_resource_selector_fastq()))
             list_required_fields_filled.append(ubiome_state.check_if_required_is_filled(ubiome_state.get_analysis_name_user()))
             list_required_fields_filled.append(ubiome_state.get_qiime2_metadata_config()["is_valid"])
+            if ubiome_state.get_associate_scenario_with_folder():
+                list_required_fields_filled.append(ubiome_state.check_if_required_is_filled(ubiome_state.get_selected_folder_id()))
             # Check if mandatory fields have been filled
             if False in list_required_fields_filled:
-                st.warning("Please fill all the mandatory fields: fastq resource and analysis name.")
+                st.warning("Please fill all the mandatory fields.")
                 return
 
             selected_fastq_id = ubiome_state.get_resource_selector_fastq()["resourceId"]

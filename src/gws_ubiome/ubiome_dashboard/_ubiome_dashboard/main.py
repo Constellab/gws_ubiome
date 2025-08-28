@@ -1,10 +1,14 @@
 import streamlit as st
-
+from state import State
 from _ubiome_dashboard.pages import first_page, new_analysis_page, analysis_page
 from gws_core.streamlit import StreamlitRouter
 
 sources: list
 params: dict
+
+associate_scenario_with_folder = params.get('associate_scenario_with_folder')
+ubiome_state = State()
+ubiome_state.set_associate_scenario_with_folder(associate_scenario_with_folder)
 
 # Hide sidebar completely
 st.markdown("""

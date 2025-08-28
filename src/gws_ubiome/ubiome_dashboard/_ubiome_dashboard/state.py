@@ -61,6 +61,8 @@ class State:
 
     EDITED_DF_METADATA = "edited_df_metadata"
 
+    ASSOCIATE_FOLDER_KEY = "associate_folder"
+
     RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
     ANALYSIS_NAME_USER = "analysis_name_user"
 
@@ -77,6 +79,14 @@ class State:
     ANCOM_CONFIG_KEY = "ancom_config"
     FUNCTIONAL_ANALYSIS_CONFIG_KEY = "functional_analysis_config"
     FUNCTIONAL_ANALYSIS_VISU_CONFIG_KEY = "functional_analysis_visu_config"
+
+    @classmethod
+    def set_associate_scenario_with_folder(cls, value: bool) -> None:
+        st.session_state[cls.ASSOCIATE_FOLDER_KEY] = value
+
+    @classmethod
+    def get_associate_scenario_with_folder(cls) -> bool:
+        return st.session_state.get(cls.ASSOCIATE_FOLDER_KEY, False)
 
     @classmethod
     def reset_tree_analysis(cls) -> None:

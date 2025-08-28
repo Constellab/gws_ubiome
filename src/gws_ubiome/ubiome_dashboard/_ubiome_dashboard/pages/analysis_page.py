@@ -2,7 +2,7 @@ import streamlit as st
 from typing import List
 from state import State
 from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table, render_multiqc_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import render_metadata_step, render_qc_step, render_feature_inference_step, render_rarefaction_step, render_taxonomy_step, render_pcoa_step, render_ancom_step, render_db_annotator_step, render_16s_step, render_16s_visu_step, search_updated_metadata_table, render_multiqc_step, get_status_emoji
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
@@ -272,19 +272,6 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         button_menu.add_item(feature_item)
 
     return button_menu, key_metadata
-
-def get_status_emoji(status: ScenarioStatus) -> str:
-    """Return appropriate emoji for scenario status"""
-    emoji_map = {
-        ScenarioStatus.DRAFT: "📝",
-        ScenarioStatus.IN_QUEUE: "⏳",
-        ScenarioStatus.WAITING_FOR_CLI_PROCESS: "⏸️",
-        ScenarioStatus.RUNNING: "🔄",
-        ScenarioStatus.SUCCESS: "✅",
-        ScenarioStatus.ERROR: "❌",
-        ScenarioStatus.PARTIALLY_RUN: "✔️"
-    }
-    return emoji_map.get(status, "")
 
 def render_analysis_page():
     router = StreamlitRouter.load_from_session()

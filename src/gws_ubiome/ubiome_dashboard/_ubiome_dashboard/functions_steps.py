@@ -21,6 +21,18 @@ from gws_core.tag.entity_tag import EntityTag
 from gws_core.tag.tag import TagOrigin
 from gws_gaia import PCoATrainer
 
+def get_status_emoji(status: ScenarioStatus) -> str:
+    """Return appropriate emoji for scenario status"""
+    emoji_map = {
+        ScenarioStatus.DRAFT: "📝",
+        ScenarioStatus.IN_QUEUE: "⏳",
+        ScenarioStatus.WAITING_FOR_CLI_PROCESS: "⏸️",
+        ScenarioStatus.RUNNING: "🔄",
+        ScenarioStatus.SUCCESS: "✅",
+        ScenarioStatus.ERROR: "❌",
+        ScenarioStatus.PARTIALLY_RUN: "✔️"
+    }
+    return emoji_map.get(status, "")
 
 # Generic helper functions
 def create_scenario_table_data(scenarios: List[Scenario], process_name: str) -> tuple:
@@ -186,7 +198,7 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 
     # Create a new file with the updated content
     path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
-    full_path = os.path.join(path_temp, f"Metadata_updated.txt")
+    full_path = os.path.join(path_temp, f"{ubiome_state.get_current_analysis_name()}_Metadata_updated.txt")
 
     # Prepare content to save
     content_to_save = ""
