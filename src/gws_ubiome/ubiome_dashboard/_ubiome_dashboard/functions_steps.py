@@ -47,6 +47,11 @@ def create_scenario_table_data(scenarios: List[Scenario], process_name: str) -> 
         protocol_proxy = scenario_proxy.get_protocol()
         process = protocol_proxy.get_process(process_name)
         config_params = process._process_model.config.to_simple_dto().values
+
+        # For PCOA scenarios, add diversity table name from input resource
+        if process_name == 'pcoa_process':
+            config_params["Diversity Table"] = process.get_input('distance_table').name.split(" - ")[1]
+
         scenarios_params.append((scenario, config_params))
         all_param_keys.update(config_params.keys())
 
@@ -86,7 +91,7 @@ def create_slickgrid_columns(param_keys: set) -> List[Dict]:
             "sortable": True,
             "type": FieldType.string,
             "filterable": True,
-            "width": 150,
+            "width": 100,
         },
         {
             "id": "Status",
@@ -95,7 +100,7 @@ def create_slickgrid_columns(param_keys: set) -> List[Dict]:
             "sortable": True,
             "type": FieldType.string,
             "filterable": True,
-            "width": 100,
+            "width": 60,
         },
     ]
 
@@ -109,7 +114,7 @@ def create_slickgrid_columns(param_keys: set) -> List[Dict]:
             "sortable": True,
             "type": FieldType.string,
             "filterable": True,
-            "width": 120,
+            "width": 70,
         })
 
     return columns
@@ -889,6 +894,10 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         # Display details about scenario PCOA
         st.markdown("##### PCOA Scenario Results")
         display_scenario_parameters(selected_scenario, 'pcoa_process')
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
+        process = protocol_proxy.get_process('pcoa_process')
+        st.write(f"Diversity Table: {process.get_input('distance_table').name}")
 
         # Display results if scenario is successful
         if selected_scenario.status != ScenarioStatus.SUCCESS:
@@ -1245,8 +1254,7 @@ def dialog_16s_params(ubiome_state: State):
         session_state_key=ubiome_state.FUNCTIONAL_ANALYSIS_CONFIG_KEY,
         default_config_values=Picrust2FunctionalAnalysis.config_specs.get_default_values(),
         is_default_config_valid=Picrust2FunctionalAnalysis.config_specs.mandatory_values_are_set(
-            Picrust2FunctionalAnalysis.config_specs.get_default_values())
-    )
+            Picrust2FunctionalAnalysis.config_specs.get_default_values()))
 
     if st.button("Run 16S Functional Analysis", use_container_width=True, icon=":material/play_arrow:", key="button_16s"):
         if not ubiome_state.get_functional_analysis_config()["is_valid"]:
