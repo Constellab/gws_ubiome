@@ -110,6 +110,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
+                "width": 120,
             },
             {
                 "id": "Folder",
@@ -118,6 +119,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
+                "width": 100,
             },
             {
                 "id": "metadata",
@@ -126,7 +128,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 80,
+                "width": 60,
             },
             {
                 "id": "qc",
@@ -135,7 +137,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 60,
+                "width": 40,
             },
             {
                 "id": "multiqc",
@@ -144,7 +146,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 80,
+                "width": 60,
             },
             {
                 "id": "feature_inference",
@@ -153,7 +155,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 120,
+                "width": 60,
             },
             {
                 "id": "rarefaction",
@@ -162,7 +164,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 90,
+                "width": 60,
             },
             {
                 "id": "taxonomy",
@@ -171,7 +173,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 80,
+                "width": 60,
             },
             {
                 "id": "pcoa",
@@ -180,7 +182,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 60,
+                "width": 40,
             },
             {
                 "id": "ancom",
@@ -189,7 +191,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 70,
+                "width": 50,
             },
             {
                 "id": "taxa_composition",
@@ -198,7 +200,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 120,
+                "width": 70,
             },
             {
                 "id": "16s_functional",
@@ -207,7 +209,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 110,
+                "width": 60,
             },
             {
                 "id": "16s_visualization",
@@ -216,7 +218,7 @@ def render_first_page(ubiome_state : State):
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 130,
+                "width": 65,
             },
         ]
 
