@@ -43,7 +43,14 @@ def render_first_page(ubiome_state : State):
     for scenario in list_scenario_user:
         entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
         tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[0].to_simple_tag()
-        tag_fastq_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_FASTQ)[0].to_simple_tag()
+
+        # Initialize row data with basic info
+        row_data = {
+            "id": scenario.id,
+            "Name given": tag_analysis_name.value,
+            "Folder": scenario.folder.name if scenario.folder else "",
+            "metadata": get_status_emoji(scenario.status)
+        }
 
         # Get pipeline ID to find all related scenarios
         pipeline_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)
@@ -57,25 +64,21 @@ def render_first_page(ubiome_state : State):
 
             pipeline_scenarios = pipeline_search_builder.search_all()
 
-            # Create overview of step statuses
-            step_statuses = []
-            step_statuses.append(f"metadata: {get_status_emoji(scenario.status)}")
-
-            # Check each step type
+            # Check each step type and add status to row data
             step_types = [
                 (ubiome_state.TAG_QC, "qc"),
                 (ubiome_state.TAG_MULTIQC, "multiqc"),
-                (ubiome_state.TAG_FEATURE_INFERENCE, "feature inference"),
+                (ubiome_state.TAG_FEATURE_INFERENCE, "feature_inference"),
                 (ubiome_state.TAG_RAREFACTION, "rarefaction"),
                 (ubiome_state.TAG_TAXONOMY, "taxonomy"),
                 (ubiome_state.TAG_PCOA_DIVERSITY, "pcoa"),
                 (ubiome_state.TAG_ANCOM, "ancom"),
-                (ubiome_state.TAG_DB_ANNOTATOR, "taxa composition"),
-                (ubiome_state.TAG_16S, "16s functional"),
-                (ubiome_state.TAG_16S_VISU, "16s visualization")
+                (ubiome_state.TAG_DB_ANNOTATOR, "taxa_composition"),
+                (ubiome_state.TAG_16S, "16s_functional"),
+                (ubiome_state.TAG_16S_VISU, "16s_visualization")
             ]
 
-            for tag_value, display_name in step_types:
+            for tag_value, field_name in step_types:
                 step_scenarios = [s for s in pipeline_scenarios if any(
                     tag.tag_key == ubiome_state.TAG_UBIOME and tag.tag_value == tag_value
                     for tag in EntityTagList.find_by_entity(TagEntityType.SCENARIO, s.id).get_tags()
@@ -84,19 +87,17 @@ def render_first_page(ubiome_state : State):
                 if step_scenarios:
                     # Get the most recent scenario for this step
                     latest_scenario = max(step_scenarios, key=lambda x: x.created_at)
-                    step_statuses.append(f"{display_name}: {get_status_emoji(latest_scenario.status)}")
-
-            overview = "\n".join(step_statuses)
+                    row_data[field_name] = get_status_emoji(latest_scenario.status)
+                else:
+                    row_data[field_name] = ""
         else:
-            overview = f"metadata: {get_status_emoji(scenario.status)}"
+            # Initialize empty status for other steps when no pipeline ID
+            step_fields = ["qc", "multiqc", "feature_inference", "rarefaction", "taxonomy",
+                          "pcoa", "ancom", "taxa_composition", "16s_functional", "16s_visualization"]
+            for field in step_fields:
+                row_data[field] = ""
 
-        table_data.append({
-            "id": scenario.id,
-            "Name given": tag_analysis_name.value,
-            "Folder": scenario.folder.name if scenario.folder else "",
-            "Fastq name": tag_fastq_name.value,
-            "Overview": overview
-        })
+        table_data.append(row_data)
 
     if table_data:
         columns = [
@@ -117,21 +118,103 @@ def render_first_page(ubiome_state : State):
                 "filterable": True,
             },
             {
-                "id": "Fastq name",
-                "name": "Fastq name",
-                "field": "Fastq name",
+                "id": "metadata",
+                "name": "Metadata",
+                "field": "metadata",
                 "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
+                "width": 80,
             },
             {
-                "id": "Overview",
-                "name": "Status overview",
-                "field": "Overview",
-                "sortable": False,
+                "id": "qc",
+                "name": "QC",
+                "field": "qc",
+                "sortable": True,
                 "type": FieldType.string,
                 "filterable": True,
-                "width": 300,
+                "width": 60,
+            },
+            {
+                "id": "multiqc",
+                "name": "MultiQC",
+                "field": "multiqc",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 80,
+            },
+            {
+                "id": "feature_inference",
+                "name": "Feature Inference",
+                "field": "feature_inference",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 120,
+            },
+            {
+                "id": "rarefaction",
+                "name": "Rarefaction",
+                "field": "rarefaction",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 90,
+            },
+            {
+                "id": "taxonomy",
+                "name": "Taxonomy",
+                "field": "taxonomy",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 80,
+            },
+            {
+                "id": "pcoa",
+                "name": "PCoA",
+                "field": "pcoa",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 60,
+            },
+            {
+                "id": "ancom",
+                "name": "ANCOM",
+                "field": "ancom",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 70,
+            },
+            {
+                "id": "taxa_composition",
+                "name": "Taxa Composition",
+                "field": "taxa_composition",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 120,
+            },
+            {
+                "id": "16s_functional",
+                "name": "16S Functional",
+                "field": "16s_functional",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 110,
+            },
+            {
+                "id": "16s_visualization",
+                "name": "16S Visualization",
+                "field": "16s_visualization",
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 130,
             },
         ]
 
