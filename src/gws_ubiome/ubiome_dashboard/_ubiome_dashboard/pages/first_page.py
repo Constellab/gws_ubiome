@@ -16,9 +16,12 @@ def render_first_page(ubiome_state : State):
 
     # Add a button create new analysis using config
     # Create a container for the header with project title and action buttons
-    col_empty, col_button_new = StreamlitContainers.columns_with_fit_content(
+    col_title, col_button_new = StreamlitContainers.columns_with_fit_content(
             key="button_new",
             cols=[1, 'fit-content'], vertical_align_items='center')
+
+    with col_title:
+        st.markdown("## Retrieve analysis")
 
     with col_button_new:
         if st.button("Create new analysis", icon=":material/add:", use_container_width=False):
@@ -28,7 +31,6 @@ def render_first_page(ubiome_state : State):
 
 
     # Add the table to retrieve the previous analysis
-    st.markdown("## Retrieve Analysis")
 
     search_scenario_builder = ScenarioSearchBuilder() \
         .add_tag_filter(Tag(key=ubiome_state.TAG_BRICK, value=ubiome_state.TAG_UBIOME)) \
