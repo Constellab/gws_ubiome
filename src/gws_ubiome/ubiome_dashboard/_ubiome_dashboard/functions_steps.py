@@ -11,7 +11,7 @@ from streamlit_slickgrid import (
 )
 from state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitResourceSelect, StreamlitTaskRunner
-from gws_core import FsNodeExtractor, Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, Tag, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core import GenerateShareLinkDTO, ShareLinkEntityType, ShareLinkService, FsNodeExtractor, Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, Tag, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE, Qiime2RarefactionAnalysis, Qiime2TaxonomyDiversity, Qiime2DifferentialAnalysis, Qiime2TableDbAnnotator, Picrust2FunctionalAnalysis, Ggpicrust2FunctionalAnalysis
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
@@ -323,7 +323,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
 
     if not ubiome_state.get_scenario_step_qc():
-        st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis.")
+        st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis and 16s functional analysis prediction.")
 
         if st.button("Add Column", use_container_width=False):
             add_new_column_dialog(ubiome_state, header_lines)
@@ -426,11 +426,13 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     else :
         # Visualize QC results
         st.markdown("##### Quality Control Results")
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
 
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
 
-        # Retrieve the resource set and save in a variable each visu
+        # Retrieve the resource set and save in a variable each visualization
         # Retrieve outputs
         resource_set_output : ResourceSet = protocol_proxy.get_process('qc_process').get_output('quality_table')
         resource_set_result_dict = resource_set_output.get_resources()
@@ -482,8 +484,11 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
             protocol.add_connector(out_port=fastqc_process >> 'output',
                                     in_port=multiqc_process << 'fastqc_reports_folder')
 
-            # Add output
-            protocol.add_output('multiqc_process_output_folder', multiqc_process >> 'output', flag_resource=False)
+            # Extract the html ressource
+            fs_node_extractor_html = protocol.add_process(FsNodeExtractor, 'fs_node_extractor_html', {"fs_node_path": "multiqc_combined.html"})
+            # Add connectors
+            protocol.add_connector(out_port=multiqc_process >> 'output', in_port=fs_node_extractor_html << "source")
+            protocol.add_output('multiqc_process_output_html', fs_node_extractor_html >> "target", flag_resource=False)
             scenario.add_to_queue()
 
             ubiome_state.reset_tree_analysis()
@@ -492,21 +497,24 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
     else:
         # Visualize MultiQC results
         st.markdown("##### MultiQC Results")
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
 
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
 
         # Retrieve html output
-        multiqc_output : Folder = protocol_proxy.get_process('multiqc_process').get_output('output')
-        # Get the html file multiqc_combined.html
-        path_full = os.path.join(multiqc_output.path, "multiqc_combined.html")
+        multiqc_output = protocol_proxy.get_process('fs_node_extractor_html').get_output('target')
 
-        if os.path.exists(path_full):
-            with open(path_full,'r') as f:
-                html_data = f.read()
-            st.components.v1.html(html_data, scrolling=True, height=500)
-        else:
-            st.error("MultiQC HTML report not found.")
+        # Generate a public share link for the html
+        generate_link_dto = GenerateShareLinkDTO.get_1_hour_validity(
+            entity_id=multiqc_output.get_model_id(),
+            entity_type=ShareLinkEntityType.RESOURCE
+        )
+
+        share_link = ShareLinkService.get_or_create_valid_public_share_link(generate_link_dto)
+        # Display html
+        st.components.v1.iframe(share_link.get_public_link(), scrolling=True, height=500)
 
 @st.dialog("Feature inference parameters")
 def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: State):
@@ -569,25 +577,26 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
         # Display details about scenario feature inference
         st.markdown("##### Feature Inference Scenario Results")
         display_scenario_parameters(selected_scenario, 'feature_process')
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
 
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            tab_boxplot, tab_table = st.tabs(["Boxplot", "Table"])
+        tab_boxplot, tab_table = st.tabs(["Boxplot", "Table"])
 
-            with tab_table:
-                # Display stats
-                stats_output = protocol_proxy.get_process('feature_process').get_output('stats')
-                if stats_output and hasattr(stats_output, 'get_data'):
-                    st.dataframe(stats_output.get_data())
+        with tab_table:
+            # Display stats
+            stats_output = protocol_proxy.get_process('feature_process').get_output('stats')
+            if stats_output and hasattr(stats_output, 'get_data'):
+                st.dataframe(stats_output.get_data())
 
-            with tab_boxplot:
-                # Display boxplot
-                boxplot_output = protocol_proxy.get_process('feature_process').get_output('boxplot').get_figure()
-                if boxplot_output:
-                    st.plotly_chart(boxplot_output)
+        with tab_boxplot:
+            # Display boxplot
+            boxplot_output = protocol_proxy.get_process('feature_process').get_output('boxplot').get_figure()
+            if boxplot_output:
+                st.plotly_chart(boxplot_output)
 
 @st.dialog("Rarefaction parameters")
 def dialog_rarefaction_params(ubiome_state: State):
@@ -652,22 +661,24 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
         st.markdown("##### Rarefaction Scenario Results")
         display_scenario_parameters(selected_scenario, 'rarefaction_process')
 
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
+
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
-            # Display rarefaction table
-            rarefaction_resource_set = protocol_proxy.get_process('rarefaction_process').get_output('rarefaction_table')
-            if rarefaction_resource_set:
-                resource_set_result_dict = rarefaction_resource_set.get_resources()
-                # Give the user the posibility to choose the result to display
-                selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys())
-                if selected_result:
-                    selected_resource = resource_set_result_dict.get(selected_result)
-                    if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
-                        st.dataframe(selected_resource.get_data())
-                    elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
-                        st.plotly_chart(selected_resource.get_figure())
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
+        # Display rarefaction table
+        rarefaction_resource_set = protocol_proxy.get_process('rarefaction_process').get_output('rarefaction_table')
+        if rarefaction_resource_set:
+            resource_set_result_dict = rarefaction_resource_set.get_resources()
+            # Give the user the posibility to choose the result to display
+            selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys())
+            if selected_result:
+                selected_resource = resource_set_result_dict.get(selected_result)
+                if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
+                    st.dataframe(selected_resource.get_data())
+                elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
+                    st.plotly_chart(selected_resource.get_figure())
 
 @st.dialog("Taxonomy parameters")
 def dialog_taxonomy_params(ubiome_state: State):
@@ -735,38 +746,40 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
         st.markdown("##### Taxonomy Scenario Results")
         display_scenario_parameters(selected_scenario, 'taxonomy_process')
 
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
+
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            tab_diversity, tab_taxonomy = st.tabs(["Diversity Tables", "Taxonomy Tables"])
+        tab_diversity, tab_taxonomy = st.tabs(["Diversity Tables", "Taxonomy Tables"])
 
-            with tab_diversity:
-                # Display diversity tables
-                diversity_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('diversity_tables')
-                if diversity_resource_set:
-                    resource_set_result_dict = diversity_resource_set.get_resources()
-                    selected_result = st.selectbox("Select a diversity table to display", options=resource_set_result_dict.keys(), key="diversity_select")
-                    if selected_result:
-                        selected_resource = resource_set_result_dict.get(selected_result)
-                        if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
-                            st.dataframe(selected_resource.get_data())
-                        elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
-                            st.plotly_chart(selected_resource.get_figure())
+        with tab_diversity:
+            # Display diversity tables
+            diversity_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('diversity_tables')
+            if diversity_resource_set:
+                resource_set_result_dict = diversity_resource_set.get_resources()
+                selected_result = st.selectbox("Select a diversity table to display", options=resource_set_result_dict.keys(), key="diversity_select")
+                if selected_result:
+                    selected_resource = resource_set_result_dict.get(selected_result)
+                    if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
+                        st.dataframe(selected_resource.get_data())
+                    elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
+                        st.plotly_chart(selected_resource.get_figure())
 
-            with tab_taxonomy:
-                # Display taxonomy tables
-                taxonomy_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('taxonomy_tables')
-                if taxonomy_resource_set:
-                    resource_set_result_dict = taxonomy_resource_set.get_resources()
-                    selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys(), key="taxonomy_select")
-                    if selected_result:
-                        selected_resource = resource_set_result_dict.get(selected_result)
-                        if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
-                            st.dataframe(selected_resource.get_data())
-                        elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
-                            st.plotly_chart(selected_resource.get_figure())
+        with tab_taxonomy:
+            # Display taxonomy tables
+            taxonomy_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('taxonomy_tables')
+            if taxonomy_resource_set:
+                resource_set_result_dict = taxonomy_resource_set.get_resources()
+                selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys(), key="taxonomy_select")
+                if selected_result:
+                    selected_resource = resource_set_result_dict.get(selected_result)
+                    if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
+                        st.dataframe(selected_resource.get_data())
+                    elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
+                        st.plotly_chart(selected_resource.get_figure())
 
 
 @st.dialog("PCOA parameters")
@@ -864,63 +877,65 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         display_scenario_parameters(selected_scenario, 'pcoa_process')
 
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
 
-            # Get PCOA results
-            pcoa_result = protocol_proxy.get_process('pcoa_process').get_output('result')
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            if pcoa_result:
-                tab_plot, tab_table = st.tabs(["2D Score Plot", "Tables"])
-                transformed_table = pcoa_result.get_transformed_table()
-                variance_table = pcoa_result.get_variance_table()
+        # Get PCOA results
+        pcoa_result = protocol_proxy.get_process('pcoa_process').get_output('result')
 
-                with tab_plot:
-                    # Manual plot creation
-                    if transformed_table and variance_table:
+        if pcoa_result:
+            tab_plot, tab_table = st.tabs(["2D Score Plot", "Tables"])
+            transformed_table = pcoa_result.get_transformed_table()
+            variance_table = pcoa_result.get_variance_table()
 
-                        data = transformed_table.get_data()
-                        variance_data = variance_table.get_data()
+            with tab_plot:
+                # Manual plot creation
+                if transformed_table and variance_table:
 
-                        # Create scatter plot of PC1 vs PC2
-                        fig = px.scatter(
-                            data,
-                            x='PC1',
-                            y='PC2',
-                            title='PCOA - 2D Score Plot'
-                        )
+                    data = transformed_table.get_data()
+                    variance_data = variance_table.get_data()
 
-                        # Update axis labels with variance explained
-                        pc1_var = variance_data.loc['PC1', 'ExplainedVariance'] * 100
-                        pc2_var = variance_data.loc['PC2', 'ExplainedVariance'] * 100
+                    # Create scatter plot of PC1 vs PC2
+                    fig = px.scatter(
+                        data,
+                        x='PC1',
+                        y='PC2',
+                        title='PCOA - 2D Score Plot'
+                    )
 
-                        fig.update_xaxes(title=f'PC1 ({pc1_var:.2f}%)')
-                        fig.update_yaxes(title=f'PC2 ({pc2_var:.2f}%)')
+                    # Update axis labels with variance explained
+                    pc1_var = variance_data.loc['PC1', 'ExplainedVariance'] * 100
+                    pc2_var = variance_data.loc['PC2', 'ExplainedVariance'] * 100
 
-                        fig.update_layout(
-                            xaxis={
-                                "showline": True,
-                                "linecolor": 'black',
-                                "linewidth": 1,
-                                "zeroline": False
-                            },
-                            yaxis={
-                                "showline": True,
-                                "linecolor": 'black',
-                                "linewidth": 1
-                            })
+                    fig.update_xaxes(title=f'PC1 ({pc1_var:.2f}%)')
+                    fig.update_yaxes(title=f'PC2 ({pc2_var:.2f}%)')
 
-                        st.plotly_chart(fig)
-                with tab_table:
-                    # Display the transformed data table
-                    if transformed_table:
-                        st.dataframe(transformed_table.get_data())
+                    fig.update_layout(
+                        xaxis={
+                            "showline": True,
+                            "linecolor": 'black',
+                            "linewidth": 1,
+                            "zeroline": False
+                        },
+                        yaxis={
+                            "showline": True,
+                            "linecolor": 'black',
+                            "linewidth": 1
+                        })
 
-                    # Also show variance table
-                    st.markdown("##### Variance Explained")
-                    if variance_table:
-                        st.dataframe(variance_table.get_data())
+                    st.plotly_chart(fig)
+            with tab_table:
+                # Display the transformed data table
+                if transformed_table:
+                    st.dataframe(transformed_table.get_data())
+
+                # Also show variance table
+                st.markdown("##### Variance Explained")
+                if variance_table:
+                    st.dataframe(variance_table.get_data())
 
 
 @st.dialog("ANCOM parameters")
@@ -1014,77 +1029,78 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         # Display details about scenario ANCOM
         st.markdown("##### ANCOM Scenario Results")
         display_scenario_parameters(selected_scenario, 'ancom_process')
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
 
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            # Get ANCOM results
-            ancom_result_tables = protocol_proxy.get_process('ancom_process').get_output('result_tables')
+        # Get ANCOM results
+        ancom_result_tables = protocol_proxy.get_process('ancom_process').get_output('result_tables')
 
-            if ancom_result_tables:
-                resource_set_result_dict = ancom_result_tables.get_resources()
+        if ancom_result_tables:
+            resource_set_result_dict = ancom_result_tables.get_resources()
 
-                # Separate different types of results
-                ancom_stats = {}
-                volcano_plots = {}
-                percentile_abundances = {}
+            # Separate different types of results
+            ancom_stats = {}
+            volcano_plots = {}
+            percentile_abundances = {}
 
-                for key, resource in resource_set_result_dict.items():
-                    if "ANCOM Stat" in key:
-                        ancom_stats[key] = resource
-                    elif "Volcano plot" in key:
-                        volcano_plots[key] = resource
-                    elif "Percentile abundances" in key:
-                        percentile_abundances[key] = resource
+            for key, resource in resource_set_result_dict.items():
+                if "ANCOM Stat" in key:
+                    ancom_stats[key] = resource
+                elif "Volcano plot" in key:
+                    volcano_plots[key] = resource
+                elif "Percentile abundances" in key:
+                    percentile_abundances[key] = resource
 
-                tab_stats, tab_volcano, tab_percentile = st.tabs(["ANCOM Statistics", "Volcano Plots", "Percentile Abundances"])
+            tab_stats, tab_volcano, tab_percentile = st.tabs(["ANCOM Statistics", "Volcano Plots", "Percentile Abundances"])
 
-                with tab_stats:
-                    st.markdown("##### ANCOM Statistical Results")
-                    if ancom_stats:
-                        selected_stat = st.selectbox("Select taxonomic level for ANCOM stats:",
-                                                   options=list(ancom_stats.keys()),
-                                                   key="ancom_stats_select")
-                        if selected_stat:
-                            st.dataframe(ancom_stats[selected_stat].get_data())
-                    else:
-                        st.info("No ANCOM statistics available.")
+            with tab_stats:
+                st.markdown("##### ANCOM Statistical Results")
+                if ancom_stats:
+                    selected_stat = st.selectbox("Select taxonomic level for ANCOM stats:",
+                                                options=list(ancom_stats.keys()),
+                                                key="ancom_stats_select")
+                    if selected_stat:
+                        st.dataframe(ancom_stats[selected_stat].get_data())
+                else:
+                    st.info("No ANCOM statistics available.")
 
-                with tab_volcano:
-                    st.markdown("##### Volcano Plot Data")
-                    if volcano_plots:
-                        selected_volcano = st.selectbox("Select taxonomic level for volcano plot:",
-                                                      options=list(volcano_plots.keys()),
-                                                      key="volcano_plot_select")
-                        if selected_volcano:
-                            volcano_data = volcano_plots[selected_volcano].get_data()
-                            st.dataframe(volcano_data)
+            with tab_volcano:
+                st.markdown("##### Volcano Plot Data")
+                if volcano_plots:
+                    selected_volcano = st.selectbox("Select taxonomic level for volcano plot:",
+                                                    options=list(volcano_plots.keys()),
+                                                    key="volcano_plot_select")
+                    if selected_volcano:
+                        volcano_data = volcano_plots[selected_volcano].get_data()
+                        st.dataframe(volcano_data)
 
-                            # Create a simple volcano plot if data has the right columns
-                            if 'W' in volcano_data.columns and 'clr_F-score' in volcano_data.columns:
-                                fig = px.scatter(volcano_data, x='W', y='clr_F-score',
-                                               title=f"Volcano Plot - {selected_volcano}",
-                                               hover_data=volcano_data.columns.tolist())
-                                fig.update_layout(
-                                    xaxis_title="W statistic",
-                                    yaxis_title="F-score"
-                                )
-                                st.plotly_chart(fig)
-                    else:
-                        st.info("No volcano plot data available.")
+                        # Create a simple volcano plot if data has the right columns
+                        if 'W' in volcano_data.columns and 'clr_F-score' in volcano_data.columns:
+                            fig = px.scatter(volcano_data, x='W', y='clr_F-score',
+                                            title=f"Volcano Plot - {selected_volcano}",
+                                            hover_data=volcano_data.columns.tolist())
+                            fig.update_layout(
+                                xaxis_title="W statistic",
+                                yaxis_title="F-score"
+                            )
+                            st.plotly_chart(fig)
+                else:
+                    st.info("No volcano plot data available.")
 
-                with tab_percentile:
-                    st.markdown("##### Percentile Abundances")
-                    if percentile_abundances:
-                        selected_percentile = st.selectbox("Select taxonomic level for percentile abundances:",
-                                                         options=list(percentile_abundances.keys()),
-                                                         key="percentile_select")
-                        if selected_percentile:
-                            st.dataframe(percentile_abundances[selected_percentile].get_data())
-                    else:
-                        st.info("No percentile abundance data available.")
+            with tab_percentile:
+                st.markdown("##### Percentile Abundances")
+                if percentile_abundances:
+                    selected_percentile = st.selectbox("Select taxonomic level for percentile abundances:",
+                                                        options=list(percentile_abundances.keys()),
+                                                        key="percentile_select")
+                    if selected_percentile:
+                        st.dataframe(percentile_abundances[selected_percentile].get_data())
+                else:
+                    st.info("No percentile abundance data available.")
 
 @st.dialog("DB annotator parameters")
 def dialog_db_annotator_params(ubiome_state: State):
@@ -1169,36 +1185,38 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
         st.markdown("##### Taxa Composition Scenario Results")
         display_scenario_parameters(selected_scenario, 'db_annotator_process')
 
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
+
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            tab_relative, tab_absolute = st.tabs(["Relative Abundance", "Absolute Abundance"])
+        tab_relative, tab_absolute = st.tabs(["Relative Abundance", "Absolute Abundance"])
 
-            with tab_relative:
-                # Display relative abundance table and plot
-                st.markdown("##### Relative Abundance Table")
-                relative_table_output = protocol_proxy.get_process('db_annotator_process').get_output('relative_abundance_table')
-                if relative_table_output:
-                    st.dataframe(relative_table_output.get_data())
+        with tab_relative:
+            # Display relative abundance table and plot
+            st.markdown("##### Relative Abundance Table")
+            relative_table_output = protocol_proxy.get_process('db_annotator_process').get_output('relative_abundance_table')
+            if relative_table_output:
+                st.dataframe(relative_table_output.get_data())
 
-                st.markdown("##### Relative Abundance Plot")
-                relative_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('relative_abundance_plotly_resource')
-                if relative_plot_output:
-                    st.plotly_chart(relative_plot_output.get_figure())
+            st.markdown("##### Relative Abundance Plot")
+            relative_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('relative_abundance_plotly_resource')
+            if relative_plot_output:
+                st.plotly_chart(relative_plot_output.get_figure())
 
-            with tab_absolute:
-                # Display absolute abundance table and plot
-                st.markdown("##### Absolute Abundance Table")
-                absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_table')
-                if absolute_table_output:
-                    st.dataframe(absolute_table_output.get_data())
+        with tab_absolute:
+            # Display absolute abundance table and plot
+            st.markdown("##### Absolute Abundance Table")
+            absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_table')
+            if absolute_table_output:
+                st.dataframe(absolute_table_output.get_data())
 
-                st.markdown("##### Absolute Abundance Plot")
-                absolute_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_plotly_resource')
-                if absolute_plot_output:
-                    st.plotly_chart(absolute_plot_output.get_figure())
+            st.markdown("##### Absolute Abundance Plot")
+            absolute_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_plotly_resource')
+            if absolute_plot_output:
+                st.plotly_chart(absolute_plot_output.get_figure())
 
 @st.dialog("16S parameters")
 def dialog_16s_params(ubiome_state: State):
@@ -1271,70 +1289,72 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         st.markdown("##### 16S Functional Analysis Scenario Results")
         display_scenario_parameters(selected_scenario, 'functional_analysis_process')
 
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
+
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            # Get functional analysis results folder
-            functional_result_folder = protocol_proxy.get_process('functional_analysis_process').get_output('Folder_result')
+        # Get functional analysis results folder
+        functional_result_folder = protocol_proxy.get_process('functional_analysis_process').get_output('Folder_result')
 
-            if functional_result_folder:
-                st.markdown("##### PICRUSt2 Functional Analysis Results")
+        if functional_result_folder:
+            st.markdown("##### PICRUSt2 Functional Analysis Results")
 
-                # Display folder contents
-                st.markdown("##### Result Folder Contents")
-                folder_path = functional_result_folder.path
+            # Display folder contents
+            st.markdown("##### Result Folder Contents")
+            folder_path = functional_result_folder.path
 
-                if os.path.exists(folder_path):
-                    # List key output folders
-                    key_folders = ['EC_metagenome_out', 'KO_metagenome_out', 'pathways_out']
+            if os.path.exists(folder_path):
+                # List key output folders
+                key_folders = ['EC_metagenome_out', 'KO_metagenome_out', 'pathways_out']
 
-                    tabs = st.tabs(["EC Metagenome", "KO Metagenome", "Pathways"])
+                tabs = st.tabs(["EC Metagenome", "KO Metagenome", "Pathways"])
 
-                    for i, (tab, folder_name) in enumerate(zip(tabs, key_folders)):
-                        with tab:
-                            folder_full_path = os.path.join(folder_path, folder_name)
-                            if os.path.exists(folder_full_path):
-                                st.write(f"#### {folder_name.replace('_', ' ').title()}")
+                for i, (tab, folder_name) in enumerate(zip(tabs, key_folders)):
+                    with tab:
+                        folder_full_path = os.path.join(folder_path, folder_name)
+                        if os.path.exists(folder_full_path):
+                            st.write(f"#### {folder_name.replace('_', ' ').title()}")
 
-                                # List files in the folder
-                                try:
-                                    files_in_folder = os.listdir(folder_full_path)
-                                    if files_in_folder:
-                                        st.write("**Available files:**")
-                                        for file_name in files_in_folder:
-                                            file_path = os.path.join(folder_full_path, file_name)
-                                            if os.path.isfile(file_path):
-                                                file_size = os.path.getsize(file_path)
-                                                st.write(f"- {file_name} ({file_size} bytes)")
+                            # List files in the folder
+                            try:
+                                files_in_folder = os.listdir(folder_full_path)
+                                if files_in_folder:
+                                    st.write("**Available files:**")
+                                    for file_name in files_in_folder:
+                                        file_path = os.path.join(folder_full_path, file_name)
+                                        if os.path.isfile(file_path):
+                                            file_size = os.path.getsize(file_path)
+                                            st.write(f"- {file_name} ({file_size} bytes)")
 
-                                                # For TSV files, offer to display them
-                                                if file_name.endswith(('.tsv', '.tsv.gz')):
-                                                    if st.button(f"View {file_name}", key=f"view_{folder_name}_{file_name}"):
-                                                        try:
-                                                            if file_name.endswith('.gz'):
-                                                                import gzip
-                                                                with gzip.open(file_path, 'rt') as f:
-                                                                    content = f.read()
-                                                            else:
-                                                                with open(file_path, 'r') as f:
-                                                                    content = f.read()
+                                            # For TSV files, offer to display them
+                                            if file_name.endswith(('.tsv', '.tsv.gz')):
+                                                if st.button(f"View {file_name}", key=f"view_{folder_name}_{file_name}"):
+                                                    try:
+                                                        if file_name.endswith('.gz'):
+                                                            import gzip
+                                                            with gzip.open(file_path, 'rt') as f:
+                                                                content = f.read()
+                                                        else:
+                                                            with open(file_path, 'r') as f:
+                                                                content = f.read()
 
-                                                            # Display as dataframe if it's TSV
-                                                            import io
-                                                            df = pd.read_csv(io.StringIO(content), sep='\t')
-                                                            st.dataframe(df.head(100))  # Show first 100 rows
-                                                        except Exception as e:
-                                                            st.error(f"Error reading file: {str(e)}")
-                                    else:
-                                        st.info(f"No files found in {folder_name}")
-                                except Exception as e:
-                                    st.error(f"Error accessing folder {folder_name}: {str(e)}")
-                            else:
-                                st.warning(f"Folder {folder_name} not found in results")
-                else:
-                    st.error("Result folder not found")
+                                                        # Display as dataframe if it's TSV
+                                                        import io
+                                                        df = pd.read_csv(io.StringIO(content), sep='\t')
+                                                        st.dataframe(df.head(100))  # Show first 100 rows
+                                                    except Exception as e:
+                                                        st.error(f"Error reading file: {str(e)}")
+                                else:
+                                    st.info(f"No files found in {folder_name}")
+                            except Exception as e:
+                                st.error(f"Error accessing folder {folder_name}: {str(e)}")
+                        else:
+                            st.warning(f"Folder {folder_name} not found in results")
+            else:
+                st.error("Result folder not found")
 
 @st.dialog("16S Visualization parameters")
 def dialog_16s_visu_params(ubiome_state: State):
@@ -1454,93 +1474,95 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         st.markdown("##### 16S Visualization Scenario Results")
         display_scenario_parameters(selected_scenario, 'functional_visu_process')
 
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return
+
         # Display results if scenario is successful
-        if selected_scenario.status == ScenarioStatus.SUCCESS:
-            scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-            protocol_proxy = scenario_proxy.get_protocol()
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+        protocol_proxy = scenario_proxy.get_protocol()
 
-            tab_pca, tab_results = st.tabs(["PCA Plot", "Analysis Results"])
+        tab_pca, tab_results = st.tabs(["PCA Plot", "Analysis Results"])
 
-            with tab_pca:
-                # Display PCA plot
-                st.markdown("##### Principal Component Analysis")
-                plotly_result = protocol_proxy.get_process('functional_visu_process').get_output('plotly_result')
-                if plotly_result:
-                    st.plotly_chart(plotly_result.get_figure())
+        with tab_pca:
+            # Display PCA plot
+            st.markdown("##### Principal Component Analysis")
+            plotly_result = protocol_proxy.get_process('functional_visu_process').get_output('plotly_result')
+            if plotly_result:
+                st.plotly_chart(plotly_result.get_figure())
 
-            with tab_results:
-                # Display resource set results
-                st.markdown("##### Differential Abundance Analysis Results")
-                resource_set_output = protocol_proxy.get_process('functional_visu_process').get_output('resource_set')
+        with tab_results:
+            # Display resource set results
+            st.markdown("##### Differential Abundance Analysis Results")
+            resource_set_output = protocol_proxy.get_process('functional_visu_process').get_output('resource_set')
 
-                if resource_set_output:
-                    resource_dict = resource_set_output.get_resources()
+            if resource_set_output:
+                resource_dict = resource_set_output.get_resources()
 
-                    # Separate different types of results
-                    error_bar_plots = {}
-                    heatmap_plots = {}
-                    analysis_tables = {}
+                # Separate different types of results
+                error_bar_plots = {}
+                heatmap_plots = {}
+                analysis_tables = {}
 
-                    for key, resource in resource_dict.items():
-                        if "pathway_errorbar" in key and key.endswith(".png"):
-                            error_bar_plots[key] = resource
-                        elif "pathway_heatmap" in key and key.endswith(".png"):
-                            heatmap_plots[key] = resource
-                        elif "daa_annotated_results" in key and key.endswith(".csv"):
-                            analysis_tables[key] = resource
+                for key, resource in resource_dict.items():
+                    if "pathway_errorbar" in key and key.endswith(".png"):
+                        error_bar_plots[key] = resource
+                    elif "pathway_heatmap" in key and key.endswith(".png"):
+                        heatmap_plots[key] = resource
+                    elif "daa_annotated_results" in key and key.endswith(".csv"):
+                        analysis_tables[key] = resource
 
-                    # Create sub-tabs for different result types
-                    if error_bar_plots or heatmap_plots or analysis_tables:
-                        sub_tabs = []
-                        if analysis_tables:
-                            sub_tabs.append("Analysis Tables")
-                        if error_bar_plots:
-                            sub_tabs.append("Error Bar Plots")
-                        if heatmap_plots:
-                            sub_tabs.append("Heatmap Plots")
+                # Create sub-tabs for different result types
+                if error_bar_plots or heatmap_plots or analysis_tables:
+                    sub_tabs = []
+                    if analysis_tables:
+                        sub_tabs.append("Analysis Tables")
+                    if error_bar_plots:
+                        sub_tabs.append("Error Bar Plots")
+                    if heatmap_plots:
+                        sub_tabs.append("Heatmap Plots")
 
-                        if len(sub_tabs) > 1:
-                            tab_tables, *other_tabs = st.tabs(sub_tabs)
-                        else:
-                            tab_tables = st.container()
-                            other_tabs = []
-
-                        # Analysis Tables
-                        if analysis_tables:
-                            with tab_tables if len(sub_tabs) > 1 else st.container():
-                                st.markdown("##### Differential Abundance Analysis Tables")
-                                selected_table = st.selectbox("Select analysis table:",
-                                                             options=list(analysis_tables.keys()),
-                                                             key="analysis_table_select")
-                                if selected_table:
-                                    st.dataframe(analysis_tables[selected_table].get_data())
-
-                        # Error Bar Plots
-                        if error_bar_plots and other_tabs:
-                            with other_tabs[0]:
-                                st.markdown("##### Pathway Error Bar Plots")
-                                selected_errorbar = st.selectbox("Select error bar plot:",
-                                                               options=list(error_bar_plots.keys()),
-                                                               key="errorbar_select")
-                                if selected_errorbar:
-                                    try:
-                                        st.image(error_bar_plots[selected_errorbar].path)
-                                    except Exception as e:
-                                        st.error(f"Error displaying image: {str(e)}")
-
-                        # Heatmap Plots
-                        if heatmap_plots and len(other_tabs) > 1:
-                            with other_tabs[1]:
-                                st.markdown("##### Pathway Heatmap Plots")
-                                selected_heatmap = st.selectbox("Select heatmap plot:",
-                                                              options=list(heatmap_plots.keys()),
-                                                              key="heatmap_select")
-                                if selected_heatmap:
-                                    try:
-                                        st.image(heatmap_plots[selected_heatmap].path)
-                                    except Exception as e:
-                                        st.error(f"Error displaying image: {str(e)}")
+                    if len(sub_tabs) > 1:
+                        tab_tables, *other_tabs = st.tabs(sub_tabs)
                     else:
-                        st.info("No visualization results available.")
+                        tab_tables = st.container()
+                        other_tabs = []
+
+                    # Analysis Tables
+                    if analysis_tables:
+                        with tab_tables if len(sub_tabs) > 1 else st.container():
+                            st.markdown("##### Differential Abundance Analysis Tables")
+                            selected_table = st.selectbox("Select analysis table:",
+                                                            options=list(analysis_tables.keys()),
+                                                            key="analysis_table_select")
+                            if selected_table:
+                                st.dataframe(analysis_tables[selected_table].get_data())
+
+                    # Error Bar Plots
+                    if error_bar_plots and other_tabs:
+                        with other_tabs[0]:
+                            st.markdown("##### Pathway Error Bar Plots")
+                            selected_errorbar = st.selectbox("Select error bar plot:",
+                                                            options=list(error_bar_plots.keys()),
+                                                            key="errorbar_select")
+                            if selected_errorbar:
+                                try:
+                                    st.image(error_bar_plots[selected_errorbar].path)
+                                except Exception as e:
+                                    st.error(f"Error displaying image: {str(e)}")
+
+                    # Heatmap Plots
+                    if heatmap_plots and len(other_tabs) > 1:
+                        with other_tabs[1]:
+                            st.markdown("##### Pathway Heatmap Plots")
+                            selected_heatmap = st.selectbox("Select heatmap plot:",
+                                                            options=list(heatmap_plots.keys()),
+                                                            key="heatmap_select")
+                            if selected_heatmap:
+                                try:
+                                    st.image(heatmap_plots[selected_heatmap].path)
+                                except Exception as e:
+                                    st.error(f"Error displaying image: {str(e)}")
                 else:
-                    st.info("No analysis results available.")
+                    st.info("No visualization results available.")
+            else:
+                st.info("No analysis results available.")
