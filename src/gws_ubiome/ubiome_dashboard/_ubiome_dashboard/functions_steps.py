@@ -421,6 +421,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
             scenario.add_to_queue()
 
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
     else :
@@ -492,6 +493,7 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
             scenario.add_to_queue()
 
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
     else:
@@ -522,7 +524,9 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
     form_config = StreamlitTaskRunner(task_feature_inference)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.FEATURE_INFERENCE_CONFIG_KEY,
-        default_config_values=task_feature_inference.config_specs.get_default_values())
+        default_config_values=task_feature_inference.config_specs.get_default_values(),
+        is_default_config_valid=task_feature_inference.config_specs.mandatory_values_are_set(
+            task_feature_inference.config_specs.get_default_values()))
 
     if st.button("Run Feature Inference", use_container_width=True, icon=":material/play_arrow:", key="button_fei"):
         if not ubiome_state.get_feature_inference_config()["is_valid"]:
@@ -554,6 +558,7 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -604,7 +609,9 @@ def dialog_rarefaction_params(ubiome_state: State):
     form_config = StreamlitTaskRunner(Qiime2RarefactionAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.RAREFACTION_CONFIG_KEY,
-        default_config_values=Qiime2RarefactionAnalysis.config_specs.get_default_values())
+        default_config_values=Qiime2RarefactionAnalysis.config_specs.get_default_values(),
+        is_default_config_valid=Qiime2RarefactionAnalysis.config_specs.mandatory_values_are_set(
+            Qiime2RarefactionAnalysis.config_specs.get_default_values()))
 
     if st.button("Run Rarefaction", use_container_width=True, icon=":material/play_arrow:", key="button_rarefaction"):
         if not ubiome_state.get_rarefaction_config()["is_valid"]:
@@ -635,6 +642,7 @@ def dialog_rarefaction_params(ubiome_state: State):
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -686,7 +694,9 @@ def dialog_taxonomy_params(ubiome_state: State):
     form_config = StreamlitTaskRunner(Qiime2TaxonomyDiversity)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.TAXONOMY_CONFIG_KEY,
-        default_config_values=Qiime2TaxonomyDiversity.config_specs.get_default_values())
+        default_config_values=Qiime2TaxonomyDiversity.config_specs.get_default_values(),
+        is_default_config_valid=Qiime2TaxonomyDiversity.config_specs.mandatory_values_are_set(
+            Qiime2TaxonomyDiversity.config_specs.get_default_values()))
 
     if st.button("Run Taxonomy", use_container_width=True, icon=":material/play_arrow:", key="button_taxonomy"):
         if not ubiome_state.get_taxonomy_config()["is_valid"]:
@@ -720,6 +730,7 @@ def dialog_taxonomy_params(ubiome_state: State):
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -807,8 +818,10 @@ def dialog_pcoa_params(ubiome_state: State):
     form_config = StreamlitTaskRunner(PCoATrainer)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.PCOA_CONFIG_KEY,
-        default_config_values=PCoATrainer.config_specs.get_default_values())
-
+        default_config_values=PCoATrainer.config_specs.get_default_values(),
+        is_default_config_valid=PCoATrainer.config_specs.mandatory_values_are_set(
+            PCoATrainer.config_specs.get_default_values())
+    )
 
     if st.button("Run PCOA", use_container_width=True, icon=":material/play_arrow:", key="button_pcoa"):
         if not ubiome_state.get_pcoa_config()["is_valid"]:
@@ -847,6 +860,7 @@ def dialog_pcoa_params(ubiome_state: State):
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 
@@ -957,7 +971,10 @@ def dialog_ancom_params(ubiome_state: State):
     form_config = StreamlitTaskRunner(Qiime2DifferentialAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.ANCOM_CONFIG_KEY,
-        default_config_values=Qiime2DifferentialAnalysis.config_specs.get_default_values())
+        default_config_values=Qiime2DifferentialAnalysis.config_specs.get_default_values(),
+        is_default_config_valid=Qiime2DifferentialAnalysis.config_specs.mandatory_values_are_set(
+            Qiime2DifferentialAnalysis.config_specs.get_default_values())
+    )
 
     if st.button("Run ANCOM", use_container_width=True, icon=":material/play_arrow:", key="button_ancom"):
         if not ubiome_state.get_ancom_config()["is_valid"]:
@@ -1001,6 +1018,7 @@ def dialog_ancom_params(ubiome_state: State):
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -1155,6 +1173,7 @@ def dialog_db_annotator_params(ubiome_state: State):
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -1224,7 +1243,10 @@ def dialog_16s_params(ubiome_state: State):
     form_config = StreamlitTaskRunner(Picrust2FunctionalAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.FUNCTIONAL_ANALYSIS_CONFIG_KEY,
-        default_config_values=Picrust2FunctionalAnalysis.config_specs.get_default_values())
+        default_config_values=Picrust2FunctionalAnalysis.config_specs.get_default_values(),
+        is_default_config_valid=Picrust2FunctionalAnalysis.config_specs.mandatory_values_are_set(
+            Picrust2FunctionalAnalysis.config_specs.get_default_values())
+    )
 
     if st.button("Run 16S Functional Analysis", use_container_width=True, icon=":material/play_arrow:", key="button_16s"):
         if not ubiome_state.get_functional_analysis_config()["is_valid"]:
@@ -1262,6 +1284,7 @@ def dialog_16s_params(ubiome_state: State):
             protocol.add_output('functional_analysis_result_output', functional_analysis_process >> 'Folder_result', flag_resource=False)
 
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -1378,7 +1401,10 @@ def dialog_16s_visu_params(ubiome_state: State):
     default_config["Round_digit"] = True
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.FUNCTIONAL_ANALYSIS_VISU_CONFIG_KEY,
-        default_config_values=default_config)
+        default_config_values=default_config,
+        is_default_config_valid=Ggpicrust2FunctionalAnalysis.config_specs.mandatory_values_are_set(
+            default_config)
+    )
 
     if st.button("Run 16S Visualization", use_container_width=True, icon=":material/play_arrow:", key="button_16s_visu"):
         if not ubiome_state.get_functional_analysis_visu_config()["is_valid"]:
@@ -1428,6 +1454,7 @@ def dialog_16s_visu_params(ubiome_state: State):
 
             scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> None:

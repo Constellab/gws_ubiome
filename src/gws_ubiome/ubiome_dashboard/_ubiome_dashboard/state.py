@@ -59,6 +59,8 @@ class State:
     SELECTED_ANNOTATION_TABLE_KEY = "selected_annotation_table"
     NEW_COLUMN_INPUT_KEY = "new_column_input"
 
+    TREE_DEFAULT_ITEM_KEY = "tree_default_item"
+
     EDITED_DF_METADATA = "edited_df_metadata"
 
     ASSOCIATE_FOLDER_KEY = "associate_folder"
@@ -79,6 +81,14 @@ class State:
     ANCOM_CONFIG_KEY = "ancom_config"
     FUNCTIONAL_ANALYSIS_CONFIG_KEY = "functional_analysis_config"
     FUNCTIONAL_ANALYSIS_VISU_CONFIG_KEY = "functional_analysis_visu_config"
+
+    @classmethod
+    def get_tree_default_item(cls) -> str:
+        return st.session_state.get(cls.TREE_DEFAULT_ITEM_KEY, None)
+
+    @classmethod
+    def set_tree_default_item(cls, value: str) -> None:
+        st.session_state[cls.TREE_DEFAULT_ITEM_KEY] = value
 
     @classmethod
     def set_associate_scenario_with_folder(cls, value: bool) -> None:

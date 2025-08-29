@@ -52,18 +52,23 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     ubiome_state.set_sequencing_type(config_sequencing_type)
 
     # 1) Metadata table
-    # Always show first step
     if ubiome_state.TAG_METADATA in scenarios_by_step:
         # If a scenario exists, use the first scenario's ID
         key_metadata = ubiome_state.get_scenario_step_metadata()[0].id
     else:
         key_metadata = ubiome_state.TAG_METADATA
+
+    # Show the default selected item if exist either show first step
+    if ubiome_state.get_tree_default_item():
+        key_default_item = ubiome_state.get_tree_default_item()
+    else :
+        key_default_item = key_metadata
+
     metadata_item = StreamlitTreeMenuItem(
         label="Metadata table",
         key=key_metadata,
         material_icon=get_step_icon(ubiome_state.TAG_METADATA, scenarios_by_step)
     )
-
 
     button_menu.add_item(metadata_item)
 
@@ -276,7 +281,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
         button_menu.add_item(feature_item)
 
-    return button_menu, key_metadata
+    return button_menu, key_default_item
 
 def render_analysis_page(ubiome_state : State):
     router = StreamlitRouter.load_from_session()
@@ -286,6 +291,8 @@ def render_analysis_page(ubiome_state : State):
     with left_col:
         # Button to go home
         if st.button("Home", use_container_width=True, icon=":material/home:", type="primary"):
+            # Reset the state of selected tree default item
+            ubiome_state.set_tree_default_item(None)
             router = StreamlitRouter.load_from_session()
             router.navigate("first-page")
 
@@ -333,10 +340,9 @@ def render_analysis_page(ubiome_state : State):
         st.write(f"**Analysis:** {analysis_name}")
 
         # Build and render the analysis tree menu, and keep the key of the first element
-        tree_menu, key_metadata = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
+        tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
 
-        # Set default selected item to metadata table
-        tree_menu.set_default_selected_item(key_metadata)
+        tree_menu.set_default_selected_item(key_default_item)
 
         # Save in session_state the tree_menu
         ubiome_state.set_tree_menu_object(tree_menu)
@@ -347,7 +353,6 @@ def render_analysis_page(ubiome_state : State):
         if selected_item is not None:
             # Handle tree item selection
             item_key = selected_item.key
-
 
             # If it's a scenario ID, update the selected scenario
             selected_scenario_new = Scenario.get_by_id(item_key)
