@@ -11,7 +11,7 @@ from streamlit_slickgrid import (
 )
 from state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitResourceSelect, StreamlitTaskRunner
-from gws_core import GenerateShareLinkDTO, ShareLinkEntityType, ShareLinkService, FsNodeExtractor, Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, Tag, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core import FrontService, GenerateShareLinkDTO, ShareLinkEntityType, ShareLinkService, FsNodeExtractor, Task, ResourceSet, Folder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, SpaceFolder, Tag, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_ubiome import Qiime2QualityCheck, Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE, Qiime2RarefactionAnalysis, Qiime2TaxonomyDiversity, Qiime2DifferentialAnalysis, Qiime2TableDbAnnotator, Picrust2FunctionalAnalysis, Ggpicrust2FunctionalAnalysis
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
@@ -1261,7 +1261,6 @@ def dialog_16s_params(ubiome_state: State):
             # Add outputs
             protocol.add_output('functional_analysis_result_output', functional_analysis_process >> 'Folder_result', flag_resource=False)
 
-            scenario.add_to_queue()
             ubiome_state.reset_tree_analysis()
             st.rerun()
 
@@ -1288,6 +1287,9 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         # Display details about scenario 16S functional analysis
         st.markdown("##### 16S Functional Analysis Scenario Results")
         display_scenario_parameters(selected_scenario, 'functional_analysis_process')
+
+        st.success("The scenario has been successfully created. Here is the link:")
+        st.write(FrontService.get_scenario_url(selected_scenario.id))
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return

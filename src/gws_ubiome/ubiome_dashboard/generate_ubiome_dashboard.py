@@ -1,5 +1,6 @@
 from gws_core import (ConfigParams, AppConfig, AppType, OutputSpec,
                       OutputSpecs, StreamlitResource, Task, TaskInputs,
+                      CredentialsDataLab, CredentialsParam, CredentialsType,
                       TaskOutputs, app_decorator, task_decorator,
                       InputSpecs, ConfigSpecs, BoolParam)
 
@@ -28,10 +29,15 @@ class GenerateUbiomeDashboard(Task):
 
     config_specs : ConfigSpecs = ConfigSpecs({'associate_scenario_with_folder': BoolParam(
         default_value=False, human_name="Associate Scenario with Folder", short_description="Set to True if it is mandatory to associate scenarios with a folder."
-    )})
+    ),
+    'credentials_lab_large' : CredentialsParam(
+        credentials_type=CredentialsType.LAB, human_name="Credentials lab large to run 16s step", short_description="Credentials to request lab large's API", optional = True)})
 
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
+        credentials_data: CredentialsDataLab = params.get_value(
+            'credentials_lab_large')
+
         """ Run the task """
 
         streamlit_app = StreamlitResource()
@@ -44,5 +50,8 @@ class GenerateUbiomeDashboard(Task):
             'associate_scenario_with_folder')
         streamlit_app.set_param(
             'associate_scenario_with_folder', associate_scenario_with_folder)
+        if credentials_data:
+            streamlit_app.set_param(
+                "credentials_name", credentials_data.meta.name)
 
         return {"streamlit_app": streamlit_app}

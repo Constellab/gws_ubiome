@@ -7,6 +7,7 @@ sources: list
 params: dict
 
 associate_scenario_with_folder = params.get('associate_scenario_with_folder')
+credentials_data = params.get('credentials_lab_large', None)
 ubiome_state = State()
 ubiome_state.set_associate_scenario_with_folder(associate_scenario_with_folder)
 
