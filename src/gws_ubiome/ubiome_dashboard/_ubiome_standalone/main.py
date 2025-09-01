@@ -5,7 +5,9 @@ from gws_core.streamlit import StreamlitRouter
 
 if 'standalone' not in st.session_state:
     st.subheader("Welcome to the Ubiome Standalone Dashboard!")
-    st.write("This application is intended exclusively for **visualization**, you can't run new analysis in this demo mode. Contact Gencovery team if you want the full app on your lab!")
+    st.write("This application is intended exclusively for **visualization**.")
+    st.write("The Ubiome Dashboard is a Streamlit application designed for microbiome data analysis and visualization. It provides an interactive interface for processing, analyzing, and interpreting 16S rRNA sequencing data through various bioinformatics workflows.")
+    st.write("This standalone dashboard only allows users to visualise results that have already been run. However, don't hesitate to contact us to arrange a demo of the full app, in which we can also run analyses automatically!")
     st.write("Click on the button to launch the app: ")
 
     if st.button("Launch the app"):

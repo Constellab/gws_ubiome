@@ -8,6 +8,12 @@ from gws_core import (ConfigParams, AppConfig, AppType, OutputSpec,
 @app_decorator("UbiomeDashboardAppConfig", app_type=AppType.STREAMLIT,
                human_name="Generate Ubiome Dashboard app")
 class UbiomeDashboardAppConfig(AppConfig):
+    """
+    Configuration class for the Ubiome Dashboard Streamlit application.
+
+    This class defines the configuration and setup for a Streamlit-based dashboard
+    that provides visualization and analysis capabilities for microbiome data.
+    """
 
     # retrieve the path of the app folder, relative to this file
     # the app code folder starts with a underscore to avoid being loaded when the brick is loaded
@@ -20,6 +26,7 @@ class UbiomeDashboardAppConfig(AppConfig):
 class GenerateUbiomeDashboard(Task):
     """
     Task that generates the Ubiome Dashboard app.
+    This dashboard provides visualization and analysis capabilities for microbiome data.
     """
 
     input_specs = InputSpecs()

@@ -4,7 +4,7 @@ from state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
 from gws_core import FsNodeExtractor, ResourceModel, Scenario, ScenarioProxy, TableImporter, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import Ggpicrust2FunctionalAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import create_base_scenario_with_tags, render_scenario_table
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 @st.dialog("16S Visualization parameters")
 def dialog_16s_visu_params(ubiome_state: State):
