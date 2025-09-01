@@ -27,6 +27,25 @@ class GenerateUbiomeDashboard(Task):
     """
     Task that generates the Ubiome Dashboard app.
     This dashboard provides visualization and analysis capabilities for microbiome data.
+    The Ubiome Dashboard is a Streamlit application designed for microbiome data analysis and visualization. It provides an interactive interface for processing, analyzing, and interpreting 16S rRNA sequencing data through various bioinformatics workflows.
+
+    The aim is to simplify the use of the Ubiome Brick by providing an application that makes running the pipeline and retrieving results easier. Dependencies between scenarios are also maintained, allowing you to navigate more easily.
+
+    Multi-Step Analysis Pipeline
+
+    The dashboard implements a structured analysis workflow with the following steps:
+
+    - Metadata table: Create a metadata table from a fastq folder
+    - Quality Control (QC): Initial data quality assessment
+    - MultiQC Reporting: Comprehensive quality control reporting
+    - Feature Inference: ASV/OTU identification and quantification
+    - Taxonomy Assignment: Taxonomic classification of features
+    - Rarefaction Analysis: Diversity curve generation
+    - PCoA (Principal Coordinate Analysis): Beta diversity visualization
+    - ANCOM (Analysis of Composition of Microbiomes): Differential abundance testing
+    - Database Annotation: Feature annotation against reference databases
+    - Functional Prediction: Metabolic pathway inference using tools like PICRUSt2
+
     """
 
     input_specs = InputSpecs()

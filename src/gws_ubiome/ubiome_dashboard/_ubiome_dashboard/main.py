@@ -1,6 +1,6 @@
 import streamlit as st
-from state import State
-from _ubiome_dashboard.pages import first_page, new_analysis_page, analysis_page
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.pages import first_page, new_analysis_page, analysis_page
 from gws_core.streamlit import StreamlitRouter
 
 sources: list

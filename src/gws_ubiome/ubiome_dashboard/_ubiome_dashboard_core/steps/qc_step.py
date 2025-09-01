@@ -1,8 +1,8 @@
 import streamlit as st
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core import ResourceSet, Scenario, ScenarioProxy, ProtocolProxy, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
 from gws_ubiome import Qiime2QualityCheck
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import create_base_scenario_with_tags
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags
 
 def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 

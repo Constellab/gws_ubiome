@@ -1,24 +1,24 @@
 import streamlit as st
 from typing import List, Dict
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import search_updated_metadata_table, get_status_emoji
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, get_status_emoji
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 
 #Steps functions
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.metadata_step import render_metadata_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.qc_step import render_qc_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.multiqc_step import render_multiqc_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.feature_inference_step import render_feature_inference_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.rarefaction_step import render_rarefaction_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.taxonomy_step import render_taxonomy_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.pcoa_step import render_pcoa_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.ancom_step import render_ancom_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.db_annotator_step import render_db_annotator_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.functional_16s_step import render_16s_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.steps.functional_16s_visu_step import render_16s_visu_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.metadata_step import render_metadata_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.qc_step import render_qc_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.multiqc_step import render_multiqc_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.feature_inference_step import render_feature_inference_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.rarefaction_step import render_rarefaction_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.taxonomy_step import render_taxonomy_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.pcoa_step import render_pcoa_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.ancom_step import render_ancom_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.db_annotator_step import render_db_annotator_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.functional_16s_step import render_16s_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.functional_16s_visu_step import render_16s_visu_step
 
 
 # Check if steps are completed (have successful scenarios)

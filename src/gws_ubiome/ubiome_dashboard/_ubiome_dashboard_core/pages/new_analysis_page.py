@@ -1,5 +1,5 @@
 import streamlit as st
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitResourceSelect, StreamlitRouter, StreamlitTaskRunner
 from gws_core import ResourceModel, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_ubiome import Qiime2MetadataTableMaker

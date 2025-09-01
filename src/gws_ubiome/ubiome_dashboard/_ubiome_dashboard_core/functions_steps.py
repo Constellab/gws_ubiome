@@ -8,7 +8,7 @@ from streamlit_slickgrid import (
     FieldType,
     ExportServices,
 )
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser
 from gws_core import Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, File, SpaceFolder, Tag, Scenario, ScenarioStatus, ScenarioProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType

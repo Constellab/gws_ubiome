@@ -1,10 +1,10 @@
 import streamlit as st
 import plotly.express as px
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
 from gws_core import Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_gaia import PCoATrainer
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 @st.dialog("PCOA parameters")
 def dialog_pcoa_params(ubiome_state: State):

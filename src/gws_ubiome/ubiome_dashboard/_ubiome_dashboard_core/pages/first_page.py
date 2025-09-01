@@ -1,11 +1,11 @@
 import streamlit as st
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from typing import List
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter
 from gws_core import Tag, ScenarioSearchBuilder, Scenario
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import get_status_emoji
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import get_status_emoji
 from streamlit_slickgrid import (
     slickgrid,
     FieldType,

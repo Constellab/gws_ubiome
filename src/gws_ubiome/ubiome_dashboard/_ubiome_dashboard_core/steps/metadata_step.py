@@ -1,8 +1,8 @@
 import streamlit as st
-from state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser
 from gws_core import Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, Scenario, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.functions_steps import search_updated_metadata_table, save_metadata_table, add_new_column_dialog
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, save_metadata_table, add_new_column_dialog
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     # Check if there's an updated metadata table first

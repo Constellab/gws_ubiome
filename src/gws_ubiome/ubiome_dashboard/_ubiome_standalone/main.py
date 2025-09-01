@@ -1,6 +1,6 @@
 import streamlit as st
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.pages import first_page, new_analysis_page, analysis_page
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard.state import State
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.pages import first_page, new_analysis_page, analysis_page
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitRouter
 
 if 'standalone' not in st.session_state:
@@ -15,7 +15,7 @@ if 'standalone' not in st.session_state:
         st.session_state['standalone'] = True
         st.rerun()
 
-else :
+else:
     ubiome_state = State()
     ubiome_state.set_associate_scenario_with_folder(False)
     ubiome_state.set_is_standalone(True)
