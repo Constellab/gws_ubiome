@@ -66,8 +66,9 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         ubiome_state.set_current_feature_scenario_id_parent(feature_scenario_parent_id)
 
     if not selected_scenario:
-        # On click, open a dialog to allow the user to select params of 16S functional analysis
-        st.button("Run new 16S Functional Analysis", icon=":material/play_arrow:", use_container_width=False,
+        if not ubiome_state.get_is_standalone():
+            # On click, open a dialog to allow the user to select params of 16S functional analysis
+            st.button("Run new 16S Functional Analysis", icon=":material/play_arrow:", use_container_width=False,
                     on_click=lambda state=ubiome_state: dialog_16s_params(state))
 
         # Display table of existing 16S Functional Analysis scenarios
@@ -79,6 +80,9 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         # Display details about scenario 16S functional analysis
         st.markdown("##### 16S Functional Analysis Scenario Results")
         display_scenario_parameters(selected_scenario, 'functional_analysis_process')
+
+        if ubiome_state.get_is_standalone():
+            return
 
         st.success("The scenario has been successfully created. Here is the link:")
         st.write(FrontService.get_scenario_url(selected_scenario.id))

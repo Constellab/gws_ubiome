@@ -74,10 +74,10 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
         ubiome_state.set_current_feature_scenario_id_parent(feature_inference_id)
 
     if not selected_scenario:
-
-        # On click, open a dialog to allow the user to select params of Taxa Composition
-        st.button("Run new Taxa Composition", icon=":material/play_arrow:", use_container_width=False,
-                        on_click=lambda state=ubiome_state: dialog_db_annotator_params(state))
+        if not ubiome_state.get_is_standalone():
+            # On click, open a dialog to allow the user to select params of Taxa Composition
+            st.button("Run new Taxa Composition", icon=":material/play_arrow:", use_container_width=False,
+                            on_click=lambda state=ubiome_state: dialog_db_annotator_params(state))
 
         # Display table of existing Taxa Composition scenarios
         st.markdown("### Previous Taxa Composition Analyses")

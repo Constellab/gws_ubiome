@@ -56,8 +56,10 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
         else:
             task_feature_inference = Qiime2FeatureTableExtractorSE
 
-        # On click, open a dialog to allow the user to select params of feature inference
-        st.button("Run new Feature Inference", icon=":material/play_arrow:", use_container_width=False,
+        if not ubiome_state.get_is_standalone():
+
+            # On click, open a dialog to allow the user to select params of feature inference
+            st.button("Run new Feature Inference", icon=":material/play_arrow:", use_container_width=False,
                     on_click=lambda task=task_feature_inference, state=ubiome_state: dialog_feature_inference_params(task, state))
 
         # Display table of existing Feature Inference scenarios

@@ -14,6 +14,9 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
             st.info("Please save a metadata table with at least one new metadata column to proceed.")
             return
 
+        if ubiome_state.get_is_standalone():
+            return
+
         if st.button("Run quality check", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario in the lab
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, f"{ubiome_state.get_current_analysis_name()} - Quality check")

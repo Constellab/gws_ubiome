@@ -13,6 +13,9 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
         if not qc_scenarios or qc_scenarios[0].status != ScenarioStatus.SUCCESS:
             st.info("Please run the QC step successfully before running MultiQC.")
             return
+        if ubiome_state.get_is_standalone():
+            st.info("MultiQC has not been run.")
+            return
 
         if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario for MultiQC

@@ -62,6 +62,7 @@ class State:
     TREE_DEFAULT_ITEM_KEY = "tree_default_item"
 
     EDITED_DF_METADATA = "edited_df_metadata"
+    STANDALONE_KEY = "standalone"
 
     ASSOCIATE_FOLDER_KEY = "associate_folder"
 
@@ -81,6 +82,14 @@ class State:
     ANCOM_CONFIG_KEY = "ancom_config"
     FUNCTIONAL_ANALYSIS_CONFIG_KEY = "functional_analysis_config"
     FUNCTIONAL_ANALYSIS_VISU_CONFIG_KEY = "functional_analysis_visu_config"
+
+    @classmethod
+    def get_is_standalone(cls) -> bool:
+        return st.session_state.get(cls.STANDALONE_KEY, False)
+
+    @classmethod
+    def set_is_standalone(cls, value: bool) -> None:
+        st.session_state[cls.STANDALONE_KEY] = value
 
     @classmethod
     def get_tree_default_item(cls) -> str:

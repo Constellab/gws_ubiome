@@ -60,9 +60,10 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
         ubiome_state.set_current_feature_scenario_id_parent(feature_scenario_parent_id)
 
     if not selected_scenario:
-        # On click, open a dialog to allow the user to select params of taxonomy
-        st.button("Run new Taxonomy", icon=":material/play_arrow:", use_container_width=False,
-                    on_click=lambda state=ubiome_state: dialog_taxonomy_params(state))
+        if not ubiome_state.get_is_standalone():
+            # On click, open a dialog to allow the user to select params of taxonomy
+            st.button("Run new Taxonomy", icon=":material/play_arrow:", use_container_width=False,
+                        on_click=lambda state=ubiome_state: dialog_taxonomy_params(state))
 
         # Display table of existing Taxonomy scenarios
         st.markdown("### Previous Taxonomy Analyses")

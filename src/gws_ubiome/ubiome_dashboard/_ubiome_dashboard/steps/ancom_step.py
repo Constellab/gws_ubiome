@@ -87,9 +87,10 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         ubiome_state.set_current_feature_scenario_id_parent(feature_inference_id)
 
     if not selected_scenario:
-        # On click, open a dialog to allow the user to select params of ANCOM
-        st.button("Run new ANCOM", icon=":material/play_arrow:", use_container_width=False,
-                        on_click=lambda state=ubiome_state: dialog_ancom_params(state))
+        if not ubiome_state.get_is_standalone():
+            # On click, open a dialog to allow the user to select params of ANCOM
+            st.button("Run new ANCOM", icon=":material/play_arrow:", use_container_width=False,
+                            on_click=lambda state=ubiome_state: dialog_ancom_params(state))
 
         # Display table of existing ANCOM scenarios
         st.markdown("### Previous ANCOM Analyses")

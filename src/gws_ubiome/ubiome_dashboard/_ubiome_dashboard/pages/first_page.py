@@ -24,10 +24,11 @@ def render_first_page(ubiome_state : State):
         st.markdown("## Retrieve analysis")
 
     with col_button_new:
-        if st.button("Create new analysis", icon=":material/add:", use_container_width=False):
-            # On click, navigate to a hidden page 'run new analysis'
-            router = StreamlitRouter.load_from_session()
-            router.navigate("new-analysis")
+        if not ubiome_state.get_is_standalone():
+            if st.button("Create new analysis", icon=":material/add:", use_container_width=False):
+                # On click, navigate to a hidden page 'run new analysis'
+                router = StreamlitRouter.load_from_session()
+                router.navigate("new-analysis")
 
 
     # Add the table to retrieve the previous analysis

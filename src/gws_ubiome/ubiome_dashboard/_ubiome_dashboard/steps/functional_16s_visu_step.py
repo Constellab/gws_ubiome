@@ -114,9 +114,10 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         if not ko_file_available:
             st.warning("⚠️ **Cannot run 16S Visualization**: The required file `KO_metagenome_out/pred_metagenome_unstrat.tsv.gz` is not available from the 16S Functional Analysis results.")
         else:
-            # On click, open a dialog to allow the user to select params of 16S visualization
-            st.button("Run new 16S Visualization", icon=":material/play_arrow:", use_container_width=False,
-                        on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
+            if not ubiome_state.get_is_standalone():
+                # On click, open a dialog to allow the user to select params of 16S visualization
+                st.button("Run new 16S Visualization", icon=":material/play_arrow:", use_container_width=False,
+                            on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
 
         # Display table of existing 16S Visualization scenarios
         st.markdown("### Previous 16S Visualizations")
