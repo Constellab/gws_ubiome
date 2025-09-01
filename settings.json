@@ -27,7 +27,12 @@
     "pip": [
       {
         "source": "https://pypi.python.org/simple",
-        "packages": []
+        "packages": [
+          {
+            "name": "streamlit-slickgrid",
+            "version": "0.2.0"
+          }
+        ]
       }
     ],
     "git": []
