@@ -23,19 +23,22 @@ def render_new_analysis_page(ubiome_state : State):
         form_config.generate_config_form_without_run(
             session_state_key=ubiome_state.QIIME2_METADATA_CONFIG_KEY, default_config_values=Qiime2MetadataTableMaker.config_specs.get_default_values())
 
-        st.text_input("Insert your analysis name", key = ubiome_state.ANALYSIS_NAME_USER)
+        cols = st.columns(2)
+        with cols[0]:
+            st.text_input("Insert your analysis name", key = ubiome_state.ANALYSIS_NAME_USER)
 
-        space_service = SpaceService.get_instance()
-        list_folders_in_lab = space_service.get_all_lab_root_folders().folders
-        folder_dict = {}
-        for folder in list_folders_in_lab:
-            # Create a dict of folder names and id
-            folder_dict[folder.id] = folder.name
+        with cols[1]:
+            space_service = SpaceService.get_instance()
+            list_folders_in_lab = space_service.get_all_lab_root_folders().folders
+            folder_dict = {}
+            for folder in list_folders_in_lab:
+                # Create a dict of folder names and id
+                folder_dict[folder.id] = folder.name
 
-        # Give the user the possibility to choose in a list of folder names
-        folder_to_associate_with = st.selectbox("Select folder to associate with", options=list(folder_dict.values()), index=None)
-        # Save in session state the id of the folder
-        ubiome_state.set_selected_folder_id(next((id for id, name in folder_dict.items() if name == folder_to_associate_with), None))
+            # Give the user the possibility to choose in a list of folder names
+            folder_to_associate_with = st.selectbox("Select folder to associate with", options=list(folder_dict.values()), index=None)
+            # Save in session state the id of the folder
+            ubiome_state.set_selected_folder_id(next((id for id, name in folder_dict.items() if name == folder_to_associate_with), None))
 
         submit_button = st.form_submit_button(
             label="Run"
