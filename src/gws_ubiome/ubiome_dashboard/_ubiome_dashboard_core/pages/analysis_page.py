@@ -324,6 +324,9 @@ def render_analysis_page(ubiome_state : State):
     tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
     ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
+    # Get folder from scenario folder
+    ubiome_state.set_selected_folder_id(selected_analysis.folder.id if selected_analysis.folder else None)
+
     if selected_analysis.status != ScenarioStatus.SUCCESS:
         with right_col:
             st.info("The first step for this analysis is not completed successfully. Please check back later.")
