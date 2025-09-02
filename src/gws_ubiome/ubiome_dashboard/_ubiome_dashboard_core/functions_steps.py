@@ -194,7 +194,7 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 
     # If there's an existing resource, delete it first
     if existing_resource:
-        ResourceModel.get_by_id(existing_resource.id).delete_instance()
+        ResourceModel.get_by_id(existing_resource.get_model_id()).delete_instance()
 
     # Create a new file with the updated content
     path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
