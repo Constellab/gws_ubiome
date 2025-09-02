@@ -80,12 +80,17 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
         protocol_proxy = scenario_proxy.get_protocol()
         # Display rarefaction table
         rarefaction_resource_set = protocol_proxy.get_process('rarefaction_process').get_output('rarefaction_table')
-        if rarefaction_resource_set:
-            resource_set_result_dict = rarefaction_resource_set.get_resources()
-            # Give the user the posibility to choose the result to display
-            selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys())
-            if selected_result:
-                selected_resource = resource_set_result_dict.get(selected_result)
+        if not rarefaction_resource_set:
+            return
+
+        resource_set_result_dict = rarefaction_resource_set.get_resources()
+        # Create tabs for each result
+        tab_names = list(resource_set_result_dict.keys())
+        tabs = st.tabs(tab_names)
+
+        for tab, result_name in zip(tabs, tab_names):
+            with tab:
+                selected_resource = resource_set_result_dict.get(result_name)
                 if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
                     st.dataframe(selected_resource.get_data())
                 elif selected_resource.get_typing_name() == "RESOURCE.gws_core.PlotlyResource":
