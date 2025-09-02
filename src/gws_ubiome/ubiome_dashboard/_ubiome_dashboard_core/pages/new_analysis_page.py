@@ -4,6 +4,17 @@ from gws_core.streamlit import StreamlitResourceSelect, StreamlitRouter, Streaml
 from gws_core import ResourceModel, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioProxy, ProtocolProxy, ScenarioCreationType
 from gws_ubiome import Qiime2MetadataTableMaker
 
+def _flatten_folders_recursive(folders, folder_dict, folder_display_names, prefix="-"):
+    """Recursively flatten folder hierarchy for display"""
+    for folder in folders:
+        display_name = f"{prefix}{folder.name}"
+        folder_dict[folder.id] = folder.name
+        folder_display_names[display_name] = folder.id
+
+        # Recursively process children with increased indentation
+        if hasattr(folder, 'children') and folder.children:
+            _flatten_folders_recursive(folder.children, folder_dict, folder_display_names, prefix + "-")
+
 def render_new_analysis_page(ubiome_state : State):
     # Add a return button
     router = StreamlitRouter.load_from_session()
@@ -31,14 +42,19 @@ def render_new_analysis_page(ubiome_state : State):
             space_service = SpaceService.get_instance()
             list_folders_in_lab = space_service.get_all_lab_root_folders().folders
             folder_dict = {}
-            for folder in list_folders_in_lab:
-                # Create a dict of folder names and id
-                folder_dict[folder.id] = folder.name
+            folder_display_names = {}
 
-            # Give the user the possibility to choose in a list of folder names
-            folder_to_associate_with = st.selectbox("Select folder to associate with", options=list(folder_dict.values()), index=None)
+            # Flatten the folder hierarchy recursively
+            _flatten_folders_recursive(list_folders_in_lab, folder_dict, folder_display_names)
+
+            # Give the user the possibility to choose from all folders (including children)
+            folder_to_associate_with = st.selectbox(
+                "Select folder to associate with",
+                options=list(folder_display_names.keys()),
+                index=None
+            )
             # Save in session state the id of the folder
-            ubiome_state.set_selected_folder_id(next((id for id, name in folder_dict.items() if name == folder_to_associate_with), None))
+            ubiome_state.set_selected_folder_id(folder_display_names.get(folder_to_associate_with))
 
         submit_button = st.form_submit_button(
             label="Run"
