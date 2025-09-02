@@ -29,6 +29,19 @@ def get_status_emoji(status: ScenarioStatus) -> str:
     }
     return emoji_map.get(status, "")
 
+def get_status_prettify(status: ScenarioStatus) -> str:
+    """Return a human-readable string for scenario status"""
+    prettify_map = {
+        ScenarioStatus.DRAFT: "Draft",
+        ScenarioStatus.IN_QUEUE: "In Queue",
+        ScenarioStatus.WAITING_FOR_CLI_PROCESS: "Waiting",
+        ScenarioStatus.RUNNING: "Running",
+        ScenarioStatus.SUCCESS: "Success",
+        ScenarioStatus.ERROR: "Error",
+        ScenarioStatus.PARTIALLY_RUN: "Partially Run"
+    }
+    return prettify_map.get(status, "")
+
 # Generic helper functions
 def create_scenario_table_data(scenarios: List[Scenario], process_name: str) -> tuple:
     """Generic function to create table data from scenarios with their parameters."""
@@ -56,7 +69,7 @@ def create_scenario_table_data(scenarios: List[Scenario], process_name: str) -> 
             "id": scenario.id,
             "Scenario Name": scenario.title,
             "Creation Date": scenario.created_at.strftime("%Y-%m-%d %H:%M") if scenario.created_at else "",
-            "Status": scenario.status.value if scenario.status else ""
+            "Status": f"{get_status_emoji(scenario.status)} {get_status_prettify(scenario.status)}" if scenario.status else ""
         }
 
         # Add each parameter as a separate column

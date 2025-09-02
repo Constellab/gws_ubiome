@@ -2,7 +2,7 @@ import streamlit as st
 from typing import List, Dict
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, get_status_emoji
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, get_status_emoji, get_status_prettify
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
@@ -247,7 +247,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
 
                 # 8) 16S sub-step
                 s16_item = StreamlitTreeMenuItem(
-                    label="16S",
+                    label="16s functional abundances prediction",
                     key=f"{ubiome_state.TAG_16S}_{scenario.id}",
                     material_icon=get_step_icon(ubiome_state.TAG_16S, scenarios_by_step)
                 )
@@ -411,7 +411,7 @@ def render_analysis_page(ubiome_state : State):
 
                 with col_status:
                     status_emoji = get_status_emoji(selected_scenario.status)
-                    st.markdown(f"#### **Status:** {status_emoji} {selected_scenario.status.value}")
+                    st.markdown(f"#### **Status:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
             else :
                 selected_scenario = None
 
