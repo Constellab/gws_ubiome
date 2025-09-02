@@ -1,6 +1,7 @@
 import streamlit as st
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core import GenerateShareLinkDTO, ShareLinkEntityType, ShareLinkService, FsNodeExtractor, Scenario, ScenarioProxy, ProtocolProxy, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
+from gws_core.streamlit import StreamlitContainers
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags
@@ -55,7 +56,11 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
 
     else:
         # Visualize MultiQC results
-        st.markdown("##### MultiQC Results")
+        col_title, col_button_html = StreamlitContainers.columns_with_fit_content(
+                        key="container_html_header",
+                        cols=[1, 'fit-content'], vertical_align_items='center')
+        with col_title:
+            st.markdown("##### MultiQC Results")
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
 
@@ -72,5 +77,7 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
         )
 
         share_link = ShareLinkService.get_or_create_valid_public_share_link(generate_link_dto)
+        with col_button_html:
+            st.markdown(f"[View MultiQC report in another tab]({share_link.get_public_link()})")
         # Display html
         st.components.v1.iframe(share_link.get_public_link(), scrolling=True, height=500)
