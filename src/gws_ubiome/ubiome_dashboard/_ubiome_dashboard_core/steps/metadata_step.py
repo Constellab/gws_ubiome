@@ -36,7 +36,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
 
     if not ubiome_state.get_scenario_step_qc():
-        st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis and 16s functional analysis prediction.")
+        st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis and 16s functional abundances prediction.")
 
         if st.button("Add Column", use_container_width=False):
             add_new_column_dialog(ubiome_state, header_lines)
@@ -71,7 +71,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
         # Check if at least one new column was added
         if len(ubiome_state.get_edited_df_metadata().columns) == 3:
-            validation_errors.append("⚠️ You must add at least one new metadata column for ANCOM analysis.")
+            validation_errors.append("⚠️ You must add at least one new metadata column for ANCOM analysis and functional abundances prediction.")
 
         # Check if all columns are completely filled
         for col in ubiome_state.get_edited_df_metadata().columns:
