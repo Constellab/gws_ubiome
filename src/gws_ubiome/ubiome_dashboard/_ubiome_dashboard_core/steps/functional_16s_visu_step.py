@@ -16,10 +16,10 @@ def dialog_16s_visu_params(ubiome_state: State):
     table_metadata = TableImporter.call(metadata_file)
     df_metadata = table_metadata.get_data()
 
-    st.markdown("##### Metadata File Preview")
+    st.markdown("##### Reminder metadata columns:")
     if metadata_table:
-        # Display only column names and first 3 rows
-        st.dataframe(df_metadata.head(3))
+        # Display only column names
+        st.write(', '.join(df_metadata.columns.tolist()))
 
     form_config = StreamlitTaskRunner(Ggpicrust2FunctionalAnalysis)
     default_config = Ggpicrust2FunctionalAnalysis.config_specs.get_default_values()

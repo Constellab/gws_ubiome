@@ -17,10 +17,10 @@ def dialog_ancom_params(ubiome_state: State):
     table_metadata = TableImporter.call(metadata_file)
     df_metadata = table_metadata.get_data()
 
-    st.markdown("##### Metadata File")
+    st.markdown("##### Reminder metadata columns:")
     if metadata_table:
-        # Display only column names and first 3 rows
-        st.dataframe(df_metadata.head(3))
+        # Display only column names
+        st.write(', '.join(df_metadata.columns.tolist()))
 
     form_config = StreamlitTaskRunner(Qiime2DifferentialAnalysis)
     form_config.generate_config_form_without_run(
