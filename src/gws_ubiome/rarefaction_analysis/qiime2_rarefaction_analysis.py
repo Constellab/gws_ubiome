@@ -1,4 +1,3 @@
-
 import os
 
 from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
@@ -180,7 +179,7 @@ class Qiime2RarefactionAnalysis(Task):
                 name=sample_id,
                 line=dict(color=color),
                 marker=dict(color=color, size=3),
-                hovertemplate=f'{sample_id} : %{{y}}<extra></extra>'
+                hovertemplate=f'{sample_id}: %{{x}} ; %{{y}}<extra></extra>'
             ))
 
         fig.update_layout(
