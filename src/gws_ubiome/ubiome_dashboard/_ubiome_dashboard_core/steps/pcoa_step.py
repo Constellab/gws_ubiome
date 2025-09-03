@@ -130,13 +130,22 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                     data = transformed_table.get_data()
                     variance_data = variance_table.get_data()
 
+                    # Add sample names from index to the data for plotting
+                    data_with_samples = data.copy()
+                    data_with_samples['Sample'] = data.index
+
                     # Create scatter plot of PC1 vs PC2
                     fig = px.scatter(
-                        data,
+                        data_with_samples,
                         x='PC1',
                         y='PC2',
+                        color = "Sample",
+                        hover_name='Sample',  # Show sample name on hover
                         title='PCOA - 2D Score Plot'
                     )
+
+                    # Update text position to be above the points
+                    fig.update_traces(textposition='top center')
 
                     # Update axis labels with variance explained
                     pc1_var = variance_data.loc['PC1', 'ExplainedVariance'] * 100
