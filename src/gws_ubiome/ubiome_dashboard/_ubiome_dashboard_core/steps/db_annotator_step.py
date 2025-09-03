@@ -97,7 +97,7 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy = scenario_proxy.get_protocol()
 
-        tab_relative, tab_absolute = st.tabs(["Relative Abundance", "Absolute Abundance"])
+        tab_relative, tab_absolute = st.tabs(["Relative Abundance", "Absolute Count"])
 
         with tab_relative:
             # Display relative abundance table and plot
@@ -112,13 +112,13 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
                 st.plotly_chart(relative_plot_output.get_figure())
 
         with tab_absolute:
-            # Display absolute abundance table and plot
-            st.markdown("##### Absolute Abundance Table")
-            absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_table')
+            # Display absolute count table and plot
+            st.markdown("##### Absolute Count Table")
+            absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_count_table')
             if absolute_table_output:
                 st.dataframe(absolute_table_output.get_data())
 
-            st.markdown("##### Absolute Abundance Plot")
-            absolute_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_plotly_resource')
+            st.markdown("##### Absolute Count Plot")
+            absolute_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_count_plotly_resource')
             if absolute_plot_output:
                 st.plotly_chart(absolute_plot_output.get_figure())
