@@ -137,7 +137,12 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                                                 options=list(ancom_stats.keys()),
                                                 key="ancom_stats_select")
                     if selected_stat:
-                        st.dataframe(ancom_stats[selected_stat].get_data())
+                        ancom_data = ancom_stats[selected_stat].get_data()
+                        # Convert boolean columns to string to avoid checkbox display
+                        for col in ancom_data.columns:
+                            if ancom_data[col].dtype == 'bool':
+                                ancom_data[col] = ancom_data[col].astype(str)
+                        st.dataframe(ancom_data)
                 else:
                     st.info("No ANCOM statistics available.")
 
@@ -149,6 +154,10 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                                                     key="volcano_plot_select")
                     if selected_volcano:
                         volcano_data = volcano_plots[selected_volcano].get_data()
+                        # Convert boolean columns to string to avoid checkbox display
+                        for col in volcano_data.columns:
+                            if volcano_data[col].dtype == 'bool':
+                                volcano_data[col] = volcano_data[col].astype(str)
                         st.dataframe(volcano_data)
 
                         # Create a simple volcano plot if data has the right columns
@@ -171,6 +180,11 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                                                         options=list(percentile_abundances.keys()),
                                                         key="percentile_select")
                     if selected_percentile:
-                        st.dataframe(percentile_abundances[selected_percentile].get_data())
+                        percentile_data = percentile_abundances[selected_percentile].get_data()
+                        # Convert boolean columns to string to avoid checkbox display
+                        for col in percentile_data.columns:
+                            if percentile_data[col].dtype == 'bool':
+                                percentile_data[col] = percentile_data[col].astype(str)
+                        st.dataframe(percentile_data)
                 else:
                     st.info("No percentile abundance data available.")
