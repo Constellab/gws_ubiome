@@ -186,7 +186,7 @@ class State:
         return cls.get_current_tag_value_by_key(cls.TAG_FASTQ)
 
     @classmethod
-    def set_current_feature_scenario_id_parent(cls, scenario_id: str):
+    def set_current_feature_scenario_id_parent(cls, scenario_id: str) -> None:
         st.session_state[cls.TAG_FEATURE_INFERENCE_ID] = scenario_id
 
     @classmethod
@@ -314,31 +314,45 @@ class State:
 
     @classmethod
     def get_scenario_step_rarefaction(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_RAREFACTION)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_RAREFACTION, {})
+        current_feature_id = cls.get_current_feature_scenario_id_parent()
+        return scenarios_dict.get((current_feature_id), [])
 
     @classmethod
     def get_scenario_step_taxonomy(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_TAXONOMY)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_TAXONOMY, {})
+        current_feature_id = cls.get_current_feature_scenario_id_parent()
+        return scenarios_dict.get(current_feature_id, [])
 
     @classmethod
     def get_scenario_step_pcoa(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_PCOA_DIVERSITY)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_PCOA_DIVERSITY, {})
+        current_taxonomy_id = cls.get_current_taxonomy_scenario_id_parent()
+        return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
     def get_scenario_step_ancom(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_ANCOM)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_ANCOM, {})
+        current_taxonomy_id = cls.get_current_taxonomy_scenario_id_parent()
+        return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
     def get_scenario_step_db_annotator(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_DB_ANNOTATOR)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_DB_ANNOTATOR, {})
+        current_taxonomy_id = cls.get_current_taxonomy_scenario_id_parent()
+        return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
     def get_scenario_step_16s(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_16S)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_16S, {})
+        current_feature_id = cls.get_current_feature_scenario_id_parent()
+        return scenarios_dict.get(current_feature_id, [])
 
     @classmethod
     def get_scenario_step_16s_visu(cls) -> List[Scenario]:
-        return cls.get_scenarios_by_step_dict().get(cls.TAG_16S_VISU)
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_16S_VISU, {})
+        current_feature_id = cls.get_current_feature_scenario_id_parent()
+        return scenarios_dict.get(current_feature_id, [])
 
     @classmethod
     def get_tree_menu_object(cls):

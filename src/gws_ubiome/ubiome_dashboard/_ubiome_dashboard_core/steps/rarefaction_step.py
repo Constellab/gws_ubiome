@@ -54,7 +54,7 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
     if selected_item.key.startswith(ubiome_state.TAG_RAREFACTION):
         feature_scenario_parent_id = ubiome_state.get_parent_feature_inference_scenario_from_step()
         # save in session state
-        ubiome_state.set_current_feature_scenario_id_parent(feature_scenario_parent_id)
+        ubiome_state.set_current_feature_scenario_id_parent(feature_scenario_parent_id.id)
 
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():

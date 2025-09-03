@@ -83,7 +83,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     selected_item = tree_menu.get_selected_item()
     if selected_item.key.startswith(ubiome_state.TAG_PCOA_DIVERSITY):
         taxonomy_scenario_parent_id = ubiome_state.get_parent_taxonomy_scenario_from_step()
-        ubiome_state.set_current_taxonomy_scenario_id_parent(taxonomy_scenario_parent_id)
+        ubiome_state.set_current_taxonomy_scenario_id_parent(taxonomy_scenario_parent_id.id)
         # Retrieve the feature inference scenario ID using the utility function
         feature_inference_id = ubiome_state.get_feature_inference_id_from_taxonomy_scenario(taxonomy_scenario_parent_id)
         ubiome_state.set_current_feature_scenario_id_parent(feature_inference_id)
