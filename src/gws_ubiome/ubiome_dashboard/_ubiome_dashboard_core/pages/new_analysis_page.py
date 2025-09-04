@@ -13,7 +13,7 @@ def _flatten_folders_recursive(folders, folder_dict, folder_display_names, prefi
 
         # Recursively process children with increased indentation
         if hasattr(folder, 'children') and folder.children:
-            _flatten_folders_recursive(folder.children, folder_dict, folder_display_names, prefix + "-")
+            _flatten_folders_recursive(folder.children, folder_dict, folder_display_names, prefix + "------")
 
 def render_new_analysis_page(ubiome_state : State):
     # Add a return button

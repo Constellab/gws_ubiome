@@ -398,14 +398,15 @@ def render_analysis_page(ubiome_state : State):
                         cols=[1, 'fit-content', 'fit-content'], vertical_align_items='center')
                 with col_title:
                     st.markdown(f"#### {selected_scenario.get_short_name()}")
+                with col_status:
+                    status_emoji = get_status_emoji(selected_scenario.status)
+                    st.markdown(f"#### **Status:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
                 with col_refresh:
                     # If the scenario status is running or in queue, add a refresh button to refresh the page
                     if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:
                         if st.button("Refresh", icon=":material/refresh:", use_container_width=False):
+                            ubiome_state.set_tree_default_item(selected_scenario.id)
                             st.rerun()
-                with col_status:
-                    status_emoji = get_status_emoji(selected_scenario.status)
-                    st.markdown(f"#### **Status:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
             else :
                 selected_scenario = None
 

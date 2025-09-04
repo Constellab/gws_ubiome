@@ -36,64 +36,69 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
 
     if not ubiome_state.get_scenario_step_qc():
-        st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis and 16s functional abundances prediction.")
+        if not ubiome_state.get_is_standalone():
+            st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis and 16s functional abundances prediction.")
 
-        if st.button("Add Column", use_container_width=False):
-            add_new_column_dialog(ubiome_state, header_lines)
+            if st.button("Add Column", use_container_width=False):
+                add_new_column_dialog(ubiome_state, header_lines)
 
-        # Create column configuration for all columns
-        column_config = {}
+            # Create column configuration for all columns
+            column_config = {}
 
-        # Configure all data columns
-        for column in df_metadata.columns:
-            column_config[column] = st.column_config.TextColumn(
-                label=column,
-                max_chars=200
+            # Configure all data columns
+            for column in df_metadata.columns:
+                column_config[column] = st.column_config.TextColumn(
+                    label=column,
+                    max_chars=200
+                )
+
+            # Use data editor for editing capabilities
+            st.session_state[ubiome_state.EDITED_DF_METADATA] = st.data_editor(
+                df_metadata,
+                hide_index=True,
+                use_container_width=True,
+                num_rows="dynamic",
+                column_config=column_config,
+                key="data_editor"
             )
-
-        # Use data editor for editing capabilities
-        st.session_state[ubiome_state.EDITED_DF_METADATA] = st.data_editor(
-            df_metadata,
-            hide_index=True,
-            use_container_width=True,
-            num_rows="dynamic",
-            column_config=column_config,
-            key="data_editor"
-        )
+        else:
+            st.dataframe(df_metadata, use_container_width=True, hide_index=True)
     else:
         st.dataframe(df_metadata, use_container_width=True, hide_index=True)
 
     # Save button only appear if QC task have not been created
     if not ubiome_state.get_scenario_step_qc():
+        if not ubiome_state.get_is_standalone():
+            # Validation
+            validation_errors = []
 
-        # Validation
-        validation_errors = []
+            # Check if at least one new column was added
+            if len(ubiome_state.get_edited_df_metadata().columns) == 3:
+                validation_errors.append("⚠️ You must add at least one new metadata column for ANCOM analysis and functional abundances prediction.")
 
-        # Check if at least one new column was added
-        if len(ubiome_state.get_edited_df_metadata().columns) == 3:
-            validation_errors.append("⚠️ You must add at least one new metadata column for ANCOM analysis and functional abundances prediction.")
+            # Check if all columns are completely filled
+            for col in ubiome_state.get_edited_df_metadata().columns:
+                if ubiome_state.get_edited_df_metadata()[col].isna().any() or (ubiome_state.get_edited_df_metadata()[col] == "").any():
+                    validation_errors.append(f"⚠️ Column '{col}' must be completely filled (no empty values).")
 
-        # Check if all columns are completely filled
-        for col in ubiome_state.get_edited_df_metadata().columns:
-            if ubiome_state.get_edited_df_metadata()[col].isna().any() or (ubiome_state.get_edited_df_metadata()[col] == "").any():
-                validation_errors.append(f"⚠️ Column '{col}' must be completely filled (no empty values).")
+            # Check if there are any rows left
+            if len(ubiome_state.get_edited_df_metadata()) == 0:
+                validation_errors.append("⚠️ At least one sample must remain in the table.")
 
-        # Check if there are any rows left
-        if len(ubiome_state.get_edited_df_metadata()) == 0:
-            validation_errors.append("⚠️ At least one sample must remain in the table.")
+            # Display validation results
+            if validation_errors:
+                for error in validation_errors:
+                    st.error(error)
+                save_disabled = True
+            else:
+                save_disabled = False
 
-        # Display validation results
-        if validation_errors:
-            for error in validation_errors:
-                st.error(error)
-            save_disabled = True
+            if st.button("Save", disabled=save_disabled, use_container_width=True):
+                with StreamlitAuthenticateUser():
+                    # Use the helper function to save
+                    save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state)
+                    st.rerun()
         else:
-            save_disabled = False
-
-        if st.button("Save", disabled=save_disabled, use_container_width=True):
-            with StreamlitAuthenticateUser():
-                # Use the helper function to save
-                save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state)
-                st.rerun()
+            st.info("ℹ️ You are in standalone mode. Metadata table cannot be edited.")
     else:
         st.info("ℹ️ Metadata table is locked because QC analysis has already been run.")
