@@ -393,12 +393,16 @@ def render_analysis_page(ubiome_state : State):
                 selected_scenario : Scenario = ubiome_state.get_selected_scenario()
 
                 # Write the status of the scenario at the top right
-                col_title, col_status = StreamlitContainers.columns_with_fit_content(
+                col_title, col_status, col_refresh= StreamlitContainers.columns_with_fit_content(
                         key="container_status",
-                        cols=[1, 'fit-content'], vertical_align_items='center')
+                        cols=[1, 'fit-content', 'fit-content'], vertical_align_items='center')
                 with col_title:
                     st.markdown(f"#### {selected_scenario.get_short_name()}")
-
+                with col_refresh:
+                    # If the scenario status is running or in queue, add a refresh button to refresh the page
+                    if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:
+                        if st.button("Refresh", icon=":material/refresh:", use_container_width=False):
+                            st.rerun()
                 with col_status:
                     status_emoji = get_status_emoji(selected_scenario.status)
                     st.markdown(f"#### **Status:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
