@@ -114,11 +114,6 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
         with tab_absolute:
             # Display absolute count table and plot
             st.markdown("##### Absolute Count Table")
-            absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_count_table')
+            absolute_table_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_abundance_table')
             if absolute_table_output:
                 st.dataframe(absolute_table_output.get_data())
-
-            st.markdown("##### Absolute Count Plot")
-            absolute_plot_output = protocol_proxy.get_process('db_annotator_process').get_output('absolute_count_plotly_resource')
-            if absolute_plot_output:
-                st.plotly_chart(absolute_plot_output.get_figure())
