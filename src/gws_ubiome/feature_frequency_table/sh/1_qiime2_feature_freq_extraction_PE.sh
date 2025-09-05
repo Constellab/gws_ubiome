@@ -11,11 +11,13 @@ qiime_dir=$1
 trcF=$2
 trcR=$3
 threads=$4
+minFold=$5
 
 qiime dada2 denoise-paired \
   --i-demultiplexed-seqs $qiime_dir/demux.qza \
   --p-trunc-len-f $trcF \
   --p-trunc-len-r $trcR \
+  --p-min-fold-parent-over-abundance $minFold \
   --p-n-threads $threads \
   --o-table table.qza \
   --o-representative-sequences rep-seqs.qza \
