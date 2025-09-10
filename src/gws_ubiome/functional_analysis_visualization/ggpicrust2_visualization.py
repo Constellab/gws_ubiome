@@ -48,7 +48,7 @@ class Ggpicrust2FunctionalAnalysis(Task):
     })
 
     config_specs: ConfigSpecs = ConfigSpecs({
-        "DA_method": StrParam(allowed_values=["LinDA", " "], short_description="Differential abundance (DA) method"),
+        "DA_method": StrParam(allowed_values=["LinDA", "DESeq2"], short_description="Differential abundance (DA) method"),
         "Samples_column_name": StrParam(short_description="Column name in metadata file containing the sample name"),
         "Reference_column": StrParam(short_description="Column name in metadata file containing the reference group"),
         "Reference_group": StrParam(short_description="Reference group level for DA"),
