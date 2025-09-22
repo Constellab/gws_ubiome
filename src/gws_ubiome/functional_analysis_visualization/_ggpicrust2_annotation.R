@@ -22,10 +22,14 @@ if (!requireNamespace("KEGGREST", quietly = TRUE) ||
 }
 library(KEGGREST)
 
-if (!requireNamespace("GGally", quietly = TRUE) ||
-    utils::packageVersion("GGally") < "2.2.0") {
-  install.packages("GGally", dependencies = TRUE)
-}
+cran_deps <- c(
+  "tibble","tidyverse","ggprism","patchwork","ggh4x","dplyr","plotly",
+  "R.utils","GGally","ggplot2","RColorBrewer","readr"
+)
+
+need <- cran_deps[!vapply(cran_deps, requireNamespace, logical(1), quietly = TRUE)]
+if (length(need)) install.packages(need, dependencies = TRUE)
+
 
 suppressPackageStartupMessages({
   library(ggh4x)
