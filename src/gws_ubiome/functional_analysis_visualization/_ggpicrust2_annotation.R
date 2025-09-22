@@ -58,27 +58,13 @@ if (!requireNamespace("devtools", quietly = TRUE)) {
 }
 
 # 1) Check if ggpicrust2 is installed and specifically version 1.7.1
-installed <- requireNamespace("ggpicrust2", quietly = TRUE)
-if (installed) {
-  current_ver <- tryCatch(as.character(utils::packageVersion("ggpicrust2")),
-                          error = function(e) NA_character_)
-  if (!is.na(current_ver) && current_ver == "1.7.1") {
-    message("Found ggpicrust2 version 1.7.1; removing it before installing the latest...")
-    .safe_detach("ggpicrust2")
-    remove.packages("ggpicrust2")
-  } else {
-    message("ggpicrust2 is installed (version ", current_ver, "), not 1.7.1.")
-  }
-} else {
-  message("ggpicrust2 is not currently installed.")
-}
+remove.packages("ggpicrust2")
+# ggpicrust2 >= 2.5.1 is required for PICRUSt 2.6.2 compatibility (auto "ko:" prefix handling)
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+devtools::install_github("cafferychen777/ggpicrust2")
 
-# 2) Install the latest ggpicrust2 from GitHub
-#    (use devtools; you could also use remotes::install_github)
-devtools::install_github("cafferychen777/ggpicrust2", dependencies = TRUE, upgrade = "never")
-# 3) Load and report the final version
-suppressPackageStartupMessages(library(ggpicrust2))
-message("ggpicrust2 now at version: ", as.character(packageVersion("ggpicrust2")))
+library(ggpicrust2)
+message("Using ggpicrust2 version: ", as.character(packageVersion("ggpicrust2")))
 
 # ------------------------------
 #  CLI arguments & parameters
