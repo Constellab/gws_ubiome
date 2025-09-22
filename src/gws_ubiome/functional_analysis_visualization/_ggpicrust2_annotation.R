@@ -1,5 +1,22 @@
 #!/usr/bin/env Rscript
 
+# ---------------------------------------------------------------------
+#  CRAN & options d'installation (non interactif / CI/CD / prod)
+# ---------------------------------------------------------------------
+local({
+  r <- getOption("repos")
+  if (is.null(r) || is.na(r["CRAN"]) || r["CRAN"] == "" || r["CRAN"] == "@CRAN@") {
+    options(repos = c(CRAN = "https://cloud.r-project.org"))
+    # Alternative (souvent rapide / entreprise) :
+    # options(repos = c(CRAN = "https://packagemanager.posit.co/cran/latest"))
+  }
+})
+# Conseils pratiques pour les environnements serveurs/CI :
+options(install.packages.compile.from.source = "never")  # privilégier les binaires
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = "true")  # éviter l'échec sur warnings remotes
+# Si vous êtes derrière un proxy d'entreprise, décommentez/ajustez :
+# Sys.setenv(http_proxy="http://user:pass@proxy:port",
+#            https_proxy="http://user:pass@proxy:port")
 
 suppressPackageStartupMessages({
   library(tibble)
@@ -22,14 +39,19 @@ if (!requireNamespace("KEGGREST", quietly = TRUE) ||
 }
 library(KEGGREST)
 
+# ---- Auto-install CRAN deps (including GGally) ------------------------------
 cran_deps <- c(
   "tibble","tidyverse","ggprism","patchwork","ggh4x","dplyr","plotly",
   "R.utils","GGally","ggplot2","RColorBrewer","readr"
 )
-
 need <- cran_deps[!vapply(cran_deps, requireNamespace, logical(1), quietly = TRUE)]
 if (length(need)) install.packages(need, dependencies = TRUE)
 
+# (optionnel) s'assurer que GGally est suffisamment récent pour GGally::geom_stripped_cols()
+if (!requireNamespace("GGally", quietly = TRUE) ||
+    utils::packageVersion("GGally") < "2.2.0") {
+  install.packages("GGally", dependencies = TRUE)
+}
 
 suppressPackageStartupMessages({
   library(ggh4x)
@@ -45,7 +67,7 @@ suppressPackageStartupMessages({
 # ------------------------------
 #  Install/attach run-time deps
 # ------------------------------
-if (!"MicrobiomeStat" %in% installed.packages()) {
+if (!"MicrobiomeStat" %in% rownames(installed.packages())) {
   if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
   devtools::install_github("cafferychen777/MicrobiomeStat", ref = "MicrobiomeStat_Version_1.1.2")
 }
