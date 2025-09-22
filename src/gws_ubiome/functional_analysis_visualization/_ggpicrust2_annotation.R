@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+
 suppressPackageStartupMessages({
   library(tibble)
   library(tidyverse)
@@ -20,6 +21,11 @@ if (!requireNamespace("KEGGREST", quietly = TRUE) ||
   )
 }
 library(KEGGREST)
+
+if (!requireNamespace("GGally", quietly = TRUE) ||
+    utils::packageVersion("GGally") < "2.2.0") {
+  install.packages("GGally", dependencies = TRUE)
+}
 
 suppressPackageStartupMessages({
   library(ggh4x)
