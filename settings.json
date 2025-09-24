@@ -2,7 +2,7 @@
   "name": "gws_ubiome",
   "author": "Gencovery",
   "author_email": "admin@gencovery.com",
-  "version": "0.11.15",
+  "version": "0.11.16",
   "description": "Gencovery brick for microbiome analysis",
   "variables": {
     "gws_ubiome:testdata_dir": "${CURRENT_DIR}/tests/testdata",
@@ -13,11 +13,11 @@
     "bricks": [
       {
         "name": "gws_core",
-        "version": "0.16.6"
+        "version": "0.16.7"
       },
       {
         "name": "gws_omix",
-        "version": "0.11.11"
+        "version": "0.11.12"
       }, 
       {
         "name": "gws_gaia",
