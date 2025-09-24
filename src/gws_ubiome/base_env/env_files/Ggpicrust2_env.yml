@@ -5,9 +5,9 @@ channels:
 dependencies:
   - r-base==4.3.2
   - r-tidyverse==2.0.0
-  - r-readr==2.1.4
   - r-tibble==3.2.1
-  - r-ggprism==1.0.4
+  - r-ggally
+  - r-ggprism
   - r-patchwork==1.1.3
   - r-ggh4x==0.2.6
   - r-devtools==2.4.5
@@ -31,7 +31,6 @@ dependencies:
   - bioconductor-edger==3.42.4
   - bioconductor-lefser==1.10.0
   - bioconductor-limma==3.56.2
-  - bioconductor-keggrest==1.40.0
   - bioconductor-deseq2==1.40.2
   - r-remotes==2.4.2.1
   - r-dplyr==1.1.3
