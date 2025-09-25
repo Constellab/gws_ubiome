@@ -89,11 +89,11 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of ANCOM
-            st.button("Run new ANCOM", icon=":material/play_arrow:", use_container_width=False,
+            st.button("Configure new ANCOM scenario", icon=":material/edit:", use_container_width=False,
                             on_click=lambda state=ubiome_state: dialog_ancom_params(state))
 
         # Display table of existing ANCOM scenarios
-        st.markdown("### Previous ANCOM Analyses")
+        st.markdown("### List of scenarios")
 
         list_scenario_ancom = ubiome_state.get_scenario_step_ancom()
         render_scenario_table(list_scenario_ancom, 'ancom_process', 'ancom_grid', ubiome_state)

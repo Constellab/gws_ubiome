@@ -19,12 +19,12 @@ def render_new_analysis_page(ubiome_state : State):
     # Add a return button
     router = StreamlitRouter.load_from_session()
 
-    if st.button("Return Home", icon=":material/arrow_back:", use_container_width=False):
+    if st.button("Return recipes", icon=":material/arrow_back:", use_container_width=False):
         router.navigate("first-page")
 
 
     with st.form(clear_on_submit=False, enter_to_submit=True, key="new_analysis_form"):
-        st.markdown("## New Analysis")
+        st.markdown("## New recipe")
         # select fastq data
         resource_select = StreamlitResourceSelect()
         resource_select.select_resource(
@@ -36,7 +36,7 @@ def render_new_analysis_page(ubiome_state : State):
 
         cols = st.columns(2)
         with cols[0]:
-            st.text_input("Insert your analysis name", key = ubiome_state.ANALYSIS_NAME_USER)
+            st.text_input("Insert your recipe name", key = ubiome_state.ANALYSIS_NAME_USER)
 
         with cols[1]:
             space_service = SpaceService.get_instance()

@@ -91,11 +91,11 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of PCOA
-            st.button("Run new PCOA", icon=":material/play_arrow:", use_container_width=False,
+            st.button("Configure new PCOA scenario", icon=":material/edit:", use_container_width=False,
                         on_click=lambda state=ubiome_state: dialog_pcoa_params(state))
 
         # Display table of existing PCOA scenarios
-        st.markdown("### Previous PCOA Analyses")
+        st.markdown("### List of scenarios")
 
         list_scenario_pcoa = ubiome_state.get_scenario_step_pcoa()
         render_scenario_table(list_scenario_pcoa, 'pcoa_process', 'pcoa_grid', ubiome_state)

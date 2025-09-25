@@ -11,25 +11,16 @@ credentials_data = params.get('credentials_lab_large', None)
 ubiome_state = State()
 ubiome_state.set_associate_scenario_with_folder(associate_scenario_with_folder)
 
-# Hide sidebar completely
-st.markdown("""
-<style>
-.stSidebar, [data-testid="stSidebarCollapsedControl"]{
-    display: none;
-}
-</style>
-""", unsafe_allow_html=True)
-
 def display_first_page(ubiome_state : State):
     first_page.render_first_page(ubiome_state)
 
 def add_first_page(router: StreamlitRouter, ubiome_state: State):
     router.add_page(
         lambda: display_first_page(ubiome_state),
-        title='First page',
+        title='Recipes',
         url_path='first-page',
         icon='📦',
-        hide_from_sidebar=True
+        hide_from_sidebar=False
     )
 
 def display_new_analysis_page(ubiome_state : State):

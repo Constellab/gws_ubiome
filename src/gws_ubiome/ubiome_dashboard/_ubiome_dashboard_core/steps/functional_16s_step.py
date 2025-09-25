@@ -68,11 +68,11 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of 16S functional analysis
-            st.button("Run new 16S Functional Analysis", icon=":material/play_arrow:", use_container_width=False,
+            st.button("Configure new 16S Functional Analysis scenario", icon=":material/edit:", use_container_width=False,
                     on_click=lambda state=ubiome_state: dialog_16s_params(state))
 
         # Display table of existing 16S Functional Analysis scenarios
-        st.markdown("### Previous 16S Functional Analysis")
+        st.markdown("### List of scenarios")
 
         list_scenario_16s = ubiome_state.get_scenario_step_16s()
         render_scenario_table(list_scenario_16s, 'functional_analysis_process', '16s_functional_grid', ubiome_state)

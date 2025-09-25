@@ -116,11 +116,11 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         else:
             if not ubiome_state.get_is_standalone():
                 # On click, open a dialog to allow the user to select params of 16S visualization
-                st.button("Run new 16S Visualization", icon=":material/play_arrow:", use_container_width=False,
+                st.button("Configure new 16S Visualization scenario", icon=":material/edit:", use_container_width=False,
                             on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
 
         # Display table of existing 16S Visualization scenarios
-        st.markdown("### Previous 16S Visualizations")
+        st.markdown("### List of scenarios")
 
         list_scenario_16s_visu = ubiome_state.get_scenario_step_16s_visu()
         render_scenario_table(list_scenario_16s_visu, 'functional_visu_process', '16s_visu_grid', ubiome_state)

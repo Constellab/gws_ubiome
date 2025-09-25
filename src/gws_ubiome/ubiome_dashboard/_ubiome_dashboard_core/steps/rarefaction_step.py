@@ -59,11 +59,11 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of rarefaction
-            st.button("Run new Rarefaction", icon=":material/play_arrow:", use_container_width=False,
+            st.button("Configure new Rarefaction scenario", icon=":material/edit:", use_container_width=False,
                         on_click=lambda state=ubiome_state: dialog_rarefaction_params(state))
 
         # Display table of existing Rarefaction scenarios
-        st.markdown("### Previous Rarefaction Analyses")
+        st.markdown("### List of scenarios")
 
         list_scenario_rarefaction = ubiome_state.get_scenario_step_rarefaction()
         render_scenario_table(list_scenario_rarefaction, 'rarefaction_process', 'rarefaction_grid', ubiome_state)

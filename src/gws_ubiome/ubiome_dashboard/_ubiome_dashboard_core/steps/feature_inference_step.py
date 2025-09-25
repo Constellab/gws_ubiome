@@ -59,11 +59,11 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
         if not ubiome_state.get_is_standalone():
 
             # On click, open a dialog to allow the user to select params of feature inference
-            st.button("Run new Feature Inference", icon=":material/play_arrow:", use_container_width=False,
+            st.button("Configure new Feature Inference scenario", icon=":material/edit:", use_container_width=False,
                     on_click=lambda task=task_feature_inference, state=ubiome_state: dialog_feature_inference_params(task, state))
 
         # Display table of existing Feature Inference scenarios
-        st.markdown("### Previous Feature Inference Analyses")
+        st.markdown("### List of scenarios")
 
         list_scenario_fi = ubiome_state.get_scenario_step_feature_inference()
         render_scenario_table(list_scenario_fi, 'feature_process', 'feature_inference_grid', ubiome_state)

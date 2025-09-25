@@ -1,8 +1,8 @@
 import streamlit as st
 from typing import List, Dict
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
-from gws_core import Tag, File, Folder, ScenarioSearchBuilder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, get_status_emoji, get_status_prettify
+from gws_core import Settings, File, Folder,  Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, get_status_emoji, get_status_prettify, build_scenarios_by_step_dict
 from gws_core.streamlit import StreamlitContainers, StreamlitRouter, StreamlitTreeMenu, StreamlitTreeMenuItem
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
@@ -40,48 +40,8 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     """Build the tree menu for analysis workflow steps"""
     button_menu = StreamlitTreeMenu(key=ubiome_state.TREE_ANALYSIS_KEY)
 
-    ubiome_pipeline_id_parsed = Tag.parse_tag(ubiome_pipeline_id)
-
-    # Get all scenarios for this analysis, we retrieve all the other thanks to the id ubiome pipeline id
-    search_scenario_builder = ScenarioSearchBuilder() \
-        .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=ubiome_pipeline_id_parsed, auto_parse=True)) \
-        .add_is_archived_filter(False)
-
-    all_scenarios: List[Scenario] = search_scenario_builder.search_all()
-
-    # Group scenarios by step type with parent relationships
-    scenarios_by_step = {}
-    for scenario in all_scenarios:
-        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
-        tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
-        step_name = tag_step_name.value
-
-        if step_name in [ubiome_state.TAG_METADATA, ubiome_state.TAG_QC, ubiome_state.TAG_MULTIQC, ubiome_state.TAG_FEATURE_INFERENCE]:
-            # These steps don't have parent dependencies
-            if step_name not in scenarios_by_step:
-                scenarios_by_step[step_name] = []
-            scenarios_by_step[step_name].append(scenario)
-        elif step_name in [ubiome_state.TAG_RAREFACTION, ubiome_state.TAG_TAXONOMY, ubiome_state.TAG_16S, ubiome_state.TAG_16S_VISU]:
-            # These steps depend on feature inference
-            feature_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
-            if feature_id_tags:
-                parent_id = feature_id_tags[0].to_simple_tag().value
-                if step_name not in scenarios_by_step:
-                    scenarios_by_step[step_name] = {}
-                if parent_id not in scenarios_by_step[step_name]:
-                    scenarios_by_step[step_name][parent_id] = []
-                scenarios_by_step[step_name][parent_id].append(scenario)
-        elif step_name in [ubiome_state.TAG_PCOA_DIVERSITY, ubiome_state.TAG_ANCOM, ubiome_state.TAG_DB_ANNOTATOR]:
-            # These steps depend on taxonomy
-            taxonomy_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
-            if taxonomy_id_tags:
-                parent_id = taxonomy_id_tags[0].to_simple_tag().value
-                if step_name not in scenarios_by_step:
-                    scenarios_by_step[step_name] = {}
-                if parent_id not in scenarios_by_step[step_name]:
-                    scenarios_by_step[step_name][parent_id] = []
-                scenarios_by_step[step_name][parent_id].append(scenario)
-
+    # Build scenarios_by_step dictionary using helper function
+    scenarios_by_step = build_scenarios_by_step_dict(ubiome_pipeline_id, ubiome_state)
     ubiome_state.set_scenarios_by_step_dict(scenarios_by_step)
 
     # Set in the state if data is single-end or paired-end
@@ -294,7 +254,7 @@ def render_analysis_page(ubiome_state : State):
 
     with left_col:
         # Button to go home
-        if st.button("Home", use_container_width=True, icon=":material/home:", type="primary"):
+        if st.button("Recipes", use_container_width=True, icon=":material/home:", type="primary"):
             # Reset the state of selected tree default item
             ubiome_state.set_tree_default_item(None)
             router = StreamlitRouter.load_from_session()
@@ -318,8 +278,12 @@ def render_analysis_page(ubiome_state : State):
     ubiome_state.set_selected_folder_id(selected_analysis.folder.id if selected_analysis.folder else None)
 
     if selected_analysis.status != ScenarioStatus.SUCCESS:
+        if selected_analysis.status in [ScenarioStatus.RUNNING, ScenarioStatus.DRAFT, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE, ScenarioStatus.PARTIALLY_RUN]:
+            message = "The first step for this analysis is still running. Please check back later."
+        else:
+            message = "The first step for this analysis is not completed successfully."
         with right_col:
-            st.info("The first step for this analysis is not completed successfully. Please check back later.")
+            st.info(message)
         return
 
     # Get fastq and metadata table
@@ -344,7 +308,7 @@ def render_analysis_page(ubiome_state : State):
     # Left column - Analysis workflow tree
     with left_col:
 
-        st.write(f"**Analysis:** {analysis_name}")
+        st.write(f"**Recipe:** {analysis_name}")
 
         # Build and render the analysis tree menu, and keep the key of the first element
         tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
@@ -401,6 +365,14 @@ def render_analysis_page(ubiome_state : State):
                 with col_status:
                     status_emoji = get_status_emoji(selected_scenario.status)
                     st.markdown(f"#### **Status:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
+                    # Add a button to redirect to the scenario page
+                    virtual_host = Settings.get_instance().get_virtual_host()
+                    if Settings.get_instance().is_prod_mode():
+                        lab_mode = "lab"
+                    else:
+                        lab_mode = "dev-lab"
+
+                    st.link_button("View scenario", f"https://{lab_mode}.{virtual_host}/app/scenario/{selected_scenario.id}", icon=":material/open_in_new:")
                 with col_refresh:
                     # If the scenario status is running or in queue, add a refresh button to refresh the page
                     if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:

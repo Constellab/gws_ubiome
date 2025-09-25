@@ -10,7 +10,7 @@ from streamlit_slickgrid import (
 )
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser
-from gws_core import Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, File, SpaceFolder, Tag, Scenario, ScenarioStatus, ScenarioProxy, ScenarioCreationType
+from gws_core import ScenarioSearchBuilder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, File, SpaceFolder, Tag, Scenario, ScenarioStatus, ScenarioProxy, ScenarioCreationType
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.entity_tag import EntityTag
@@ -166,8 +166,18 @@ def display_scenario_parameters(scenario: Scenario, process_name: str) -> None:
     process = protocol_proxy.get_process(process_name)
     config_params = process._process_model.config.to_simple_dto().values
 
-    with st.expander("Parameters - Reminder"):
+    # Add task name to parameters
+    readable_task_name = process._process_model.name
+
+    with st.expander(f"Parameters - {readable_task_name}"):
         param_data = []
+
+        # Add task name as first parameter
+        param_data.append({
+            "Parameter": "Task",
+            "Value": readable_task_name
+        })
+
         for key, value in config_params.items():
             readable_key = key.replace("_", " ").replace("-", " ").title()
             param_data.append({
@@ -303,3 +313,59 @@ def search_updated_metadata_table(ubiome_state: State) -> File | None:
         pass
 
     return None
+
+
+def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -> Dict[str, List[Scenario]]:
+    """
+    Build scenarios_by_step dictionary for a given ubiome_pipeline_id.
+
+    Args:
+        ubiome_pipeline_id: The pipeline ID to search for scenarios
+        ubiome_state: State object containing tag constants
+
+    Returns:
+        Dictionary mapping step names to lists of scenarios
+    """
+    ubiome_pipeline_id_parsed = Tag.parse_tag(ubiome_pipeline_id)
+
+    # Get all scenarios for this analysis, we retrieve all the other thanks to the id ubiome pipeline id
+    search_scenario_builder = ScenarioSearchBuilder() \
+        .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=ubiome_pipeline_id_parsed, auto_parse=True)) \
+        .add_is_archived_filter(False)
+
+    all_scenarios: List[Scenario] = search_scenario_builder.search_all()
+
+    # Group scenarios by step type with parent relationships
+    scenarios_by_step = {}
+    for scenario in all_scenarios:
+        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
+        tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
+        step_name = tag_step_name.value
+
+        if step_name in [ubiome_state.TAG_METADATA, ubiome_state.TAG_QC, ubiome_state.TAG_MULTIQC, ubiome_state.TAG_FEATURE_INFERENCE]:
+            # These steps don't have parent dependencies
+            if step_name not in scenarios_by_step:
+                scenarios_by_step[step_name] = []
+            scenarios_by_step[step_name].append(scenario)
+        elif step_name in [ubiome_state.TAG_RAREFACTION, ubiome_state.TAG_TAXONOMY, ubiome_state.TAG_16S, ubiome_state.TAG_16S_VISU]:
+            # These steps depend on feature inference
+            feature_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+            if feature_id_tags:
+                parent_id = feature_id_tags[0].to_simple_tag().value
+                if step_name not in scenarios_by_step:
+                    scenarios_by_step[step_name] = {}
+                if parent_id not in scenarios_by_step[step_name]:
+                    scenarios_by_step[step_name][parent_id] = []
+                scenarios_by_step[step_name][parent_id].append(scenario)
+        elif step_name in [ubiome_state.TAG_PCOA_DIVERSITY, ubiome_state.TAG_ANCOM, ubiome_state.TAG_DB_ANNOTATOR]:
+            # These steps depend on taxonomy
+            taxonomy_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+            if taxonomy_id_tags:
+                parent_id = taxonomy_id_tags[0].to_simple_tag().value
+                if step_name not in scenarios_by_step:
+                    scenarios_by_step[step_name] = {}
+                if parent_id not in scenarios_by_step[step_name]:
+                    scenarios_by_step[step_name][parent_id] = []
+                scenarios_by_step[step_name][parent_id].append(scenario)
+
+    return scenarios_by_step
