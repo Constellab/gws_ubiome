@@ -1,13 +1,15 @@
 #!/usr/bin/env Rscript
 # ============================================================
 # PICRUSt2 pathway DA + plots (safe with ggpicrust2 2.5.x)
-# - Enforce ggplot2==3.5.1 (no runtime install/unload)
+# - ggplot2: require >= 3.5.2 and < 4.0.0 (upgrade if needed)
 # - Verify ggpicrust2 (> 2.5.0) or install from GitHub
 # - KEGGREST tolerant install (as before)
 # - MicrobiomeStat pinned install (as before)
 # - No ggprism, no GGally stripes, no legends/guides
 # - cowplot for panel assembly; robust joins, de-dup, grids
 # - Clear version & path logs
+# - Titles added for errorbar & heatmap with sizes/margins
+#   matched to the reference script (no new packages)
 # ============================================================
 
 ## ----------------------------
@@ -39,9 +41,6 @@ no_guides <- function(p) {
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
 ## ------------------------------------------------------------
-## ggplot2 FIRST: require EXACT version 3.5.1 (no runtime install)
-## ------------------------------------------------------------
-## ------------------------------------------------------------
 ## ggplot2: require >= 3.5.2 and < 4.0.0 (upgrade if needed)
 ## ------------------------------------------------------------
 ensure_ggplot2 <- function(target = "3.5.2") {
@@ -60,6 +59,34 @@ ensure_ggplot2 <- function(target = "3.5.2") {
 }
 
 ensure_ggplot2("3.5.2")
+# ---- BEGIN: lock cleanup + fBasics/modeest/GUniFrac install helpers ----
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+options(Ncpus = max(1L, parallel::detectCores() - 1L))
+
+remove_lock_dirs <- function(pkgs = c("fBasics","modeest","GUniFrac")) {
+  for (lib in .libPaths()) {
+    locks <- Sys.glob(file.path(lib, "00LOCK*"))
+    if (!length(locks)) next
+    keep <- vapply(locks, function(p) {
+      b <- basename(p)
+      any(grepl(paste0("^00LOCK(-|\\.)?", pkgs, "$"), b))
+    }, logical(1))
+    targets <- unique(c(locks[keep], locks[!keep & !any(keep)]))
+    if (length(targets)) {
+      message("Removing lock dirs in ", lib, ":\n  ", paste(basename(targets), collapse = "\n  "))
+      unlink(targets, recursive = TRUE, force = TRUE)
+    }
+  }
+}
+remove_lock_dirs()
+
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+
+install.packages(c("timeDate","timeSeries","quadprog"))
+
+remotes::install_version("fBasics", version = "4041.97", upgrade = "never", dependencies = TRUE)
+remotes::install_version("modeest", version = "2.4.0",  upgrade = "never", dependencies = TRUE)
+install.packages("GUniFrac")  # ou: install.packages("GUniFrac", type = "binary")
 
 ## ============================================================
 ## DO NOT TOUCH: KEGGREST (tolerant Bioconductor install)
@@ -161,6 +188,33 @@ logfc_width      <- 0.55
 padj_width       <- 0.25
 panel_widths     <- c(left_class_width + left_map_width, bar_width, logfc_width, padj_width)
 left_gap_mm      <- 70
+
+## ------- Extra title/legend/heatmap sizing carried over (no new pkgs) -------
+legend_text_size_pt     <- 18
+legend_key_size_cm      <- 1.2
+legend_key_width_cm     <- 1.6
+
+plot_title_top_gap_pt    <- 24
+plot_title_bottom_gap_pt <- 10
+plot_outer_top_gap_pt    <- 8
+
+heat_x_text_size_pt       <- 20
+heat_y_text_size_pt       <- 26
+heat_x_angle_deg          <- 90
+heat_axis_title_size_pt   <- 22
+heat_axis_title_margin_pt <- 14
+heat_legend_text_size_pt  <- 16
+heat_legend_title_size_pt <- 16
+heat_colorbar_width_cm    <- 0.7
+heat_colorbar_height_cm   <- 10
+
+strip_text_size_pt        <- 20
+strip_text_margin_pt      <- 6
+strip_pad_pt              <- 4
+
+heat_title_size_pt        <- 35
+heat_title_top_gap_pt     <- 30
+heat_title_bottom_gap_pt  <- 24
 
 ## ------------------------------
 ## Analysis settings
@@ -283,7 +337,7 @@ annotate_kegg_pathways <- function(features, chunk_size = 10) {
   }
   ann <- if (length(rows)) dplyr::bind_rows(rows) else
     data.frame(feature = character(), pathway_name = character(), pathway_class = character())
-  ann <- ann %>% distinct(feature, .keep_all = TRUE)
+  ann <- ann %>% dplyr::distinct(feature, .keep_all = TRUE)
   ann[match(features, ann$feature), , drop = FALSE]
 }
 
@@ -320,7 +374,6 @@ pathway_errorbar_patched <- function(
     stop("Length of Group must match number of columns in abundance matrix")
 
   daa_results_df <- daa_results_df[!is.na(daa_results_df[, x_lab]), , drop = FALSE]
-
   Group <- validate_group_factors(Group, context = "pathway_errorbar_patched Group")
 
   # Filter & de-dup features
@@ -682,7 +735,8 @@ for (i in seq_len(nrow(contrasts_df))) {
     fallback_cols <- RColorBrewer::brewer.pal(max(3, length(group_levels)), "Set2")[seq_along(group_levels)]
     bar_colors <- setNames(fallback_cols, group_levels)
 
-    err_plot <- pathway_errorbar_patched(
+    # ---- Build the 3–4-panel plot grid
+    base_grid <- pathway_errorbar_patched(
       abundance          = sub_kegg_abundance,
       daa_results_df     = slice_df,
       Group              = sub_metadata[[Reference_column]],
@@ -702,25 +756,74 @@ for (i in seq_len(nrow(contrasts_df))) {
       colors             = bar_colors
     )
 
+    # ---- Add title (same size/margins as reference; cowplot-only)
+    title_plot <- ggplot() +
+      labs(title = sprintf("Differential relative abundance errorbar plot: %s vs %s", gA, gB)) +
+      theme_void() +
+      theme(
+        plot.title = element_text(
+          hjust = 0.5, size = plot_title_size_pt, face = "bold",
+          margin = margin(t = plot_title_top_gap_pt, r = 0, b = plot_title_bottom_gap_pt, l = 0)
+        ),
+        plot.margin = margin(t = plot_outer_top_gap_pt, r = 0, b = 0, l = 0)
+      )
+
+    err_plot <- cowplot::plot_grid(
+      title_plot, base_grid, ncol = 1, rel_heights = c(0.065, 1)
+    )
+
     ggsave(sprintf("pathway_errorbar_%s_vs_%s_slice%d.png", gA, gB, slice_idx),
            err_plot, width = 40, height = 20, units = "in", dpi = 300)
 
-    # HEATMAP (skip when <2 groups)
+    # ---------------- HEATMAP (keep row order)
     n_groups_here <- nlevels(droplevels(sub_metadata[[Reference_column]]))
     if (n_groups_here >= 2) {
       row_levels <- slice_df$feature
       heat_mat <- sub_kegg_abundance %>%
-        rownames_to_column("feature") %>%
+        tibble::rownames_to_column("feature") %>%
         dplyr::filter(feature %in% row_levels) %>%
         dplyr::mutate(feature = factor(feature, levels = row_levels)) %>%
         dplyr::arrange(match(feature, row_levels)) %>%
-        column_to_rownames("feature")
+        tibble::column_to_rownames("feature")
 
       heat_plot <- pathway_heatmap(
         abundance = heat_mat,
         metadata  = sub_metadata,
         group     = Reference_column
-      ) + ggtitle(sprintf("Differential relative abundance pathway heatmap plot: %s vs %s", gA, gB))
+      ) +
+        ggtitle(sprintf("Differential relative abundance pathway heatmap plot: %s vs %s", gA, gB)) +
+        guides(fill = guide_colorbar(
+          direction      = "vertical",
+          barwidth       = grid::unit(heat_colorbar_width_cm, "cm"),
+          barheight      = grid::unit(heat_colorbar_height_cm, "cm"),
+          title          = "Value",
+          title.position = "top",
+          title.hjust    = 0.5
+        )) +
+        theme(
+          plot.title = element_text(
+            size = heat_title_size_pt, face = "bold", hjust = 0.5,
+            margin = margin(t = heat_title_top_gap_pt, r = 0, b = heat_title_bottom_gap_pt, l = 0)
+          ),
+          legend.position = "right",
+          legend.text  = element_text(size = heat_legend_text_size_pt),
+          legend.title = element_text(size = heat_legend_title_size_pt),
+
+          axis.text.x  = element_text(size = heat_x_text_size_pt,
+                                      angle = heat_x_angle_deg,
+                                      vjust = 1, hjust = 1,
+                                      margin = margin(t = 6)),
+          axis.text.y  = element_text(size = heat_y_text_size_pt,
+                                      margin = margin(r = 4)),
+          axis.title.x = element_text(size = heat_axis_title_size_pt,
+                                      margin = margin(t = heat_axis_title_margin_pt)),
+          axis.title.y = element_text(size = heat_axis_title_size_pt,
+                                      margin = margin(r = heat_axis_title_margin_pt)),
+
+          strip.text.x = element_text(size = strip_text_size_pt, face = "bold",
+                                      margin = margin(t = strip_text_margin_pt, b = strip_text_margin_pt)),
+          strip.switch.pad.grid = grid::unit(strip_pad_pt, "pt")
+        )
 
       ggsave(sprintf("pathway_heatmap_%s_vs_%s_slice%d.png", gA, gB, slice_idx),
              heat_plot, width = 40, height = 20, units = "in", dpi = 300)
