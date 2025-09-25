@@ -3,7 +3,7 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitResourceSelect
 from gws_core import Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import Qiime2TableDbAnnotator
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 
 @st.dialog("DB annotator parameters")
@@ -16,7 +16,16 @@ def dialog_db_annotator_params(ubiome_state: State):
     resource_select.select_resource(
         placeholder='Select annotation table', key=ubiome_state.SELECTED_ANNOTATION_TABLE_KEY, defaut_resource=None)
 
-    if st.button("Run Taxa Composition", use_container_width=True, icon=":material/play_arrow:", key="button_db_annotator"):
+    # Add both Save and Run buttons
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button("Save Taxa Composition", use_container_width=True, icon=":material/save:", key="button_db_annotator_save")
+
+    with col2:
+        run_clicked = st.button("Run Taxa Composition", use_container_width=True, icon=":material/play_arrow:", key="button_db_annotator_run")
+
+    if save_clicked or run_clicked:
         selected_annotation_table_id = ubiome_state.get_selected_annotation_table()["resourceId"]
         if not selected_annotation_table_id:
             st.warning("Please select an annotation table.")
@@ -57,9 +66,11 @@ def dialog_db_annotator_params(ubiome_state: State):
             protocol.add_output('absolute_abundance_table_output', db_annotator_process >> 'absolute_abundance_table', flag_resource=False)
             protocol.add_output('absolute_abundance_plotly_output', db_annotator_process >> 'absolute_abundance_plotly_resource', flag_resource=False)
 
-            scenario.add_to_queue()
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
+            # Only add to queue if Run was clicked
+            if run_clicked:
+                scenario.add_to_queue()
+                ubiome_state.reset_tree_analysis()
+                ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -89,6 +100,9 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
         # Display details about scenario DB annotator
         st.markdown("##### Taxa Composition Scenario Results")
         display_scenario_parameters(selected_scenario, 'db_annotator_process')
+
+        if selected_scenario.status == ScenarioStatus.DRAFT:
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return

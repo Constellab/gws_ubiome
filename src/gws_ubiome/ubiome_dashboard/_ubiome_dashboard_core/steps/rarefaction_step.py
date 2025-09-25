@@ -3,7 +3,7 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
 from gws_core import Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import Qiime2RarefactionAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 @st.dialog("Rarefaction parameters")
 def dialog_rarefaction_params(ubiome_state: State):
@@ -15,7 +15,16 @@ def dialog_rarefaction_params(ubiome_state: State):
         is_default_config_valid=Qiime2RarefactionAnalysis.config_specs.mandatory_values_are_set(
             Qiime2RarefactionAnalysis.config_specs.get_default_values()))
 
-    if st.button("Run Rarefaction", use_container_width=True, icon=":material/play_arrow:", key="button_rarefaction"):
+    # Add both Save and Run buttons
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button("Save Rarefaction", use_container_width=True, icon=":material/save:", key="button_rarefaction_save")
+
+    with col2:
+        run_clicked = st.button("Run Rarefaction", use_container_width=True, icon=":material/play_arrow:", key="button_rarefaction_run")
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_rarefaction_config()["is_valid"]:
             st.warning("Please fill all the mandatory fields.")
             return
@@ -42,9 +51,12 @@ def dialog_rarefaction_params(ubiome_state: State):
             protocol.add_output('rarefaction_table_output', rarefaction_process >> 'rarefaction_table', flag_resource=False)
             protocol.add_output('rarefaction_folder_output', rarefaction_process >> 'result_folder', flag_resource=False)
 
-            scenario.add_to_queue()
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
+            # Only add to queue if Run was clicked
+            if run_clicked:
+                scenario.add_to_queue()
+                ubiome_state.reset_tree_analysis()
+                ubiome_state.set_tree_default_item(scenario.get_model_id())
+
             st.rerun()
 
 def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -71,6 +83,9 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
         # Display details about scenario rarefaction
         st.markdown("##### Rarefaction Scenario Results")
         display_scenario_parameters(selected_scenario, 'rarefaction_process')
+
+        if selected_scenario.status == ScenarioStatus.DRAFT:
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return

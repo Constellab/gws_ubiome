@@ -4,7 +4,7 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
 from gws_core import Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_gaia import PCoATrainer
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 @st.dialog("PCOA parameters")
 def dialog_pcoa_params(ubiome_state: State):
@@ -36,7 +36,16 @@ def dialog_pcoa_params(ubiome_state: State):
             PCoATrainer.config_specs.get_default_values())
     )
 
-    if st.button("Run PCOA", use_container_width=True, icon=":material/play_arrow:", key="button_pcoa"):
+    # Add both Save and Run buttons
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button("Save PCOA", use_container_width=True, icon=":material/save:", key="button_pcoa_save")
+
+    with col2:
+        run_clicked = st.button("Run PCOA", use_container_width=True, icon=":material/play_arrow:", key="button_pcoa_run")
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_pcoa_config()["is_valid"]:
             st.warning("Please fill all the mandatory fields.")
             return
@@ -71,9 +80,11 @@ def dialog_pcoa_params(ubiome_state: State):
             # Add outputs
             protocol.add_output('pcoa_result_output', pcoa_process >> 'result', flag_resource=False)
 
-            scenario.add_to_queue()
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
+            # Only add to queue if Run was clicked
+            if run_clicked:
+                scenario.add_to_queue()
+                ubiome_state.reset_tree_analysis()
+                ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 
@@ -103,6 +114,10 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         # Display details about scenario PCOA
         st.markdown("##### PCOA Scenario Results")
         display_scenario_parameters(selected_scenario, 'pcoa_process')
+
+        if selected_scenario.status == ScenarioStatus.DRAFT:
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
+
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy = scenario_proxy.get_protocol()
         process = protocol_proxy.get_process('pcoa_process')

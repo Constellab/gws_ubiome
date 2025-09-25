@@ -3,7 +3,7 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
 from gws_core import Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import  Qiime2TaxonomyDiversity
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 @st.dialog("Taxonomy parameters")
 def dialog_taxonomy_params(ubiome_state: State):
@@ -15,7 +15,16 @@ def dialog_taxonomy_params(ubiome_state: State):
         is_default_config_valid=Qiime2TaxonomyDiversity.config_specs.mandatory_values_are_set(
             Qiime2TaxonomyDiversity.config_specs.get_default_values()))
 
-    if st.button("Run Taxonomy", use_container_width=True, icon=":material/play_arrow:", key="button_taxonomy"):
+    # Add both Save and Run buttons
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button("Save Taxonomy", use_container_width=True, icon=":material/save:", key="button_taxonomy_save")
+
+    with col2:
+        run_clicked = st.button("Run Taxonomy", use_container_width=True, icon=":material/play_arrow:", key="button_taxonomy_run")
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_taxonomy_config()["is_valid"]:
             st.warning("Please fill all the mandatory fields.")
             return
@@ -44,10 +53,12 @@ def dialog_taxonomy_params(ubiome_state: State):
             protocol.add_output('taxonomy_taxonomy_tables_output', taxonomy_process >> 'taxonomy_tables', flag_resource=False)
             protocol.add_output('taxonomy_folder_output', taxonomy_process >> 'result_folder', flag_resource=False)
 
+            # Only add to queue if Run was clicked
+            if run_clicked:
+                scenario.add_to_queue()
+                ubiome_state.reset_tree_analysis()
+                ubiome_state.set_tree_default_item(scenario.get_model_id())
 
-            scenario.add_to_queue()
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -74,6 +85,9 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
         # Display details about scenario taxonomy
         st.markdown("##### Taxonomy Scenario Results")
         display_scenario_parameters(selected_scenario, 'taxonomy_process')
+
+        if selected_scenario.status == ScenarioStatus.DRAFT:
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return

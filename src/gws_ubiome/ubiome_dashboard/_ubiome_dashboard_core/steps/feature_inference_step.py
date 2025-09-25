@@ -3,7 +3,7 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
 from gws_core import Task, Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
 
 @st.dialog("Feature inference parameters")
 def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: State):
@@ -15,7 +15,16 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
         is_default_config_valid=task_feature_inference.config_specs.mandatory_values_are_set(
             task_feature_inference.config_specs.get_default_values()))
 
-    if st.button("Run Feature Inference", use_container_width=True, icon=":material/play_arrow:", key="button_fei"):
+    # Add both Save and Run buttons
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button("Save Feature Inference", use_container_width=True, icon=":material/save:", key="button_fei_save")
+
+    with col2:
+        run_clicked = st.button("Run Feature Inference", use_container_width=True, icon=":material/play_arrow:", key="button_fei_run")
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_feature_inference_config()["is_valid"]:
             st.warning("Please fill all the mandatory fields.")
             return
@@ -43,9 +52,11 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
             protocol.add_output('qiime2_feature_process_stats_output', qiime2_feature_process >> 'stats', flag_resource=False)
             protocol.add_output('qiime2_feature_process_folder_output', qiime2_feature_process >> 'result_folder', flag_resource=False)
 
-            scenario.add_to_queue()
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
+            # Only add to queue if Run was clicked
+            if run_clicked:
+                scenario.add_to_queue()
+                ubiome_state.reset_tree_analysis()
+                ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
 def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -71,6 +82,10 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
         # Display details about scenario feature inference
         st.markdown("##### Feature Inference Scenario Results")
         display_scenario_parameters(selected_scenario, 'feature_process')
+
+        if selected_scenario.status == ScenarioStatus.DRAFT:
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
+
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
 
