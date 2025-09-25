@@ -84,7 +84,7 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
         st.markdown("##### Rarefaction Scenario Results")
         display_scenario_parameters(selected_scenario, 'rarefaction_process')
 
-        if selected_scenario.status == ScenarioStatus.DRAFT:
+        if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
             display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:

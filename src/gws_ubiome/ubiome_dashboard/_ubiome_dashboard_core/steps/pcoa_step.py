@@ -115,7 +115,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         st.markdown("##### PCOA Scenario Results")
         display_scenario_parameters(selected_scenario, 'pcoa_process')
 
-        if selected_scenario.status == ScenarioStatus.DRAFT:
+        if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
             display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
