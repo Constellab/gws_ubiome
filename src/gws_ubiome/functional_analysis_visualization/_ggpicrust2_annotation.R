@@ -114,25 +114,28 @@ if (!"MicrobiomeStat" %in% rownames(installed.packages())) {
 }
 suppressPackageStartupMessages(library(MicrobiomeStat))
 
-## ============================================================
-## Verify ggpicrust2 (> 2.5.0); install if missing/too old
-## ============================================================
+# ---- ggpicrust2: pin exactly v2.5.3 ----
 log_gp <- function(fmt, ...) message(sprintf(paste0("[ggpicrust2] ", fmt), ...))
+
+target_ver <- "2.5.3"
 prev_ver <- tryCatch(as.character(utils::packageVersion("ggpicrust2")),
                      error = function(e) NA_character_)
 log_gp("Previously installed version: %s", ifelse(is.na(prev_ver), "none", prev_ver))
 
-need_install <- is.na(prev_ver) || utils::packageVersion("ggpicrust2") <= "2.5.0"
+need_install <- is.na(prev_ver) || utils::packageVersion("ggpicrust2") != target_ver
 if (need_install) {
-  log_gp("Installing/upgrading to a version > 2.5.0 from GitHub…")
-  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
-  devtools::install_github("cafferychen777/ggpicrust2", upgrade = "never", quiet = FALSE, force = TRUE)
+  log_gp("Installing ggpicrust2@v%s from GitHub…", target_ver)
+  if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+  remotes::install_github(sprintf("cafferychen777/ggpicrust2@v%s", target_ver),
+                          upgrade = "never", dependencies = TRUE)
 } else {
-  log_gp("Suitable version already present (> 2.5.0).")
+  log_gp("Exact requested version already present (v%s).", target_ver)
 }
+
 suppressPackageStartupMessages(library(ggpicrust2))
 log_gp("Loaded version: %s", as.character(utils::packageVersion("ggpicrust2")))
 log_gp("Package path: %s", find.package("ggpicrust2"))
+# -----------------------------------------
 
 ## ------------------------------------------------------------
 ## Core libs (no ggprism; no GGally stripes)
