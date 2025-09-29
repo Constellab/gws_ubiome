@@ -8,7 +8,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import d
 
 @st.dialog("PCOA parameters")
 def dialog_pcoa_params(ubiome_state: State):
-    st.text_input("PCOA scenario name:", placeholder="Enter PCOA scenario name", value=f"{ubiome_state.get_current_analysis_name()} - PCOA", key=ubiome_state.PCOA_SCENARIO_NAME_INPUT_KEY)
+    translate_service = ubiome_state.get_translate_service()
+    st.text_input(translate_service.translate("pcoa_scenario_name"), placeholder=translate_service.translate("enter_pcoa_name"), value=f"{ubiome_state.get_current_analysis_name()} - PCOA", key=ubiome_state.PCOA_SCENARIO_NAME_INPUT_KEY)
     taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
 
     # Get available diversity tables from taxonomy results
@@ -22,7 +23,7 @@ def dialog_pcoa_params(ubiome_state: State):
 
     # Let user select which diversity table to use
     st.selectbox(
-        "Select a diversity table for PCOA analysis:",
+        translate_service.translate("select_diversity_table_pcoa"),
         options=list(beta_diversity_tables.keys()),
         key=ubiome_state.PCOA_DIVERSITY_TABLE_SELECT_KEY,
     )
@@ -40,19 +41,19 @@ def dialog_pcoa_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button("Save PCOA", use_container_width=True, icon=":material/save:", key="button_pcoa_save")
+        save_clicked = st.button(translate_service.translate("save_pcoa"), use_container_width=True, icon=":material/save:", key="button_pcoa_save")
 
     with col2:
-        run_clicked = st.button("Run PCOA", use_container_width=True, icon=":material/play_arrow:", key="button_pcoa_run")
+        run_clicked = st.button(translate_service.translate("run_pcoa"), use_container_width=True, icon=":material/play_arrow:", key="button_pcoa_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_pcoa_config()["is_valid"]:
-            st.warning("Please fill all the mandatory fields.")
+            st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
         selected_table = ubiome_state.get_pcoa_diversity_table_select()
         if not selected_table:
-            st.warning("Please select a diversity table.")
+            st.warning(translate_service.translate("select_diversity_table_required"))
             return
 
         with StreamlitAuthenticateUser():
@@ -89,6 +90,8 @@ def dialog_pcoa_params(ubiome_state: State):
 
 
 def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Get the selected tree menu item to determine which taxonomy scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
@@ -102,18 +105,18 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of PCOA
-            st.button("Configure new PCOA scenario", icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_pcoa_scenario"), icon=":material/edit:", use_container_width=False,
                         on_click=lambda state=ubiome_state: dialog_pcoa_params(state))
 
         # Display table of existing PCOA scenarios
-        st.markdown("### List of scenarios")
+        st.markdown(f"### {translate_service.translate('list_scenarios')}")
 
         list_scenario_pcoa = ubiome_state.get_scenario_step_pcoa()
         render_scenario_table(list_scenario_pcoa, 'pcoa_process', 'pcoa_grid', ubiome_state)
     else:
         # Display details about scenario PCOA
-        st.markdown("##### PCOA Scenario Results")
-        display_scenario_parameters(selected_scenario, 'pcoa_process')
+        st.markdown(f"##### {translate_service.translate('pcoa_scenario_results')}")
+        display_scenario_parameters(selected_scenario, 'pcoa_process', ubiome_state)
 
         if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
             display_saved_scenario_actions(selected_scenario, ubiome_state)
@@ -134,7 +137,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         pcoa_result = protocol_proxy.get_process('pcoa_process').get_output('result')
 
         if pcoa_result:
-            tab_plot, tab_table = st.tabs(["2D Score Plot", "Tables"])
+            tab_plot, tab_table = st.tabs([translate_service.translate("2d_score_plot"), translate_service.translate("tables")])
             transformed_table = pcoa_result.get_transformed_table()
             variance_table = pcoa_result.get_variance_table()
 
@@ -156,7 +159,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                         y='PC2',
                         color = "Sample",
                         hover_name='Sample',  # Show sample name on hover
-                        title='PCOA - 2D Score Plot'
+                        title=translate_service.translate('pcoa_2d_score_plot')
                     )
 
                     # Update text position to be above the points
@@ -189,6 +192,6 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                     st.dataframe(transformed_table.get_data())
 
                 # Also show variance table
-                st.markdown("##### Variance Explained")
+                st.markdown(f"##### {translate_service.translate('variance_explained')}")
                 if variance_table:
                     st.dataframe(variance_table.get_data())

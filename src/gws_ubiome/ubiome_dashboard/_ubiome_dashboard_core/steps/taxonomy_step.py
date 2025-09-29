@@ -7,7 +7,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import d
 
 @st.dialog("Taxonomy parameters")
 def dialog_taxonomy_params(ubiome_state: State):
-    st.text_input("Taxonomy scenario name:", placeholder="Enter taxonomy scenario name", value=f"{ubiome_state.get_current_analysis_name()} - Taxonomy", key=ubiome_state.TAXONOMY_SCENARIO_NAME_INPUT_KEY)
+    translate_service = ubiome_state.get_translate_service()
+    st.text_input(translate_service.translate("taxonomy_scenario_name"), placeholder=translate_service.translate("enter_taxonomy_name"), value=f"{ubiome_state.get_current_analysis_name()} - Taxonomy", key=ubiome_state.TAXONOMY_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(Qiime2TaxonomyDiversity)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.TAXONOMY_CONFIG_KEY,
@@ -19,14 +20,14 @@ def dialog_taxonomy_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button("Save Taxonomy", use_container_width=True, icon=":material/save:", key="button_taxonomy_save")
+        save_clicked = st.button(translate_service.translate("save_taxonomy"), use_container_width=True, icon=":material/save:", key="button_taxonomy_save")
 
     with col2:
-        run_clicked = st.button("Run Taxonomy", use_container_width=True, icon=":material/play_arrow:", key="button_taxonomy_run")
+        run_clicked = st.button(translate_service.translate("run_taxonomy"), use_container_width=True, icon=":material/play_arrow:", key="button_taxonomy_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_taxonomy_config()["is_valid"]:
-            st.warning("Please fill all the mandatory fields.")
+            st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
         with StreamlitAuthenticateUser():
@@ -62,6 +63,8 @@ def dialog_taxonomy_params(ubiome_state: State):
             st.rerun()
 
 def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Get the selected tree menu item to determine which feature inference scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
@@ -73,18 +76,18 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of taxonomy
-            st.button("Configure new Taxonomy scenario", icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_taxonomy_scenario"), icon=":material/edit:", use_container_width=False,
                         on_click=lambda state=ubiome_state: dialog_taxonomy_params(state))
 
         # Display table of existing Taxonomy scenarios
-        st.markdown("### List of scenarios")
+        st.markdown(f"### {translate_service.translate('list_scenarios')}")
 
         list_scenario_taxonomy = ubiome_state.get_scenario_step_taxonomy()
         render_scenario_table(list_scenario_taxonomy, 'taxonomy_process', 'taxonomy_grid', ubiome_state)
     else:
         # Display details about scenario taxonomy
-        st.markdown("##### Taxonomy Scenario Results")
-        display_scenario_parameters(selected_scenario, 'taxonomy_process')
+        st.markdown(f"##### {translate_service.translate('taxonomy_scenario_results')}")
+        display_scenario_parameters(selected_scenario, 'taxonomy_process', ubiome_state)
 
         if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
             display_saved_scenario_actions(selected_scenario, ubiome_state)
@@ -96,14 +99,14 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy = scenario_proxy.get_protocol()
 
-        tab_diversity, tab_taxonomy = st.tabs(["Diversity Tables", "Taxonomy Tables"])
+        tab_diversity, tab_taxonomy = st.tabs([translate_service.translate("diversity_tables"), translate_service.translate("taxonomy_tables")])
 
         with tab_diversity:
             # Display diversity tables
             diversity_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('diversity_tables')
             if diversity_resource_set:
                 resource_set_result_dict = diversity_resource_set.get_resources()
-                selected_result = st.selectbox("Select a diversity table to display", options=resource_set_result_dict.keys(), key="diversity_select")
+                selected_result = st.selectbox(translate_service.translate("select_diversity_table"), options=resource_set_result_dict.keys(), key="diversity_select")
                 if selected_result:
                     selected_resource = resource_set_result_dict.get(selected_result)
                     if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":
@@ -116,7 +119,7 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
             taxonomy_resource_set = protocol_proxy.get_process('taxonomy_process').get_output('taxonomy_tables')
             if taxonomy_resource_set:
                 resource_set_result_dict = taxonomy_resource_set.get_resources()
-                selected_result = st.selectbox("Select a result to display", options=resource_set_result_dict.keys(), key="taxonomy_select")
+                selected_result = st.selectbox(translate_service.translate("select_result_display"), options=resource_set_result_dict.keys(), key="taxonomy_select")
                 if selected_result:
                     selected_resource = resource_set_result_dict.get(selected_result)
                     if selected_resource.get_typing_name() == "RESOURCE.gws_core.Table":

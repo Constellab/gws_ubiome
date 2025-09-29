@@ -38,6 +38,7 @@ def get_step_icon(step_name: str, scenarios_by_step: Dict, list_scenarios: List[
 
 def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     """Build the tree menu for analysis workflow steps"""
+    translate_service = ubiome_state.get_translate_service()
     button_menu = StreamlitTreeMenu(key=ubiome_state.TREE_ANALYSIS_KEY)
 
     # Build scenarios_by_step dictionary using helper function
@@ -66,7 +67,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         key_default_item = key_metadata
 
     metadata_item = StreamlitTreeMenuItem(
-        label="Metadata table",
+        label=translate_service.translate("metadata_table"),
         key=key_metadata,
         material_icon=get_step_icon(ubiome_state.TAG_METADATA, scenarios_by_step, scenario_metadata)
     )
@@ -83,7 +84,7 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
         else:
             key_qc = ubiome_state.TAG_QC
         qc_item = StreamlitTreeMenuItem(
-            label="Quality check",
+            label=translate_service.translate("quality_control"),
             key=key_qc,
             material_icon=get_step_icon(ubiome_state.TAG_QC, scenarios_by_step, scenario_qc)
         )
@@ -248,13 +249,14 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     return button_menu, key_default_item
 
 def render_analysis_page(ubiome_state : State):
+    translate_service = ubiome_state.get_translate_service()
     router = StreamlitRouter.load_from_session()
     # Create two columns
     left_col, right_col = st.columns([1, 4])
 
     with left_col:
         # Button to go home
-        if st.button("Recipes", use_container_width=True, icon=":material/home:", type="primary"):
+        if st.button(translate_service.translate("recipes"), use_container_width=True, icon=":material/home:", type="primary"):
             # Reset the state of selected tree default item
             ubiome_state.set_tree_default_item(None)
             router = StreamlitRouter.load_from_session()
@@ -263,7 +265,7 @@ def render_analysis_page(ubiome_state : State):
 
     selected_analysis = ubiome_state.get_selected_analysis()
     if not selected_analysis:
-        return st.error("No analysis selected. Please select an analysis from the first page.")
+        return st.error(translate_service.translate("no_analysis_selected"))
 
     # Get analysis name from scenario tag
     entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_analysis.id)
@@ -279,9 +281,9 @@ def render_analysis_page(ubiome_state : State):
 
     if selected_analysis.status != ScenarioStatus.SUCCESS:
         if selected_analysis.status in [ScenarioStatus.RUNNING, ScenarioStatus.DRAFT, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE, ScenarioStatus.PARTIALLY_RUN]:
-            message = "The first step for this analysis is still running. Please check back later."
+            message = translate_service.translate("analysis_still_running")
         else:
-            message = "The first step for this analysis is not completed successfully."
+            message = translate_service.translate("analysis_not_completed")
         with right_col:
             st.info(message)
         return
@@ -308,7 +310,7 @@ def render_analysis_page(ubiome_state : State):
     # Left column - Analysis workflow tree
     with left_col:
 
-        st.write(f"**Recipe:** {analysis_name}")
+        st.write(f"**{translate_service.translate('recipe')}:** {analysis_name}")
 
         # Build and render the analysis tree menu, and keep the key of the first element
         tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
@@ -364,7 +366,7 @@ def render_analysis_page(ubiome_state : State):
                     st.markdown(f"#### {selected_scenario.get_short_name()}")
                 with col_status:
                     status_emoji = get_status_emoji(selected_scenario.status)
-                    st.markdown(f"#### **Status:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
+                    st.markdown(f"#### **{translate_service.translate('status')}:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
                     # Add a button to redirect to the scenario page
                     virtual_host = Settings.get_instance().get_virtual_host()
                     if Settings.get_instance().is_prod_mode():
@@ -372,11 +374,11 @@ def render_analysis_page(ubiome_state : State):
                     else:
                         lab_mode = "dev-lab"
                     if not ubiome_state.get_is_standalone():
-                        st.link_button("View scenario", f"https://{lab_mode}.{virtual_host}/app/scenario/{selected_scenario.id}", icon=":material/open_in_new:")
+                        st.link_button(translate_service.translate("view_scenario"), f"https://{lab_mode}.{virtual_host}/app/scenario/{selected_scenario.id}", icon=":material/open_in_new:")
                 with col_refresh:
                     # If the scenario status is running or in queue, add a refresh button to refresh the page
                     if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:
-                        if st.button("Refresh", icon=":material/refresh:", use_container_width=False):
+                        if st.button(translate_service.translate("refresh"), icon=":material/refresh:", use_container_width=False):
                             ubiome_state.set_tree_default_item(selected_scenario.id)
                             st.rerun()
             else :

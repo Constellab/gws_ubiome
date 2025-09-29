@@ -7,7 +7,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import d
 
 @st.dialog("Rarefaction parameters")
 def dialog_rarefaction_params(ubiome_state: State):
-    st.text_input("Rarefaction scenario name:", placeholder="Enter rarefaction scenario name", value=f"{ubiome_state.get_current_analysis_name()} - Rarefaction", key=ubiome_state.RAREFACTION_SCENARIO_NAME_INPUT_KEY)
+    translate_service = ubiome_state.get_translate_service()
+    st.text_input(translate_service.translate("rarefaction_scenario_name"), placeholder=translate_service.translate("enter_rarefaction_name"), value=f"{ubiome_state.get_current_analysis_name()} - Rarefaction", key=ubiome_state.RAREFACTION_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(Qiime2RarefactionAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.RAREFACTION_CONFIG_KEY,
@@ -19,14 +20,14 @@ def dialog_rarefaction_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button("Save Rarefaction", use_container_width=True, icon=":material/save:", key="button_rarefaction_save")
+        save_clicked = st.button(translate_service.translate("save_rarefaction"), use_container_width=True, icon=":material/save:", key="button_rarefaction_save")
 
     with col2:
-        run_clicked = st.button("Run Rarefaction", use_container_width=True, icon=":material/play_arrow:", key="button_rarefaction_run")
+        run_clicked = st.button(translate_service.translate("run_rarefaction"), use_container_width=True, icon=":material/play_arrow:", key="button_rarefaction_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_rarefaction_config()["is_valid"]:
-            st.warning("Please fill all the mandatory fields.")
+            st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
         with StreamlitAuthenticateUser():
@@ -60,6 +61,8 @@ def dialog_rarefaction_params(ubiome_state: State):
             st.rerun()
 
 def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Get the selected tree menu item to determine which feature inference scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
@@ -71,18 +74,18 @@ def render_rarefaction_step(selected_scenario: Scenario, ubiome_state: State) ->
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of rarefaction
-            st.button("Configure new Rarefaction scenario", icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_rarefaction_scenario"), icon=":material/edit:", use_container_width=False,
                         on_click=lambda state=ubiome_state: dialog_rarefaction_params(state))
 
         # Display table of existing Rarefaction scenarios
-        st.markdown("### List of scenarios")
+        st.markdown(f"### {translate_service.translate('list_scenarios')}")
 
         list_scenario_rarefaction = ubiome_state.get_scenario_step_rarefaction()
         render_scenario_table(list_scenario_rarefaction, 'rarefaction_process', 'rarefaction_grid', ubiome_state)
     else:
         # Display details about scenario rarefaction
-        st.markdown("##### Rarefaction Scenario Results")
-        display_scenario_parameters(selected_scenario, 'rarefaction_process')
+        st.markdown(f"##### {translate_service.translate('rarefaction_scenario_results')}")
+        display_scenario_parameters(selected_scenario, 'rarefaction_process', ubiome_state)
 
         if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
             display_saved_scenario_actions(selected_scenario, ubiome_state)

@@ -5,6 +5,8 @@ from gws_core import Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, save_metadata_table, add_new_column_dialog
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Check if there's an updated metadata table first
     file_metadata = search_updated_metadata_table(ubiome_state)
 
@@ -32,14 +34,13 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
     # Define that all columns types must be string
     df_metadata = df_metadata.astype(str)
 
-    st.markdown("##### Metadata Table Editor")
-
+    st.markdown(f"##### {translate_service.translate('metadata_table_editor')}")
 
     if not ubiome_state.get_scenario_step_qc():
         if not ubiome_state.get_is_standalone():
-            st.info("💡 **Instructions:** You can delete rows and must add at least one new metadata column for ANCOM differential analysis and 16s functional abundances prediction.")
+            st.info(f"💡 **{translate_service.translate('instructions')}:** {translate_service.translate('instructions_metadata')}")
 
-            if st.button("Add Column", use_container_width=False):
+            if st.button(translate_service.translate("add_column"), use_container_width=False):
                 add_new_column_dialog(ubiome_state, header_lines)
 
             # Create column configuration for all columns
@@ -74,16 +75,16 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
             # Check if at least one new column was added
             if len(ubiome_state.get_edited_df_metadata().columns) == 3:
-                validation_errors.append("⚠️ You must add at least one new metadata column for ANCOM analysis and functional abundances prediction.")
+                validation_errors.append(f"⚠️ {translate_service.translate('one_metadata_column_required')}")
 
             # Check if all columns are completely filled
             for col in ubiome_state.get_edited_df_metadata().columns:
                 if ubiome_state.get_edited_df_metadata()[col].isna().any() or (ubiome_state.get_edited_df_metadata()[col] == "").any():
-                    validation_errors.append(f"⚠️ Column '{col}' must be completely filled (no empty values).")
+                    validation_errors.append(f"⚠️ '{col}' : {translate_service.translate('column_must_be_filled')}")
 
             # Check if there are any rows left
             if len(ubiome_state.get_edited_df_metadata()) == 0:
-                validation_errors.append("⚠️ At least one sample must remain in the table.")
+                validation_errors.append(f"⚠️ {translate_service.translate('one_sample_required')}")
 
             # Display validation results
             if validation_errors:
@@ -93,12 +94,12 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
             else:
                 save_disabled = False
 
-            if st.button("Save", disabled=save_disabled, use_container_width=True):
+            if st.button(translate_service.translate("save"), disabled=save_disabled, use_container_width=True):
                 with StreamlitAuthenticateUser():
                     # Use the helper function to save
                     save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state)
                     st.rerun()
         else:
-            st.info("ℹ️ You are in standalone mode. Metadata table cannot be edited.")
+            st.info(f"ℹ️ {translate_service.translate('standalone_metadata_info')}")
     else:
-        st.info("ℹ️ Metadata table is locked because QC analysis has already been run.")
+        st.info(f"ℹ️ {translate_service.translate('metadata_locked_info')}")

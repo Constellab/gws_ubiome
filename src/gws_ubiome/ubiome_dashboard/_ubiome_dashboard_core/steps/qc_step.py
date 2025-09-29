@@ -5,19 +5,20 @@ from gws_ubiome import Qiime2QualityCheck
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, search_updated_metadata_table
 
 def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
 
     if not selected_scenario:
         # If a metadata table has been saved, allow running QC
         # Check if there's an updated metadata table first
         file_metadata = search_updated_metadata_table(ubiome_state)
         if not file_metadata:
-            st.info("Please save a metadata table with at least one new metadata column to proceed.")
+            st.info(translate_service.translate("save_metadata_table_info"))
             return
 
         if ubiome_state.get_is_standalone():
             return
 
-        if st.button("Run quality check", icon=":material/play_arrow:", use_container_width=False):
+        if st.button(translate_service.translate("run_quality_check"), icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario in the lab
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, f"{ubiome_state.get_current_analysis_name()} - Quality check")
             protocol: ProtocolProxy = scenario.get_protocol()
@@ -48,7 +49,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
     else :
         # Visualize QC results
-        st.markdown("##### Quality Control Results")
+        st.markdown(f"##### {translate_service.translate('quality_control_results')}")
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
 

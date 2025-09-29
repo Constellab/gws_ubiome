@@ -9,7 +9,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import c
 
 @st.dialog("16S parameters")
 def dialog_16s_params(ubiome_state: State):
-    st.text_input("16S Functional Analysis scenario name:", placeholder="Enter 16S functional analysis scenario name", value=f"{ubiome_state.get_current_analysis_name()} - 16S Functional Analysis", key=ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY)
+    translate_service = ubiome_state.get_translate_service()
+    st.text_input(translate_service.translate("16s_functional_analysis_scenario_name"), placeholder=translate_service.translate("enter_16s_functional_analysis_name"), value=f"{ubiome_state.get_current_analysis_name()} - 16S Functional Analysis", key=ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY)
     form_config = StreamlitTaskRunner(Picrust2FunctionalAnalysis)
     form_config.generate_config_form_without_run(
         session_state_key=ubiome_state.FUNCTIONAL_ANALYSIS_CONFIG_KEY,
@@ -17,9 +18,9 @@ def dialog_16s_params(ubiome_state: State):
         is_default_config_valid=Picrust2FunctionalAnalysis.config_specs.mandatory_values_are_set(
             Picrust2FunctionalAnalysis.config_specs.get_default_values()))
 
-    if st.button("Run 16S Functional Analysis", use_container_width=True, icon=":material/play_arrow:", key="button_16s"):
+    if st.button(translate_service.translate("run_16s_functional_analysis"), use_container_width=True, icon=":material/play_arrow:", key="button_16s"):
         if not ubiome_state.get_functional_analysis_config()["is_valid"]:
-            st.warning("Please fill all the mandatory fields.")
+            st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
         with StreamlitAuthenticateUser():
@@ -57,6 +58,8 @@ def dialog_16s_params(ubiome_state: State):
             st.rerun()
 
 def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Get the selected tree menu item to determine which feature inference scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
@@ -68,18 +71,18 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of 16S functional analysis
-            st.button("Configure new 16S Functional Analysis scenario", icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_16s_functional_analysis_scenario"), icon=":material/edit:", use_container_width=False,
                     on_click=lambda state=ubiome_state: dialog_16s_params(state))
 
         # Display table of existing 16S Functional Analysis scenarios
-        st.markdown("### List of scenarios")
+        st.markdown(f"### {translate_service.translate('list_scenarios')}")
 
         list_scenario_16s = ubiome_state.get_scenario_step_16s()
         render_scenario_table(list_scenario_16s, 'functional_analysis_process', '16s_functional_grid', ubiome_state)
     else:
         # Display details about scenario 16S functional analysis
-        st.markdown("##### 16S Functional Analysis Scenario Results")
-        display_scenario_parameters(selected_scenario, 'functional_analysis_process')
+        st.markdown(f"##### {translate_service.translate('16s_functional_analysis_scenario_results')}")
+        display_scenario_parameters(selected_scenario, 'functional_analysis_process', ubiome_state)
 
         if ubiome_state.get_is_standalone():
             return
@@ -98,17 +101,17 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         functional_result_folder = protocol_proxy.get_process('functional_analysis_process').get_output('Folder_result')
 
         if functional_result_folder:
-            st.markdown("##### PICRUSt2 Functional Analysis Results")
+            st.markdown(f"##### {translate_service.translate('picrust2_functional_analysis_results')}")
 
             # Display folder contents
-            st.markdown("##### Result Folder Contents")
+            st.markdown(f"##### {translate_service.translate('result_folder_contents')}")
             folder_path = functional_result_folder.path
 
             if os.path.exists(folder_path):
                 # List key output folders
                 key_folders = ['EC_metagenome_out', 'KO_metagenome_out', 'pathways_out']
 
-                tabs = st.tabs(["EC Metagenome", "KO Metagenome", "Pathways"])
+                tabs = st.tabs([translate_service.translate("ec_metagenome"), translate_service.translate("ko_metagenome"), translate_service.translate("pathways")])
 
                 for i, (tab, folder_name) in enumerate(zip(tabs, key_folders)):
                     with tab:
@@ -120,7 +123,7 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                             try:
                                 files_in_folder = os.listdir(folder_full_path)
                                 if files_in_folder:
-                                    st.write("**Available files:**")
+                                    st.write(f"**{translate_service.translate('available_files')}**")
                                     for file_name in files_in_folder:
                                         file_path = os.path.join(folder_full_path, file_name)
                                         if os.path.isfile(file_path):
@@ -129,7 +132,7 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
                                             # For TSV files, offer to display them
                                             if file_name.endswith(('.tsv', '.tsv.gz')):
-                                                if st.button(f"View {file_name}", key=f"view_{folder_name}_{file_name}"):
+                                                if st.button(translate_service.translate("view_file").format(file_name), key=f"view_{folder_name}_{file_name}"):
                                                     try:
                                                         if file_name.endswith('.gz'):
                                                             import gzip
@@ -144,12 +147,12 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                                                         df = pd.read_csv(io.StringIO(content), sep='\t')
                                                         st.dataframe(df.head(100))  # Show first 100 rows
                                                     except Exception as e:
-                                                        st.error(f"Error reading file: {str(e)}")
+                                                        st.error(translate_service.translate("error_reading_file").format(str(e)))
                                 else:
-                                    st.info(f"No files found in {folder_name}")
+                                    st.info(translate_service.translate("no_files_found").format(folder_name))
                             except Exception as e:
-                                st.error(f"Error accessing folder {folder_name}: {str(e)}")
+                                st.error(translate_service.translate("error_accessing_folder").format(folder_name, str(e)))
                         else:
-                            st.warning(f"Folder {folder_name} not found in results")
+                            st.warning(translate_service.translate("folder_not_found").format(folder_name))
             else:
-                st.error("Result folder not found")
+                st.error(translate_service.translate("result_folder_not_found"))

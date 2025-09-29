@@ -13,6 +13,7 @@ from streamlit_slickgrid import (
 )
 
 def render_first_page(ubiome_state : State):
+    translate_service = ubiome_state.get_translate_service()
 
     # Add a button create new analysis using config
     # Create a container for the header with project title and action buttons
@@ -21,11 +22,11 @@ def render_first_page(ubiome_state : State):
             cols=[1, 'fit-content'], vertical_align_items='center')
 
     with col_title:
-        st.markdown("## Retrieve recipes")
+        st.markdown(f"## {translate_service.translate('retrieve_recipes')}")
 
     with col_button_new:
         if not ubiome_state.get_is_standalone():
-            if st.button("Create new recipe", icon=":material/add:", use_container_width=False, type = "primary"):
+            if st.button(translate_service.translate("create_new_recipe"), icon=":material/add:", use_container_width=False, type = "primary"):
                 # On click, navigate to a hidden page 'run new recipe'
                 router = StreamlitRouter.load_from_session()
                 router.navigate("new-analysis")
@@ -106,7 +107,7 @@ def render_first_page(ubiome_state : State):
         columns = [
             {
                 "id": "Name given",
-                "name": "Recipe name",
+                "name": translate_service.translate("recipe_name"),
                 "field": "Name given",
                 "sortable": True,
                 "type": FieldType.string,
@@ -115,7 +116,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "Folder",
-                "name": "Folder",
+                "name": translate_service.translate("folder"),
                 "field": "Folder",
                 "sortable": True,
                 "type": FieldType.string,
@@ -124,7 +125,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "metadata",
-                "name": "Metadata",
+                "name": translate_service.translate("metadata"),
                 "field": "metadata",
                 "sortable": True,
                 "type": FieldType.string,
@@ -133,7 +134,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "quality_control",
-                "name": "QC",
+                "name": translate_service.translate("quality_control"),
                 "field": "qc",
                 "sortable": True,
                 "type": FieldType.string,
@@ -142,7 +143,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "multiqc",
-                "name": "MultiQC",
+                "name": translate_service.translate("multiqc"),
                 "field": "multiqc",
                 "sortable": True,
                 "type": FieldType.string,
@@ -151,7 +152,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "feature_inference",
-                "name": "Feature Inference",
+                "name": translate_service.translate("feature_inference"),
                 "field": "feature_inference",
                 "sortable": True,
                 "type": FieldType.string,
@@ -160,7 +161,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "rarefaction",
-                "name": "Rarefaction",
+                "name": translate_service.translate("rarefaction"),
                 "field": "rarefaction",
                 "sortable": True,
                 "type": FieldType.string,
@@ -169,7 +170,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "taxonomy",
-                "name": "Taxonomy",
+                "name": translate_service.translate("taxonomy"),
                 "field": "taxonomy",
                 "sortable": True,
                 "type": FieldType.string,
@@ -178,7 +179,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "pcoa",
-                "name": "PCoA",
+                "name": translate_service.translate("pcoa"),
                 "field": "pcoa",
                 "sortable": True,
                 "type": FieldType.string,
@@ -187,7 +188,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "ancom",
-                "name": "ANCOM",
+                "name": translate_service.translate("ancom"),
                 "field": "ancom",
                 "sortable": True,
                 "type": FieldType.string,
@@ -196,7 +197,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "taxa_composition",
-                "name": "Taxa Composition",
+                "name": translate_service.translate("taxa_composition"),
                 "field": "taxa_composition",
                 "sortable": True,
                 "type": FieldType.string,
@@ -205,7 +206,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "16s_functional",
-                "name": "16S Functional",
+                "name": translate_service.translate("16s_functional"),
                 "field": "16s_functional",
                 "sortable": True,
                 "type": FieldType.string,
@@ -214,7 +215,7 @@ def render_first_page(ubiome_state : State):
             },
             {
                 "id": "16s_visualization",
-                "name": "16S Visualization",
+                "name": translate_service.translate("16s_visualization"),
                 "field": "16s_visualization",
                 "sortable": True,
                 "type": FieldType.string,
@@ -290,4 +291,4 @@ def render_first_page(ubiome_state : State):
                 router.navigate("analysis")
 
     else:
-        st.info("No recipe found. Please click on 'Create new recipe' to create one.")
+        st.info(translate_service.translate("no_recipe_found"))

@@ -7,18 +7,19 @@ from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags
 
 def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
 
     if not selected_scenario:
         # Check if QC has been run successfully
         qc_scenarios = ubiome_state.get_scenario_step_qc()
         if not qc_scenarios or qc_scenarios[0].status != ScenarioStatus.SUCCESS:
-            st.info("Please run the QC step successfully before running MultiQC.")
+            st.info(translate_service.translate("qc_run_successfully_info"))
             return
         if ubiome_state.get_is_standalone():
-            st.info("MultiQC has not been run.")
+            st.info(translate_service.translate("multiqc_not_run"))
             return
 
-        if st.button("Run MultiQC", icon=":material/play_arrow:", use_container_width=False):
+        if st.button(translate_service.translate("run_multiqc"), icon=":material/play_arrow:", use_container_width=False):
             # Create a new scenario for MultiQC
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_MULTIQC, f"{ubiome_state.get_current_analysis_name()} - MultiQC")
             protocol: ProtocolProxy = scenario.get_protocol()
@@ -60,7 +61,7 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
                         key="container_html_header",
                         cols=[1, 'fit-content'], vertical_align_items='center')
         with col_title:
-            st.markdown("##### MultiQC Results")
+            st.markdown(f"##### {translate_service.translate('multiqc_results')}")
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
 
@@ -78,6 +79,6 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
 
         share_link = ShareLinkService.get_or_create_valid_public_share_link(generate_link_dto)
         with col_button_html:
-            st.markdown(f"[View MultiQC report in another tab]({share_link.get_public_link()})")
+            st.markdown(f"[{translate_service.translate('view_multiqc_report')}]({share_link.get_public_link()})")
         # Display html
         st.components.v1.iframe(share_link.get_public_link(), scrolling=True, height=500)

@@ -8,7 +8,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import c
 
 @st.dialog("16S Visualization parameters")
 def dialog_16s_visu_params(ubiome_state: State):
-    st.text_input("16S Visualization scenario name:", placeholder="Enter 16S visualization scenario name", value=f"{ubiome_state.get_current_analysis_name()} - 16S Visualization", key=ubiome_state.FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY)
+    translate_service = ubiome_state.get_translate_service()
+    st.text_input(translate_service.translate("16s_visualization_scenario_name"), placeholder=translate_service.translate("enter_16s_visualization_name"), value=f"{ubiome_state.get_current_analysis_name()} - 16S Visualization", key=ubiome_state.FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY)
     # Show metadata file preview
     metadata_table = ResourceModel.get_by_id(ubiome_state.get_resource_id_metadata_table())
     metadata_file = metadata_table.get_resource()
@@ -16,7 +17,7 @@ def dialog_16s_visu_params(ubiome_state: State):
     table_metadata = TableImporter.call(metadata_file)
     df_metadata = table_metadata.get_data()
 
-    st.markdown("##### Reminder metadata columns:")
+    st.markdown(f"##### {translate_service.translate('reminder_metadata_columns')}")
     if metadata_table:
         # Display only column names
         st.write(', '.join(df_metadata.columns.tolist()))
@@ -31,9 +32,9 @@ def dialog_16s_visu_params(ubiome_state: State):
             default_config)
     )
 
-    if st.button("Run 16S Visualization", use_container_width=True, icon=":material/play_arrow:", key="button_16s_visu"):
+    if st.button(translate_service.translate("run_16s_visualization"), use_container_width=True, icon=":material/play_arrow:", key="button_16s_visu"):
         if not ubiome_state.get_functional_analysis_visu_config()["is_valid"]:
-            st.warning("Please fill all the mandatory fields.")
+            st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
         with StreamlitAuthenticateUser():
@@ -83,6 +84,8 @@ def dialog_16s_visu_params(ubiome_state: State):
             st.rerun()
 
 def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Get the selected tree menu item to determine which 16s scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
@@ -112,22 +115,22 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                 ko_file_available = False
 
         if not ko_file_available:
-            st.warning("⚠️ **Cannot run 16S Visualization**: The required file `KO_metagenome_out/pred_metagenome_unstrat.tsv.gz` is not available from the 16S Functional Analysis results.")
+            st.warning(f"⚠️ **{translate_service.translate('cannot_run_16s_visualization')}**")
         else:
             if not ubiome_state.get_is_standalone():
                 # On click, open a dialog to allow the user to select params of 16S visualization
-                st.button("Configure new 16S Visualization scenario", icon=":material/edit:", use_container_width=False,
+                st.button(translate_service.translate("configure_new_16s_visualization_scenario"), icon=":material/edit:", use_container_width=False,
                             on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
 
         # Display table of existing 16S Visualization scenarios
-        st.markdown("### List of scenarios")
+        st.markdown(f"### {translate_service.translate('list_scenarios')}")
 
         list_scenario_16s_visu = ubiome_state.get_scenario_step_16s_visu()
         render_scenario_table(list_scenario_16s_visu, 'functional_visu_process', '16s_visu_grid', ubiome_state)
     else:
         # Display details about scenario 16S visualization
-        st.markdown("##### 16S Visualization Scenario Results")
-        display_scenario_parameters(selected_scenario, 'functional_visu_process')
+        st.markdown(f"##### {translate_service.translate('16s_visualization_scenario_results')}")
+        display_scenario_parameters(selected_scenario, 'functional_visu_process', ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
@@ -136,18 +139,18 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy = scenario_proxy.get_protocol()
 
-        tab_pca, tab_results = st.tabs(["PCA Plot", "Analysis Results"])
+        tab_pca, tab_results = st.tabs([translate_service.translate("pca_plot"), translate_service.translate("analysis_results")])
 
         with tab_pca:
             # Display PCA plot
-            st.markdown("##### Principal Component Analysis")
+            st.markdown(f"##### {translate_service.translate('principal_component_analysis')}")
             plotly_result = protocol_proxy.get_process('functional_visu_process').get_output('plotly_result')
             if plotly_result:
                 st.plotly_chart(plotly_result.get_figure())
 
         with tab_results:
             # Display resource set results
-            st.markdown("##### Differential Abundance Analysis Results")
+            st.markdown(f"##### {translate_service.translate('differential_abundance_analysis_results')}")
             resource_set_output = protocol_proxy.get_process('functional_visu_process').get_output('resource_set')
 
             if resource_set_output:
@@ -185,8 +188,8 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                     # Analysis Tables
                     if analysis_tables:
                         with tab_tables if len(sub_tabs) > 1 else st.container():
-                            st.markdown("##### Differential Abundance Analysis Tables")
-                            selected_table = st.selectbox("Select analysis table:",
+                            st.markdown(f"##### {translate_service.translate('differential_abundance_analysis_tables')}")
+                            selected_table = st.selectbox(translate_service.translate("select_analysis_table"),
                                                             options=list(analysis_tables.keys()),
                                                             key="analysis_table_select")
                             if selected_table:
@@ -195,29 +198,29 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                     # Error Bar Plots
                     if error_bar_plots and other_tabs:
                         with other_tabs[0]:
-                            st.markdown("##### Pathway Error Bar Plots")
-                            selected_errorbar = st.selectbox("Select error bar plot:",
+                            st.markdown(f"##### {translate_service.translate('pathway_error_bar_plots')}")
+                            selected_errorbar = st.selectbox(translate_service.translate("select_error_bar_plot"),
                                                             options=list(error_bar_plots.keys()),
                                                             key="errorbar_select")
                             if selected_errorbar:
                                 try:
                                     st.image(error_bar_plots[selected_errorbar].path)
                                 except Exception as e:
-                                    st.error(f"Error displaying image: {str(e)}")
+                                    st.error(translate_service.translate("error_displaying_image"))
 
                     # Heatmap Plots
                     if heatmap_plots and len(other_tabs) > 1:
                         with other_tabs[1]:
-                            st.markdown("##### Pathway Heatmap Plots")
-                            selected_heatmap = st.selectbox("Select heatmap plot:",
+                            st.markdown(f"##### {translate_service.translate('pathway_heatmap_plots')}")
+                            selected_heatmap = st.selectbox(translate_service.translate("select_heatmap_plot"),
                                                             options=list(heatmap_plots.keys()),
                                                             key="heatmap_select")
                             if selected_heatmap:
                                 try:
                                     st.image(heatmap_plots[selected_heatmap].path)
                                 except Exception as e:
-                                    st.error(f"Error displaying image: {str(e)}")
+                                    st.error(translate_service.translate("error_displaying_image"))
                 else:
-                    st.info("No visualization results available.")
+                    st.info(translate_service.translate("no_visualization_results"))
             else:
-                st.info("No analysis results available.")
+                st.info(translate_service.translate("no_analysis_results"))

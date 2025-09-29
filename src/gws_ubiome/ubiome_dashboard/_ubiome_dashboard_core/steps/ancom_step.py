@@ -8,7 +8,8 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import d
 
 @st.dialog("ANCOM parameters")
 def dialog_ancom_params(ubiome_state: State):
-    st.text_input("ANCOM scenario name:", placeholder="Enter ANCOM scenario name", value=f"{ubiome_state.get_current_analysis_name()} - ANCOM", key=ubiome_state.ANCOM_SCENARIO_NAME_INPUT_KEY)
+    translate_service = ubiome_state.get_translate_service()
+    st.text_input(translate_service.translate("ancom_scenario_name"), placeholder=translate_service.translate("enter_ancom_name"), value=f"{ubiome_state.get_current_analysis_name()} - ANCOM", key=ubiome_state.ANCOM_SCENARIO_NAME_INPUT_KEY)
 
     # Show header of metadata file
     metadata_table = ResourceModel.get_by_id(ubiome_state.get_resource_id_metadata_table())
@@ -17,7 +18,7 @@ def dialog_ancom_params(ubiome_state: State):
     table_metadata = TableImporter.call(metadata_file)
     df_metadata = table_metadata.get_data()
 
-    st.markdown("##### Reminder metadata columns:")
+    st.markdown(f"##### {translate_service.translate('reminder_metadata_columns')}")
     if metadata_table:
         # Display only column names
         st.write(', '.join(df_metadata.columns.tolist()))
@@ -34,14 +35,14 @@ def dialog_ancom_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button("Save ANCOM", use_container_width=True, icon=":material/save:", key="button_ancom_save")
+        save_clicked = st.button(translate_service.translate("save_ancom"), use_container_width=True, icon=":material/save:", key="button_ancom_save")
 
     with col2:
-        run_clicked = st.button("Run ANCOM", use_container_width=True, icon=":material/play_arrow:", key="button_ancom_run")
+        run_clicked = st.button(translate_service.translate("run_ancom"), use_container_width=True, icon=":material/play_arrow:", key="button_ancom_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_ancom_config()["is_valid"]:
-            st.warning("Please fill all the mandatory fields.")
+            st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
         with StreamlitAuthenticateUser():
@@ -88,6 +89,8 @@ def dialog_ancom_params(ubiome_state: State):
             st.rerun()
 
 def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
+    translate_service = ubiome_state.get_translate_service()
+
     # Get the selected tree menu item to determine which taxonomy scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
@@ -101,19 +104,19 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of ANCOM
-            st.button("Configure new ANCOM scenario", icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_ancom_scenario"), icon=":material/edit:", use_container_width=False,
                             on_click=lambda state=ubiome_state: dialog_ancom_params(state))
 
         # Display table of existing ANCOM scenarios
-        st.markdown("### List of scenarios")
+        st.markdown(f"### {translate_service.translate('list_scenarios')}")
 
         list_scenario_ancom = ubiome_state.get_scenario_step_ancom()
         render_scenario_table(list_scenario_ancom, 'ancom_process', 'ancom_grid', ubiome_state)
 
     else:
         # Display details about scenario ANCOM
-        st.markdown("##### ANCOM Scenario Results")
-        display_scenario_parameters(selected_scenario, 'ancom_process')
+        st.markdown(f"##### {translate_service.translate('ancom_scenario_results')}")
+        display_scenario_parameters(selected_scenario, 'ancom_process', ubiome_state)
 
         if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
             display_saved_scenario_actions(selected_scenario, ubiome_state)
@@ -144,12 +147,12 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                 elif "Percentile abundances" in key:
                     percentile_abundances[key] = resource
 
-            tab_stats, tab_volcano, tab_percentile = st.tabs(["ANCOM Statistics", "Volcano Plots", "Percentile Abundances"])
+            tab_stats, tab_volcano, tab_percentile = st.tabs([translate_service.translate("ancom_statistics"), translate_service.translate("volcano_plots"), translate_service.translate("percentile_abundances")])
 
             with tab_stats:
-                st.markdown("##### ANCOM Statistical Results")
+                st.markdown(f"##### {translate_service.translate('ancom_statistical_results')}")
                 if ancom_stats:
-                    selected_stat = st.selectbox("Select taxonomic level for ANCOM stats:",
+                    selected_stat = st.selectbox(translate_service.translate("select_taxonomic_level_ancom"),
                                                 options=list(ancom_stats.keys()),
                                                 key="ancom_stats_select")
                     if selected_stat:
@@ -160,12 +163,12 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                                 ancom_data[col] = ancom_data[col].astype(str)
                         st.dataframe(ancom_data)
                 else:
-                    st.info("No ANCOM statistics available.")
+                    st.info(translate_service.translate("no_ancom_statistics"))
 
             with tab_volcano:
-                st.markdown("##### Volcano Plot Data")
+                st.markdown(f"##### {translate_service.translate('volcano_plot_data')}")
                 if volcano_plots:
-                    selected_volcano = st.selectbox("Select taxonomic level for volcano plot:",
+                    selected_volcano = st.selectbox(translate_service.translate("select_taxonomic_level_volcano"),
                                                     options=list(volcano_plots.keys()),
                                                     key="volcano_plot_select")
                     if selected_volcano:
@@ -177,22 +180,22 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                         st.dataframe(volcano_data)
 
                         # Create a simple volcano plot if data has the right columns
-                        if 'W' in volcano_data.columns and 'clr_F-score' in volcano_data.columns:
-                            fig = px.scatter(volcano_data, x='W', y='clr_F-score',
-                                            title=f"Volcano Plot - {selected_volcano}",
+                        if 'W' in volcano_data.columns and 'clr' in volcano_data.columns:
+                            fig = px.scatter(volcano_data, x='clr', y='W',
+                                            title=translate_service.translate("volcano_plot_title").format(selected_volcano),
                                             hover_data=volcano_data.columns.tolist())
                             fig.update_layout(
-                                xaxis_title="W statistic",
-                                yaxis_title="F-score"
+                                xaxis_title=translate_service.translate("f_score"),
+                                yaxis_title=translate_service.translate("w_statistic")
                             )
                             st.plotly_chart(fig)
                 else:
-                    st.info("No volcano plot data available.")
+                    st.info(translate_service.translate("no_volcano_plot_data"))
 
             with tab_percentile:
-                st.markdown("##### Percentile Abundances")
+                st.markdown(f"##### {translate_service.translate('percentile_abundances')}")
                 if percentile_abundances:
-                    selected_percentile = st.selectbox("Select taxonomic level for percentile abundances:",
+                    selected_percentile = st.selectbox(translate_service.translate("select_taxonomic_level_percentile"),
                                                         options=list(percentile_abundances.keys()),
                                                         key="percentile_select")
                     if selected_percentile:
@@ -203,4 +206,4 @@ def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
                                 percentile_data[col] = percentile_data[col].astype(str)
                         st.dataframe(percentile_data)
                 else:
-                    st.info("No percentile abundance data available.")
+                    st.info(translate_service.translate("no_percentile_abundance_data"))
