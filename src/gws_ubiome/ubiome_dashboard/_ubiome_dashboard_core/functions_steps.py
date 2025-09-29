@@ -248,7 +248,8 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 
     # Add tags using EntityTagList
     user_origin = TagOrigin.current_user_origin()
-    entity_tags = EntityTagList(TagEntityType.RESOURCE, resource_model.id, default_origin=user_origin)
+    entity_tags = EntityTagList.find_by_entity(TagEntityType.RESOURCE, resource_model.id)
+    entity_tags._default_origin = user_origin # TODO will be fixed in future releases of core to set the default origin in the constructor
 
     # Add the required tags
     entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=False))
