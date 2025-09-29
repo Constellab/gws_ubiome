@@ -249,161 +249,170 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
     return button_menu, key_default_item
 
 def render_analysis_page(ubiome_state : State):
-    translate_service = ubiome_state.get_translate_service()
-    router = StreamlitRouter.load_from_session()
-    # Create two columns
-    left_col, right_col = st.columns([1, 4])
+    style = """
+    [CLASS_NAME] {
+        padding: 40px;
+    }
+    """
 
-    with left_col:
-        # Button to go home
-        if st.button(translate_service.translate("recipes"), use_container_width=True, icon=":material/home:", type="primary"):
-            # Reset the state of selected tree default item
-            ubiome_state.set_tree_default_item(None)
-            router = StreamlitRouter.load_from_session()
-            router.navigate("first-page")
+    with StreamlitContainers.container_full_min_height('container-center_analysis_page',
+                additional_style=style):
+
+        translate_service = ubiome_state.get_translate_service()
+        router = StreamlitRouter.load_from_session()
+        # Create two columns
+        left_col, right_col = st.columns([1, 4])
+
+        with left_col:
+            # Button to go home
+            if st.button(translate_service.translate("recipes"), use_container_width=True, icon=":material/home:", type="primary"):
+                # Reset the state of selected tree default item
+                ubiome_state.set_tree_default_item(None)
+                router = StreamlitRouter.load_from_session()
+                router.navigate("first-page")
 
 
-    selected_analysis = ubiome_state.get_selected_analysis()
-    if not selected_analysis:
-        return st.error(translate_service.translate("no_analysis_selected"))
+        selected_analysis = ubiome_state.get_selected_analysis()
+        if not selected_analysis:
+            return st.error(translate_service.translate("no_analysis_selected"))
 
-    # Get analysis name from scenario tag
-    entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_analysis.id)
-    tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[0].to_simple_tag()
-    analysis_name = tag_analysis_name.value
+        # Get analysis name from scenario tag
+        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_analysis.id)
+        tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[0].to_simple_tag()
+        analysis_name = tag_analysis_name.value
 
-    # Get ubiome pipeline id from scenario tag
-    tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
-    ubiome_pipeline_id = tag_ubiome_pipeline_id.value
+        # Get ubiome pipeline id from scenario tag
+        tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
+        ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
-    # Get folder from scenario folder
-    ubiome_state.set_selected_folder_id(selected_analysis.folder.id if selected_analysis.folder else None)
+        # Get folder from scenario folder
+        ubiome_state.set_selected_folder_id(selected_analysis.folder.id if selected_analysis.folder else None)
 
-    if selected_analysis.status != ScenarioStatus.SUCCESS:
-        if selected_analysis.status in [ScenarioStatus.RUNNING, ScenarioStatus.DRAFT, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE, ScenarioStatus.PARTIALLY_RUN]:
-            message = translate_service.translate("analysis_still_running")
-        else:
-            message = translate_service.translate("analysis_not_completed")
-        with right_col:
-            st.info(message)
-        return
-
-    # Get fastq and metadata table
-    scenario_proxy = ScenarioProxy.from_existing_scenario(selected_analysis.id)
-    # Retrieve the protocol
-    protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
-
-    # Retrieve outputs
-    # Fastq
-    file_fastq : Folder = protocol_proxy.get_process('metadata_process').get_input('fastq_folder')
-    ubiome_state.set_resource_id_fastq(file_fastq.get_model_id())
-
-    ##### Metadata table
-    metadata_updated = search_updated_metadata_table(ubiome_state)
-
-    if metadata_updated:
-        ubiome_state.set_resource_id_metadata_table(metadata_updated.get_model_id())
-    else : # Get the table from initial scenario
-        metadata_output : File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
-        ubiome_state.set_resource_id_metadata_table(metadata_output.get_model_id())
-
-    # Left column - Analysis workflow tree
-    with left_col:
-
-        st.write(f"**{translate_service.translate('recipe')}:** {analysis_name}")
-
-        # Build and render the analysis tree menu, and keep the key of the first element
-        tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
-
-        tree_menu.set_default_selected_item(key_default_item)
-
-        # Save in session_state the tree_menu
-        ubiome_state.set_tree_menu_object(tree_menu)
-
-        # Render the tree menu
-        selected_item = tree_menu.render()
-
-        if selected_item is not None:
-            # Handle tree item selection
-            item_key = selected_item.key
-
-            # If it's a scenario ID, update the selected scenario
-            selected_scenario_new = Scenario.get_by_id(item_key)
-
-            if selected_scenario_new:
-                ubiome_state.set_selected_scenario(selected_scenario_new)
-
-                entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_scenario_new.id)
-                tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
-                ubiome_state.set_step_pipeline(tag_step_name.value)
-
+        if selected_analysis.status != ScenarioStatus.SUCCESS:
+            if selected_analysis.status in [ScenarioStatus.RUNNING, ScenarioStatus.DRAFT, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE, ScenarioStatus.PARTIALLY_RUN]:
+                message = translate_service.translate("analysis_still_running")
             else:
-                ubiome_state.set_selected_scenario(None)
-                ubiome_state.set_step_pipeline(item_key)
+                message = translate_service.translate("analysis_not_completed")
+            with right_col:
+                st.info(message)
+            return
 
-    # Right column - Analysis details
-    with right_col:
-        # Add vertical line to separate the two columns
-        style = """
-        [CLASS_NAME] {
-            border-left: 2px solid #ccc;
-            min-height: 100vh;
-            padding-left: 20px !important;
-        }
-        """
-        with StreamlitContainers.container_with_style('analysis-container', style):
+        # Get fastq and metadata table
+        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_analysis.id)
+        # Retrieve the protocol
+        protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
 
-            is_scenario = True if ubiome_state.get_selected_scenario() else False
+        # Retrieve outputs
+        # Fastq
+        file_fastq : Folder = protocol_proxy.get_process('metadata_process').get_input('fastq_folder')
+        ubiome_state.set_resource_id_fastq(file_fastq.get_model_id())
 
-            if is_scenario:
-                selected_scenario : Scenario = ubiome_state.get_selected_scenario()
+        ##### Metadata table
+        metadata_updated = search_updated_metadata_table(ubiome_state)
 
-                # Write the status of the scenario at the top right
-                col_title, col_status, col_refresh= StreamlitContainers.columns_with_fit_content(
-                        key="container_status",
-                        cols=[1, 'fit-content', 'fit-content'], vertical_align_items='center')
-                with col_title:
-                    st.markdown(f"#### {selected_scenario.get_short_name()}")
-                with col_status:
-                    status_emoji = get_status_emoji(selected_scenario.status)
-                    st.markdown(f"#### **{translate_service.translate('status')}:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
-                    # Add a button to redirect to the scenario page
-                    virtual_host = Settings.get_instance().get_virtual_host()
-                    if Settings.get_instance().is_prod_mode():
-                        lab_mode = "lab"
-                    else:
-                        lab_mode = "dev-lab"
-                    if not ubiome_state.get_is_standalone():
-                        st.link_button(translate_service.translate("view_scenario"), f"https://{lab_mode}.{virtual_host}/app/scenario/{selected_scenario.id}", icon=":material/open_in_new:")
-                with col_refresh:
-                    # If the scenario status is running or in queue, add a refresh button to refresh the page
-                    if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:
-                        if st.button(translate_service.translate("refresh"), icon=":material/refresh:", use_container_width=False):
-                            ubiome_state.set_tree_default_item(selected_scenario.id)
-                            st.rerun()
-            else :
-                selected_scenario = None
+        if metadata_updated:
+            ubiome_state.set_resource_id_metadata_table(metadata_updated.get_model_id())
+        else : # Get the table from initial scenario
+            metadata_output : File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
+            ubiome_state.set_resource_id_metadata_table(metadata_output.get_model_id())
 
-            if ubiome_state.get_step_pipeline() == ubiome_state.TAG_METADATA:
-                # Render metadata table
-                render_metadata_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
-                render_qc_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_MULTIQC:
-                render_multiqc_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
-                render_feature_inference_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RAREFACTION):
-                render_rarefaction_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_TAXONOMY):
-                render_taxonomy_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_PCOA_DIVERSITY):
-                render_pcoa_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_ANCOM):
-                render_ancom_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_DB_ANNOTATOR):
-                render_db_annotator_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S_VISU):
-                render_16s_visu_step(selected_scenario, ubiome_state)
-            elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S):
-                render_16s_step(selected_scenario, ubiome_state)
+        # Left column - Analysis workflow tree
+        with left_col:
+
+            st.write(f"**{translate_service.translate('recipe')}:** {analysis_name}")
+
+            # Build and render the analysis tree menu, and keep the key of the first element
+            tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
+
+            tree_menu.set_default_selected_item(key_default_item)
+
+            # Save in session_state the tree_menu
+            ubiome_state.set_tree_menu_object(tree_menu)
+
+            # Render the tree menu
+            selected_item = tree_menu.render()
+
+            if selected_item is not None:
+                # Handle tree item selection
+                item_key = selected_item.key
+
+                # If it's a scenario ID, update the selected scenario
+                selected_scenario_new = Scenario.get_by_id(item_key)
+
+                if selected_scenario_new:
+                    ubiome_state.set_selected_scenario(selected_scenario_new)
+
+                    entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_scenario_new.id)
+                    tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
+                    ubiome_state.set_step_pipeline(tag_step_name.value)
+
+                else:
+                    ubiome_state.set_selected_scenario(None)
+                    ubiome_state.set_step_pipeline(item_key)
+
+        # Right column - Analysis details
+        with right_col:
+            # Add vertical line to separate the two columns
+            style = """
+            [CLASS_NAME] {
+                border-left: 2px solid #ccc;
+                min-height: 100vh;
+                padding-left: 20px !important;
+            }
+            """
+            with StreamlitContainers.container_with_style('analysis-container', style):
+
+                is_scenario = True if ubiome_state.get_selected_scenario() else False
+
+                if is_scenario:
+                    selected_scenario : Scenario = ubiome_state.get_selected_scenario()
+
+                    # Write the status of the scenario at the top right
+                    col_title, col_status, col_refresh= StreamlitContainers.columns_with_fit_content(
+                            key="container_status",
+                            cols=[1, 'fit-content', 'fit-content'], vertical_align_items='center')
+                    with col_title:
+                        st.markdown(f"#### {selected_scenario.get_short_name()}")
+                    with col_status:
+                        status_emoji = get_status_emoji(selected_scenario.status)
+                        st.markdown(f"#### **{translate_service.translate('status')}:** {status_emoji} {get_status_prettify(selected_scenario.status)}")
+                        # Add a button to redirect to the scenario page
+                        virtual_host = Settings.get_instance().get_virtual_host()
+                        if Settings.get_instance().is_prod_mode():
+                            lab_mode = "lab"
+                        else:
+                            lab_mode = "dev-lab"
+                        if not ubiome_state.get_is_standalone():
+                            st.link_button(translate_service.translate("view_scenario"), f"https://{lab_mode}.{virtual_host}/app/scenario/{selected_scenario.id}", icon=":material/open_in_new:")
+                    with col_refresh:
+                        # If the scenario status is running or in queue, add a refresh button to refresh the page
+                        if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:
+                            if st.button(translate_service.translate("refresh"), icon=":material/refresh:", use_container_width=False):
+                                ubiome_state.set_tree_default_item(selected_scenario.id)
+                                st.rerun()
+                else :
+                    selected_scenario = None
+
+                if ubiome_state.get_step_pipeline() == ubiome_state.TAG_METADATA:
+                    # Render metadata table
+                    render_metadata_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
+                    render_qc_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_MULTIQC:
+                    render_multiqc_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
+                    render_feature_inference_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RAREFACTION):
+                    render_rarefaction_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_TAXONOMY):
+                    render_taxonomy_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_PCOA_DIVERSITY):
+                    render_pcoa_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_ANCOM):
+                    render_ancom_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_DB_ANNOTATOR):
+                    render_db_annotator_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S_VISU):
+                    render_16s_visu_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S):
+                    render_16s_step(selected_scenario, ubiome_state)
