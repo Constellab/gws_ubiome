@@ -70,8 +70,8 @@ class TaxonomyTable(Table):
 
         # unfolding using "metadata_tag"
         unfold_table = TableUnfolderHelper.unfold_rows_by_tags(
-            table_to_unfold, keys=[params.get("Metadata_tag")],
-            tag_key_column_name="column_name")
+            table_to_unfold, [params.get("Metadata_tag")],
+            "column_name")
 
         # then matrix transposition
         all_tags = table_to_unfold.get_available_row_tags()
