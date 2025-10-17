@@ -6,10 +6,10 @@ from gws_core import (ConfigParams, AppConfig, AppType, OutputSpec,
 
 
 @app_decorator("UbiomeDashboardAppConfig", app_type=AppType.STREAMLIT,
-               human_name="Generate Ubiome Dashboard app")
+               human_name="Generate Constellab 16S rRNA-seq app")
 class UbiomeDashboardAppConfig(AppConfig):
     """
-    Configuration class for the Ubiome Dashboard Streamlit application.
+    Configuration class for the Constellab 16S rRNA-seq Streamlit application.
 
     This class defines the configuration and setup for a Streamlit-based dashboard
     that provides visualization and analysis capabilities for microbiome data.
@@ -21,13 +21,13 @@ class UbiomeDashboardAppConfig(AppConfig):
         return self.get_app_folder_from_relative_path(__file__, "_ubiome_dashboard")
 
 
-@task_decorator("GenerateUbiomeDashboard", human_name="Generate Ubiome Dashboard app",
+@task_decorator("GenerateUbiomeDashboard", human_name="Generate Constellab 16S rRNA-seq app",
                 style=StreamlitResource.copy_style())
 class GenerateUbiomeDashboard(Task):
     """
-    Task that generates the Ubiome Dashboard app.
+    Task that generates the Constellab 16S rRNA-seq app.
     This dashboard provides visualization and analysis capabilities for microbiome data.
-    The Ubiome Dashboard is a Streamlit application designed for microbiome data analysis and visualization. It provides an interactive interface for processing, analyzing, and interpreting 16S rRNA sequencing data through various bioinformatics workflows.
+    The Constellab 16S rRNA-seq is a Streamlit application designed for microbiome data analysis and visualization. It provides an interactive interface for processing, analyzing, and interpreting 16S rRNA sequencing data through various bioinformatics workflows.
 
     The aim is to simplify the use of the Ubiome Brick by providing an application that makes running the pipeline and retrieving results easier. Dependencies between scenarios are also maintained, allowing you to navigate more easily.
 
@@ -69,7 +69,7 @@ class GenerateUbiomeDashboard(Task):
         streamlit_app = StreamlitResource()
 
         streamlit_app.set_app_config(UbiomeDashboardAppConfig())
-        streamlit_app.name = "Ubiome Dashboard"
+        streamlit_app.name = "Constellab 16S rRNA-seq"
 
         # Add param
         associate_scenario_with_folder: bool = params.get_value(
