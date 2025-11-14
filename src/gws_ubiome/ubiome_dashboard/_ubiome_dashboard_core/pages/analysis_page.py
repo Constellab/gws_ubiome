@@ -265,7 +265,7 @@ def render_analysis_page(ubiome_state : State):
 
         with left_col:
             # Button to go home
-            if st.button(translate_service.translate("recipes"), use_container_width=True, icon=":material/home:", type="primary"):
+            if st.button(translate_service.translate("recipes"), width="stretch", icon=":material/home:", type="primary"):
                 # Reset the state of selected tree default item
                 ubiome_state.set_tree_default_item(None)
                 router = StreamlitRouter.load_from_session()
@@ -387,7 +387,7 @@ def render_analysis_page(ubiome_state : State):
                     with col_refresh:
                         # If the scenario status is running or in queue, add a refresh button to refresh the page
                         if selected_scenario.status in [ScenarioStatus.RUNNING, ScenarioStatus.WAITING_FOR_CLI_PROCESS, ScenarioStatus.IN_QUEUE]:
-                            if st.button(translate_service.translate("refresh"), icon=":material/refresh:", use_container_width=False):
+                            if st.button(translate_service.translate("refresh"), icon=":material/refresh:", width="stretch"):
                                 ubiome_state.set_tree_default_item(selected_scenario.id)
                                 st.rerun()
                 else :

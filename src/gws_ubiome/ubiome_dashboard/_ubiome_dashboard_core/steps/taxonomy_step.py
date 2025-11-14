@@ -20,10 +20,10 @@ def dialog_taxonomy_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button(translate_service.translate("save_taxonomy"), use_container_width=True, icon=":material/save:", key="button_taxonomy_save")
+        save_clicked = st.button(translate_service.translate("save_taxonomy"), width="stretch", icon=":material/save:", key="button_taxonomy_save")
 
     with col2:
-        run_clicked = st.button(translate_service.translate("run_taxonomy"), use_container_width=True, icon=":material/play_arrow:", key="button_taxonomy_run")
+        run_clicked = st.button(translate_service.translate("run_taxonomy"), width="stretch", icon=":material/play_arrow:", key="button_taxonomy_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_taxonomy_config()["is_valid"]:
@@ -76,7 +76,7 @@ def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> No
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of taxonomy
-            st.button(translate_service.translate("configure_new_taxonomy_scenario"), icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_taxonomy_scenario"), icon=":material/edit:", width="content",
                         on_click=lambda state=ubiome_state: dialog_taxonomy_params(state))
 
         # Display table of existing Taxonomy scenarios

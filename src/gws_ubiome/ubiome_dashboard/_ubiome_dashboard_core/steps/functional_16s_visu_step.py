@@ -32,7 +32,7 @@ def dialog_16s_visu_params(ubiome_state: State):
             default_config)
     )
 
-    if st.button(translate_service.translate("run_16s_visualization"), use_container_width=True, icon=":material/play_arrow:", key="button_16s_visu"):
+    if st.button(translate_service.translate("run_16s_visualization"), width="stretch", icon=":material/play_arrow:", key="button_16s_visu"):
         if not ubiome_state.get_functional_analysis_visu_config()["is_valid"]:
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
@@ -119,7 +119,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         else:
             if not ubiome_state.get_is_standalone():
                 # On click, open a dialog to allow the user to select params of 16S visualization
-                st.button(translate_service.translate("configure_new_16s_visualization_scenario"), icon=":material/edit:", use_container_width=False,
+                st.button(translate_service.translate("configure_new_16s_visualization_scenario"), icon=":material/edit:", width="content",
                             on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
 
         # Display table of existing 16S Visualization scenarios

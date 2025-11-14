@@ -35,7 +35,7 @@ def render_first_page(ubiome_state : State):
 
         with col_button_new:
             if not ubiome_state.get_is_standalone():
-                if st.button(translate_service.translate("create_new_recipe"), icon=":material/add:", use_container_width=False, type = "primary"):
+                if st.button(translate_service.translate("create_new_recipe"), icon=":material/add:", width="content", type = "primary"):
                     # On click, navigate to a hidden page 'run new recipe'
                     router = StreamlitRouter.load_from_session()
                     router.navigate("new-analysis")

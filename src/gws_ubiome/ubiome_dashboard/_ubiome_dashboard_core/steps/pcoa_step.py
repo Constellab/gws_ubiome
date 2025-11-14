@@ -41,10 +41,10 @@ def dialog_pcoa_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button(translate_service.translate("save_pcoa"), use_container_width=True, icon=":material/save:", key="button_pcoa_save")
+        save_clicked = st.button(translate_service.translate("save_pcoa"), width="stretch", icon=":material/save:", key="button_pcoa_save")
 
     with col2:
-        run_clicked = st.button(translate_service.translate("run_pcoa"), use_container_width=True, icon=":material/play_arrow:", key="button_pcoa_run")
+        run_clicked = st.button(translate_service.translate("run_pcoa"), width="stretch", icon=":material/play_arrow:", key="button_pcoa_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_pcoa_config()["is_valid"]:
@@ -105,7 +105,7 @@ def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of PCOA
-            st.button(translate_service.translate("configure_new_pcoa_scenario"), icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_pcoa_scenario"), icon=":material/edit:", width="content",
                         on_click=lambda state=ubiome_state: dialog_pcoa_params(state))
 
         # Display table of existing PCOA scenarios

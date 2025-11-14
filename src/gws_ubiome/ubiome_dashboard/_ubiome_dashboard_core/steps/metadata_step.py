@@ -40,7 +40,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
         if not ubiome_state.get_is_standalone():
             st.info(f"💡 **{translate_service.translate('instructions')}:** {translate_service.translate('instructions_metadata')}")
 
-            if st.button(translate_service.translate("add_column"), use_container_width=False):
+            if st.button(translate_service.translate("add_column"), width="stretch"):
                 add_new_column_dialog(ubiome_state, header_lines)
 
             # Create column configuration for all columns
@@ -57,15 +57,15 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
             st.session_state[ubiome_state.EDITED_DF_METADATA] = st.data_editor(
                 df_metadata,
                 hide_index=True,
-                use_container_width=True,
+                width="stretch",
                 num_rows="dynamic",
                 column_config=column_config,
                 key="data_editor"
             )
         else:
-            st.dataframe(df_metadata, use_container_width=True, hide_index=True)
+            st.dataframe(df_metadata, width="stretch", hide_index=True)
     else:
-        st.dataframe(df_metadata, use_container_width=True, hide_index=True)
+        st.dataframe(df_metadata, width="stretch", hide_index=True)
 
     # Save button only appear if QC task have not been created
     if not ubiome_state.get_scenario_step_qc():
@@ -94,7 +94,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
             else:
                 save_disabled = False
 
-            if st.button(translate_service.translate("save"), disabled=save_disabled, use_container_width=True):
+            if st.button(translate_service.translate("save"), disabled=save_disabled, width="content"):
                 with StreamlitAuthenticateUser():
                     # Use the helper function to save
                     save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state)

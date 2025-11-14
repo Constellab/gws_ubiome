@@ -28,7 +28,7 @@ def render_new_analysis_page(ubiome_state : State):
         # Add a return button
         router = StreamlitRouter.load_from_session()
 
-        if st.button(translate_service.translate("return_recipes"), icon=":material/arrow_back:", use_container_width=False):
+        if st.button(translate_service.translate("return_recipes"), icon=":material/arrow_back:", width="content"):
             router.navigate("first-page")
 
 

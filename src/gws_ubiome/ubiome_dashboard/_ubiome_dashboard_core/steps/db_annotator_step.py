@@ -22,10 +22,10 @@ def dialog_db_annotator_params(ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button(translate_service.translate("save_taxa_composition"), use_container_width=True, icon=":material/save:", key="button_db_annotator_save")
+        save_clicked = st.button(translate_service.translate("save_taxa_composition"), width="stretch", icon=":material/save:", key="button_db_annotator_save")
 
     with col2:
-        run_clicked = st.button(translate_service.translate("run_taxa_composition"), use_container_width=True, icon=":material/play_arrow:", key="button_db_annotator_run")
+        run_clicked = st.button(translate_service.translate("run_taxa_composition"), width="stretch", icon=":material/play_arrow:", key="button_db_annotator_run")
 
     if save_clicked or run_clicked:
         selected_annotation_table_id = ubiome_state.get_selected_annotation_table()["resourceId"]
@@ -91,7 +91,7 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of Taxa Composition
-            st.button(translate_service.translate("configure_new_taxa_composition_scenario"), icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_taxa_composition_scenario"), icon=":material/edit:", width="content",
                             on_click=lambda state=ubiome_state: dialog_db_annotator_params(state))
 
         # Display table of existing Taxa Composition scenarios

@@ -18,7 +18,7 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         if ubiome_state.get_is_standalone():
             return
 
-        if st.button(translate_service.translate("run_quality_check"), icon=":material/play_arrow:", use_container_width=False):
+        if st.button(translate_service.translate("run_quality_check"), icon=":material/play_arrow:", width="content"):
             # Create a new scenario in the lab
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, f"{ubiome_state.get_current_analysis_name()} - Quality check")
             protocol: ProtocolProxy = scenario.get_protocol()

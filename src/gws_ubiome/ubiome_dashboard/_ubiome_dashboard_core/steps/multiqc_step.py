@@ -19,7 +19,7 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
             st.info(translate_service.translate("multiqc_not_run"))
             return
 
-        if st.button(translate_service.translate("run_multiqc"), icon=":material/play_arrow:", use_container_width=False):
+        if st.button(translate_service.translate("run_multiqc"), icon=":material/play_arrow:", width="content"):
             # Create a new scenario for MultiQC
             scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_MULTIQC, f"{ubiome_state.get_current_analysis_name()} - MultiQC")
             protocol: ProtocolProxy = scenario.get_protocol()

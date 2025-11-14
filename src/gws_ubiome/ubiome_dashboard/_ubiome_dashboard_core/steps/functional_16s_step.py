@@ -18,7 +18,7 @@ def dialog_16s_params(ubiome_state: State):
         is_default_config_valid=Picrust2FunctionalAnalysis.config_specs.mandatory_values_are_set(
             Picrust2FunctionalAnalysis.config_specs.get_default_values()))
 
-    if st.button(translate_service.translate("run_16s_functional_analysis"), use_container_width=True, icon=":material/play_arrow:", key="button_16s"):
+    if st.button(translate_service.translate("run_16s_functional_analysis"), width="stretch", icon=":material/play_arrow:", key="button_16s"):
         if not ubiome_state.get_functional_analysis_config()["is_valid"]:
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
@@ -71,7 +71,7 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     if not selected_scenario:
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of 16S functional analysis
-            st.button(translate_service.translate("configure_new_16s_functional_analysis_scenario"), icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_16s_functional_analysis_scenario"), icon=":material/edit:", width="content",
                     on_click=lambda state=ubiome_state: dialog_16s_params(state))
 
         # Display table of existing 16S Functional Analysis scenarios

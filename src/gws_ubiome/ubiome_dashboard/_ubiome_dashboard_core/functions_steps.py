@@ -190,7 +190,7 @@ def display_scenario_parameters(scenario: Scenario, process_name: str, ubiome_st
 
         if param_data:
             param_df = pd.DataFrame(param_data)
-            st.dataframe(param_df, use_container_width=True, hide_index=True)
+            st.dataframe(param_df, width="stretch", hide_index=True)
 
 def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title: str) -> ScenarioProxy:
     """Generic function to create a scenario with base tags."""
@@ -261,7 +261,7 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 def add_new_column_dialog(ubiome_state: State, header_lines: List[str]):
     translate_service = ubiome_state.get_translate_service()
     st.text_input(translate_service.translate("new_column_name"), placeholder=translate_service.translate("enter_column_name"), key=ubiome_state.NEW_COLUMN_INPUT_KEY)
-    if st.button(translate_service.translate("add_column"), use_container_width=True, key="add_column_btn"):
+    if st.button(translate_service.translate("add_column"), width="stretch", key="add_column_btn"):
         df_metadata = ubiome_state.get_edited_df_metadata()
         if not ubiome_state.get_new_column_name():
             st.warning("Please enter a column name")
@@ -381,7 +381,7 @@ def display_saved_scenario_actions(scenario: Scenario, ubiome_state: State) -> N
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(translate_service.translate("run"), icon=":material/play_arrow:", key=f"run_{scenario.id}", use_container_width=True):
+        if st.button(translate_service.translate("run"), icon=":material/play_arrow:", key=f"run_{scenario.id}", width="stretch"):
             scenario_proxy = ScenarioProxy.from_existing_scenario(scenario.id)
             scenario_proxy.add_to_queue()
             ubiome_state.reset_tree_analysis()
@@ -389,7 +389,7 @@ def display_saved_scenario_actions(scenario: Scenario, ubiome_state: State) -> N
             st.rerun()
 
     with col2:
-        if st.button(translate_service.translate("edit"), icon=":material/edit:", key=f"edit_{scenario.id}", use_container_width=True):
+        if st.button(translate_service.translate("edit"), icon=":material/edit:", key=f"edit_{scenario.id}", width="stretch"):
             dialog_edit_scenario_params(scenario, ubiome_state)
 
 @st.dialog("Edit Scenario Parameters")
@@ -444,10 +444,10 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button(translate_service.translate("save_changes"), icon=":material/save:", use_container_width=True, key=f"save_edit_{scenario.id}")
+        save_clicked = st.button(translate_service.translate("save_changes"), icon=":material/save:", width="stretch", key=f"save_edit_{scenario.id}")
 
     with col2:
-        run_clicked = st.button(translate_service.translate("save_and_run"), icon=":material/play_arrow:", use_container_width=True, key=f"run_edit_{scenario.id}")
+        run_clicked = st.button(translate_service.translate("save_and_run"), icon=":material/play_arrow:", width="stretch", key=f"run_edit_{scenario.id}")
 
     if save_clicked or run_clicked:
         # Get the updated configuration from session state

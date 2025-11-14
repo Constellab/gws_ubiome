@@ -20,10 +20,10 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button(translate_service.translate("save_feature_inference"), use_container_width=True, icon=":material/save:", key="button_fei_save")
+        save_clicked = st.button(translate_service.translate("save_feature_inference"), width="stretch", icon=":material/save:", key="button_fei_save")
 
     with col2:
-        run_clicked = st.button(translate_service.translate("run_feature_inference"), use_container_width=True, icon=":material/play_arrow:", key="button_fei_run")
+        run_clicked = st.button(translate_service.translate("run_feature_inference"), width="stretch", icon=":material/play_arrow:", key="button_fei_run")
 
     if save_clicked or run_clicked:
         if not ubiome_state.get_feature_inference_config()["is_valid"]:
@@ -72,7 +72,7 @@ def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: Sta
 
         if not ubiome_state.get_is_standalone():
             # On click, open a dialog to allow the user to select params of feature inference
-            st.button(translate_service.translate("configure_new_feature_inference_scenario"), icon=":material/edit:", use_container_width=False,
+            st.button(translate_service.translate("configure_new_feature_inference_scenario"), icon=":material/edit:", width="content",
                     on_click=lambda task=task_feature_inference, state=ubiome_state: dialog_feature_inference_params(task, state))
 
         # Display table of existing Feature Inference scenarios
