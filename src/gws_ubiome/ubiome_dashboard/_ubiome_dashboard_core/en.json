@@ -190,5 +190,6 @@
     "scenario_name": "Scenario Name",
     "creation_date": "Creation Date",
     "no_analyses_found": "analysis found.",
-    "no_analyses_found_prefix": "No"
+    "no_analyses_found_prefix": "No",
+    "run_16s_functional_analysis": "Run 16S Functional Analysis"
 }

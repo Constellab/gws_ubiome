@@ -190,5 +190,6 @@
     "scenario_name": "Nom du scénario",
     "creation_date": "Date de création",
     "no_analyses_found": "analyse trouvée.",
-    "no_analyses_found_prefix": "Aucune"
+    "no_analyses_found_prefix": "Aucune",
+    "run_16s_functional_analysis": "Exécuter l'analyse fonctionnelle 16S"
 }
