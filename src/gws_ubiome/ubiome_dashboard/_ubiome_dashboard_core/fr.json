@@ -191,5 +191,8 @@
     "creation_date": "Date de création",
     "no_analyses_found": "analyse trouvée.",
     "no_analyses_found_prefix": "Aucune",
-    "run_16s_functional_analysis": "Exécuter l'analyse fonctionnelle 16S"
+    "run_16s_functional_analysis": "Exécuter l'analyse fonctionnelle 16S",
+    "download_table": "Télécharger la table",
+    "upload_table": "Télécharger la table de métadonnées mise à jour",
+    "upload_table_info": "Pour télécharger une table de métadonnées, veuillez sélectionner un fichier TSV contenant vos métadonnées. Assurez-vous de savoir ce que vous faites avant de télécharger."
 }

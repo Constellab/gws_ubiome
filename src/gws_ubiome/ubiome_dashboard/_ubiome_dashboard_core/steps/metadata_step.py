@@ -1,7 +1,9 @@
+import os
+import pandas as pd
 import streamlit as st
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser
-from gws_core import Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, Scenario, ScenarioProxy, ProtocolProxy
+from gws_core import Settings, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, Scenario, ScenarioProxy, ProtocolProxy
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, save_metadata_table, add_new_column_dialog
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -71,6 +73,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
     # Save button only appear if QC task have not been created
     if not ubiome_state.get_scenario_step_qc():
         if not ubiome_state.get_is_standalone():
+            cols = st.columns(3)
             # Validation
             validation_errors = []
 
@@ -95,12 +98,57 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
             else:
                 save_disabled = False
 
-            if st.button(translate_service.translate("save"), disabled=save_disabled, width="content"):
-                with StreamlitAuthenticateUser():
-                    # Use the helper function to save
-                    save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state, protocol_proxy)
-                    st.rerun()
+            with cols[0]:
+                if st.button(translate_service.translate("save"), disabled=save_disabled, width="content"):
+                    with StreamlitAuthenticateUser():
+                        # Use the helper function to save
+                        save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state, protocol_proxy)
+                        st.rerun()
+
+            with cols[1]:
+                # Add a button to download the table
+                # Prepare the content to download
+                content_to_download = "\n".join(header_lines) + "\n"
+                content_to_download += ubiome_state.get_edited_df_metadata().to_csv(sep="\t", index=False)
+                st.download_button(
+                    label=translate_service.translate("download_table"),
+                    data=content_to_download,
+                    file_name=f"{ubiome_state.get_current_analysis_name()}_Metadata.tsv",
+                    mime="text/tab-separated-values"
+                )
+
+            with cols[2]:
+                # Add a button to allow the user to upload metadata from a file
+                if st.button(translate_service.translate("upload_table"), width="content"):
+                    upload_metadata_table(ubiome_state, protocol_proxy)
+
         else:
             st.info(f"ℹ️ {translate_service.translate('standalone_metadata_info')}")
     else:
         st.info(f"ℹ️ {translate_service.translate('metadata_locked_info')}")
+
+@st.dialog("Upload Metadata Table")
+def upload_metadata_table(ubiome_state : State, protocol_proxy : ProtocolProxy) -> None:
+    translate_service = ubiome_state.get_translate_service()
+    st.info(translate_service.translate("upload_table_info"))
+    uploaded_file = st.file_uploader(translate_service.translate("upload_table"), type=["tsv"])
+    if uploaded_file is not None:
+        df_uploaded = pd.read_csv(uploaded_file, sep='\t', dtype=str, comment='#')
+
+        # Read the raw file content to capture header lines
+        uploaded_file.seek(0)  # Reset file pointer after pd.read_csv
+        raw_content = uploaded_file.read().decode('utf-8')
+        lines = raw_content.split('\n')
+
+        # Find where the actual table data starts (usually after comment lines starting with #)
+        header_lines = []
+        for i, line in enumerate(lines):
+            if line.strip().startswith('#') or (line.strip() and not '\t' in line and not ',' in line):
+                header_lines.append(line)
+            else:
+                break
+
+        with StreamlitAuthenticateUser():
+            # Use the helper function to save
+            save_metadata_table(df_uploaded, header_lines, ubiome_state, protocol_proxy)
+            st.rerun()

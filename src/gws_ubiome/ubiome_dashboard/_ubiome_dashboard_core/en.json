@@ -191,5 +191,8 @@
     "creation_date": "Creation Date",
     "no_analyses_found": "analysis found.",
     "no_analyses_found_prefix": "No",
-    "run_16s_functional_analysis": "Run 16S Functional Analysis"
+    "run_16s_functional_analysis": "Run 16S Functional Analysis",
+    "download_table": "Download Table",
+    "upload_table": "Upload updated metadata Table",
+    "upload_table_info": "To upload a metadata table, please select a TSV file containing your metadata. Make sure you know what you're doing before you upload."
 }

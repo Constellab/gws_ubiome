@@ -229,7 +229,7 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 
     # Create a new file with the updated content
     path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
-    full_path = os.path.join(path_temp, f"{ubiome_state.get_current_analysis_name()}_Metadata_updated.txt")
+    full_path = os.path.join(path_temp, f"{ubiome_state.get_current_analysis_name()}_Metadata_updated.tsv")
 
     # Prepare content to save
     content_to_save = ""
