@@ -36,6 +36,8 @@ def render_new_analysis_page(ubiome_state : State):
             st.markdown(f"## {translate_service.translate('new_recipe')}")
             # select fastq data
             resource_select = StreamlitResourceSelect()
+            # Filter to show only FastqFolder resources
+            resource_select.filters['resourceTypingNames'] = ['RESOURCE.gws_omix.FastqFolder']
             resource_select.select_resource(
                 placeholder=translate_service.translate('search_fastq_resource'), key=ubiome_state.RESOURCE_SELECTOR_FASTQ_KEY, defaut_resource=None)
 
