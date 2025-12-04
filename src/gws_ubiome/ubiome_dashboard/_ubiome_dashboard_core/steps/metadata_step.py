@@ -7,13 +7,14 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import s
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()
 
+    scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
+    protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
+
     # Check if there's an updated metadata table first
     file_metadata = search_updated_metadata_table(ubiome_state)
 
     # If no updated table found, use the original scenario output
     if file_metadata is None:
-        scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
-        protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
         file_metadata: File = protocol_proxy.get_process('metadata_process').get_output('metadata_table')
 
     # Read the raw file content to capture header lines
@@ -41,7 +42,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
             st.info(f"💡 **{translate_service.translate('instructions')}:** {translate_service.translate('instructions_metadata')}")
 
             if st.button(translate_service.translate("add_column"), width="stretch"):
-                add_new_column_dialog(ubiome_state, header_lines)
+                add_new_column_dialog(ubiome_state, header_lines, protocol_proxy)
 
             # Create column configuration for all columns
             column_config = {}
@@ -97,7 +98,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
             if st.button(translate_service.translate("save"), disabled=save_disabled, width="content"):
                 with StreamlitAuthenticateUser():
                     # Use the helper function to save
-                    save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state)
+                    save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state, protocol_proxy)
                     st.rerun()
         else:
             st.info(f"ℹ️ {translate_service.translate('standalone_metadata_info')}")

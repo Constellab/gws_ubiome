@@ -10,10 +10,11 @@ from streamlit_slickgrid import (
 )
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
-from gws_core import ScenarioSearchBuilder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy, File, SpaceFolder, Tag, Scenario, ScenarioStatus, ScenarioProxy, ScenarioCreationType
+from gws_core import (ScenarioSearchBuilder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy,
+                      File, SpaceFolder, Tag, Scenario, ScenarioStatus, ScenarioProxy, ScenarioCreationType,
+                      ProtocolProxy, InputTask, ProtocolService)
 from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
-from gws_core.tag.entity_tag import EntityTag
 from gws_core.tag.tag import TagOrigin
 
 def get_status_emoji(status: ScenarioStatus) -> str:
@@ -210,7 +211,7 @@ def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title: st
 
     return scenario
 
-def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome_state: State) -> None:
+def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome_state: State, protocol: ProtocolProxy) -> None:
     """
     Helper function to save metadata table to resource.
     """
@@ -220,6 +221,10 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 
     # If there's an existing resource, delete it first
     if existing_resource:
+        # Reset
+        ProtocolService.reset_process_of_protocol(protocol._process_model, 'updated_metadata')
+        # Delete the process in the protocol
+        protocol.refresh().delete_process('updated_metadata')
         ResourceModel.get_by_id(existing_resource.get_model_id()).delete_instance()
 
     # Create a new file with the updated content
@@ -245,20 +250,16 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
         origin=ResourceOrigin.UPLOADED,
         flagged=True
     )
+    add_tags_on_metadata(metadata_file, ubiome_state)
 
-    # Add tags using EntityTagList
-    user_origin = TagOrigin.current_user_origin()
-    entity_tags = EntityTagList.find_by_entity(TagEntityType.RESOURCE, resource_model.id)
-    entity_tags._default_origin = user_origin # TODO will be fixed in future releases of core to set the default origin in the constructor
+    # Add the metadata table on the scenario
+    protocol.add_process(
+        InputTask, 'updated_metadata',
+        {InputTask.config_name: resource_model.get_resource().get_model_id()})
 
-    # Add the required tags
-    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=False))
-    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False))
-
-    ubiome_state.set_resource_id_metadata_table(resource_model.id)
 
 @st.dialog("Add New Metadata Column")
-def add_new_column_dialog(ubiome_state: State, header_lines: List[str]):
+def add_new_column_dialog(ubiome_state: State, header_lines: List[str], protocol_proxy: ProtocolProxy) -> None:
     translate_service = ubiome_state.get_translate_service()
     st.text_input(translate_service.translate("new_column_name"), placeholder=translate_service.translate("enter_column_name"), key=ubiome_state.NEW_COLUMN_INPUT_KEY)
     if st.button(translate_service.translate("add_column"), width="stretch", key="add_column_btn"):
@@ -277,43 +278,37 @@ def add_new_column_dialog(ubiome_state: State, header_lines: List[str]):
             df_metadata[column_name] = np.nan
 
             # Use the helper function to save
-            save_metadata_table(df_metadata, header_lines, ubiome_state)
+            save_metadata_table(df_metadata, header_lines, ubiome_state, protocol_proxy)
 
             st.rerun()
+
+def add_tags_on_metadata(edited_metadata: File, ubiome_state: State) -> None:
+    """
+    Helper function to add tags on metadata resource.
+    """
+    metadata_model_id = edited_metadata.get_model_id()
+
+    # Add tags using EntityTagList
+    user_origin = TagOrigin.current_user_origin()
+    entity_tags = EntityTagList.find_by_entity(TagEntityType.RESOURCE, metadata_model_id)
+    entity_tags._default_origin = user_origin # TODO will be fixed in future releases of core to set the default origin in the constructor
+
+    # Add the required tags
+    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=False))
+    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False))
+
+    ubiome_state.set_resource_id_metadata_table(metadata_model_id)
 
 def search_updated_metadata_table(ubiome_state: State) -> File | None:
     """
     Helper function to search for updated metadata table resource.
     Returns the File resource if found, None otherwise.
     """
+    scenario_step_metadata = ubiome_state.get_scenario_step_metadata()
+    protocol_proxy: ProtocolProxy = ScenarioProxy.from_existing_scenario(scenario_step_metadata[0].id).get_protocol()
     try:
-        # Search for existing updated metadata resource
-        pipeline_id_entities = EntityTag.select().where(
-            (EntityTag.entity_type == TagEntityType.RESOURCE) &
-            (EntityTag.tag_key == ubiome_state.TAG_UBIOME_PIPELINE_ID) &
-            (EntityTag.tag_value == ubiome_state.get_current_ubiome_pipeline_id())
-        )
-
-        metadata_updated_entities = EntityTag.select().where(
-            (EntityTag.entity_type == TagEntityType.RESOURCE) &
-            (EntityTag.tag_key == ubiome_state.TAG_UBIOME) &
-            (EntityTag.tag_value == ubiome_state.TAG_METADATA_UPDATED)
-        )
-
-        pipeline_id_entity_ids = [entity.entity_id for entity in pipeline_id_entities]
-        metadata_updated_entity_ids = [entity.entity_id for entity in metadata_updated_entities]
-        common_entity_ids = list(set(pipeline_id_entity_ids) & set(metadata_updated_entity_ids))
-
-        if common_entity_ids:
-            metadata_table_resource_search = ResourceModel.select().where(
-                (ResourceModel.id.in_(common_entity_ids)) &
-                (ResourceModel.resource_typing_name.contains('File'))
-            )
-            updated_resource = metadata_table_resource_search.first()
-
-            if updated_resource:
-                return updated_resource.get_resource()
-
+        updated_metadata_resource: File = protocol_proxy.get_process('updated_metadata').get_output('resource')
+        return updated_metadata_resource
     except Exception:
         pass
 
