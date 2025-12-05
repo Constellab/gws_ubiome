@@ -29,12 +29,14 @@ class State:
     TAG_DB_ANNOTATOR = "db_annotator"
     TAG_16S = "16S"
     TAG_16S_VISU = "16S_visualization"
+    TAG_RATIO = "ratio"
 
     # Tags unique ids
     TAG_UBIOME_PIPELINE_ID = "ubiome_pipeline_id"
     TAG_FEATURE_INFERENCE_ID = "feature_inference_id"
     TAG_RAREFACTION_ID = "rarefaction_id"
     TAG_TAXONOMY_ID = "taxonomy_id"
+    TAG_DB_ANNOTATOR_ID = "db_annotator_id"
     TAG_PCOA_ID = "pcoa_id"
     TAG_16S_ID = "16S_id"
 
@@ -45,6 +47,7 @@ class State:
     PCOA_SCENARIO_NAME_INPUT_KEY = "pcoa_scenario_name_input"
     ANCOM_SCENARIO_NAME_INPUT_KEY = "ancom_scenario_name_input"
     DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY = "db_annotator_scenario_name_input"
+    RATIO_SCENARIO_NAME_INPUT_KEY = "ratio_scenario_name_input"
     FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY = "functional_analysis_scenario_name_input"
     FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY = "functional_analysis_visu_scenario_name_input"
 
@@ -59,6 +62,7 @@ class State:
     PCOA_DIVERSITY_TABLE_SELECT_KEY = "pcoa_diversity_table_select"
     SELECTED_ANNOTATION_TABLE_KEY = "selected_annotation_table"
     NEW_COLUMN_INPUT_KEY = "new_column_input"
+    SELECTED_RATIOS_DEFINITION_KEY = "selected_ratios_definition"
 
     TREE_DEFAULT_ITEM_KEY = "tree_default_item"
 
@@ -86,6 +90,8 @@ class State:
 
     LANG_KEY = "lang_select"
     TRANSLATE_SERVICE = "translate_service"
+
+    HAS_RATIO_STEP_KEY = "has_ratio_step"
 
     def __init__(cls, file_lang: str):
         translate_service = StreamlitTranslateService(file_lang)
@@ -115,6 +121,13 @@ class State:
     def set_translate_service(cls, value : StreamlitTranslateService) -> None:
         st.session_state[cls.TRANSLATE_SERVICE] = value
 
+    @classmethod
+    def get_has_ratio_step(cls) -> bool:
+        return st.session_state.get(cls.HAS_RATIO_STEP_KEY, False)
+
+    @classmethod
+    def set_has_ratio_step(cls, value: bool) -> None:
+        st.session_state[cls.HAS_RATIO_STEP_KEY] = value
     @classmethod
     def get_is_standalone(cls) -> bool:
         return st.session_state.get(cls.STANDALONE_KEY, False)
@@ -196,6 +209,10 @@ class State:
     def get_selected_annotation_table(cls) -> ResourceModel:
         return st.session_state.get(cls.SELECTED_ANNOTATION_TABLE_KEY)
 
+    @classmethod
+    def get_selected_ratios_definition(cls) -> ResourceModel:
+        return st.session_state.get(cls.SELECTED_RATIOS_DEFINITION_KEY)
+
     # Infos of the metadata scenario
 
     @classmethod
@@ -232,6 +249,14 @@ class State:
     @classmethod
     def get_current_taxonomy_scenario_id_parent(cls) -> str:
         return st.session_state.get(cls.TAG_TAXONOMY_ID)
+
+    @classmethod
+    def set_current_taxa_composition_scenario_id_parent(cls, scenario_id: str):
+        st.session_state[cls.TAG_DB_ANNOTATOR] = scenario_id
+
+    @classmethod
+    def get_current_taxa_composition_scenario_id_parent(cls) -> str:
+        return st.session_state.get(cls.TAG_DB_ANNOTATOR)
 
     @classmethod
     def get_current_16s_scenario_id_parent(cls) -> str:
@@ -375,6 +400,12 @@ class State:
         return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
+    def get_scenario_step_ratio(cls) -> List[Scenario]:
+        scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_RATIO, {})
+        current_taxa_composition_id = cls.get_current_taxa_composition_scenario_id_parent()
+        return scenarios_dict.get(current_taxa_composition_id, [])
+
+    @classmethod
     def get_scenario_step_16s(cls) -> List[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_16S, {})
         current_feature_id = cls.get_current_feature_scenario_id_parent()
@@ -425,6 +456,23 @@ class State:
             return Scenario.get_by_id(scenario_id)
         return None
 
+    # Retrieve taxa composition
+    @classmethod
+    def get_parent_taxa_composition_scenario_id_from_step(cls) -> str:
+        """Extract the parent taxa composition scenario ID from the current step pipeline."""
+        step = cls.get_step_pipeline()
+        if step and step.startswith(cls.TAG_RATIO + "_"):
+            return step.replace(cls.TAG_RATIO + "_", "")
+        return None
+
+    @classmethod
+    def get_parent_taxa_composition_scenario_from_step(cls) -> 'Scenario':
+        """Get the parent taxa composition scenario from the current step pipeline."""
+        scenario_id = cls.get_parent_taxa_composition_scenario_id_from_step()
+        if scenario_id:
+            return Scenario.get_by_id(scenario_id)
+        return None
+
     # Retrieve taxonomy
     @classmethod
     def get_parent_taxonomy_scenario_id_from_step(cls) -> str:
@@ -453,6 +501,14 @@ class State:
         entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, taxonomy_scenario.id)
         feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
         return feature_inference_id_tag.value
+
+    @classmethod
+    def get_taxonomy_scenario_id_from_db_annotator_scenario(cls, db_annotator_scenario_id: str) -> str:
+        """Get the taxonomy scenario ID from a ratio scenario ID."""
+        db_annotator_scenario = Scenario.get_by_id(db_annotator_scenario_id)
+        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, db_annotator_scenario.id)
+        taxonomy_scenario_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_TAXONOMY_ID)[0].to_simple_tag()
+        return taxonomy_scenario_id_tag.value
 
     @classmethod
     def get_feature_inference_id_from_16s_scenario(cls, functional_16s_scenario_id: str) -> str:

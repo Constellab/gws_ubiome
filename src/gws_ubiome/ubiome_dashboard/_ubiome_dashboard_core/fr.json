@@ -194,5 +194,15 @@
     "run_16s_functional_analysis": "Exécuter l'analyse fonctionnelle 16S",
     "download_table": "Télécharger la table",
     "upload_table": "Télécharger la table de métadonnées mise à jour",
-    "upload_table_info": "Pour télécharger une table de métadonnées, veuillez sélectionner un fichier TSV contenant vos métadonnées. Assurez-vous de savoir ce que vous faites avant de télécharger."
+    "upload_table_info": "Pour télécharger une table de métadonnées, veuillez sélectionner un fichier TSV contenant vos métadonnées. Assurez-vous de savoir ce que vous faites avant de télécharger.",
+    "ratio_table": "Table de ratio",
+    "select_ratios_definition_required": "Veuillez sélectionner une définition de ratios.",
+    "select_ratio_definition_table": "Sélectionner la table de définition des ratios",
+    "ratio_scenario_name": "Nom du scénario de ratio",
+    "enter_ratio_scenario_name": "Entrer le nom du scénario de ratio",
+    "save_ratio": "Sauvegarder le ratio",
+    "run_ratio": "Exécuter le ratio",
+    "configure_new_ratio_scenario": "Configurer un nouveau scénario de ratio",
+    "ratio_scenario_results": "Résultats du scénario de ratio",
+    "download_ratio_table": "Télécharger la table de ratio"
 }

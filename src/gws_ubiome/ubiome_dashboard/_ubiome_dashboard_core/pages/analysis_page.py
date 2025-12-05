@@ -19,6 +19,7 @@ from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.ancom_step import 
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.db_annotator_step import render_db_annotator_step
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.functional_16s_step import render_16s_step
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.functional_16s_visu_step import render_16s_visu_step
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.ubiome_config import UbiomeConfig
 
 
 # Check if steps are completed (have successful scenarios)
@@ -204,6 +205,29 @@ def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
                                     key=db_scenario.id,
                                     material_icon='description'
                                 )
+
+                                # Add ratio sub-step if available
+                                if ubiome_state.get_has_ratio_step() and db_scenario.status == ScenarioStatus.SUCCESS:
+                                    # Get db scenario ID for ratio filtering
+                                    scenario_db_id_tags = EntityTagList.find_by_entity(TagEntityType.SCENARIO, db_scenario.id).get_tags_by_key(ubiome_state.TAG_DB_ANNOTATOR_ID)
+                                    parent_db_id = scenario_db_id_tags[0].to_simple_tag().value if scenario_db_id_tags else db_scenario.id
+
+                                    ratio_scenarios = scenarios_by_step.get(ubiome_state.TAG_RATIO, {}).get(parent_db_id, [])
+                                    ratio_item = StreamlitTreeMenuItem(
+                                        label="Ratio",
+                                        key=f"{ubiome_state.TAG_RATIO}_{db_scenario.id}",
+                                        material_icon=get_step_icon(ubiome_state.TAG_RATIO, scenarios_by_step, ratio_scenarios)
+                                    )
+                                    for ratio_scenario in ratio_scenarios:
+                                        ratio_child_item = StreamlitTreeMenuItem(
+                                            label=ratio_scenario.get_short_name(),
+                                            key=ratio_scenario.id,
+                                            material_icon='description'
+                                        )
+                                        ratio_item.add_children([ratio_child_item])
+
+                                    db_item.add_children([ratio_item])
+
                                 taxa_comp_item.add_children([db_item])
 
                             tax_item.add_children([pcoa_diversity_item, ancom_item, taxa_comp_item])
@@ -416,3 +440,6 @@ def render_analysis_page(ubiome_state : State):
                     render_16s_visu_step(selected_scenario, ubiome_state)
                 elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S):
                     render_16s_step(selected_scenario, ubiome_state)
+                elif ubiome_state.get_has_ratio_step() and ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RATIO):
+                    ubiome_config = UbiomeConfig.get_instance()
+                    ubiome_config.render_ratio_step(selected_scenario, ubiome_state)

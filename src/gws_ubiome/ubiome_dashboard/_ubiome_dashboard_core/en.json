@@ -194,5 +194,15 @@
     "run_16s_functional_analysis": "Run 16S Functional Analysis",
     "download_table": "Download Table",
     "upload_table": "Upload updated metadata Table",
-    "upload_table_info": "To upload a metadata table, please select a TSV file containing your metadata. Make sure you know what you're doing before you upload."
+    "upload_table_info": "To upload a metadata table, please select a TSV file containing your metadata. Make sure you know what you're doing before you upload.",
+    "ratio_table": "Ratio Table",
+    "select_ratios_definition_required": "Please select a ratios definition.",
+    "select_ratio_definition_table": "Select Ratio Definition Table",
+    "ratio_scenario_name": "Ratio scenario name",
+    "enter_ratio_scenario_name": "Enter ratio scenario name",
+    "save_ratio": "Save Ratio",
+    "run_ratio": "Run Ratio",
+    "configure_new_ratio_scenario": "Configure new Ratio scenario",
+    "ratio_scenario_results": "Ratio Scenario Results",
+    "download_ratio_table": "Download Ratio Table"
 }
