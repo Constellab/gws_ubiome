@@ -91,6 +91,10 @@ def render_first_page(ubiome_state : State):
                     (ubiome_state.TAG_16S_VISU, "16s_visualization")
                 ]
 
+                # Add ratio step if enabled
+                if ubiome_state.get_has_ratio_step():
+                    step_types.append((ubiome_state.TAG_RATIO, "ratio"))
+
                 for tag_value, field_name in step_types:
                     step_scenarios = [s for s in pipeline_scenarios if any(
                         tag.tag_key == ubiome_state.TAG_UBIOME and tag.tag_value == tag_value
@@ -107,6 +111,8 @@ def render_first_page(ubiome_state : State):
                 # Initialize empty status for other steps when no pipeline ID
                 step_fields = ["qc", "multiqc", "feature_inference", "rarefaction", "taxonomy",
                             "pcoa", "ancom", "taxa_composition", "16s_functional", "16s_visualization"]
+                if ubiome_state.get_has_ratio_step():
+                    step_fields.append("ratio")
                 for field in step_fields:
                     row_data[field] = ""
 
@@ -213,6 +219,22 @@ def render_first_page(ubiome_state : State):
                     "filterable": True,
                     "width": 70,
                 },
+            ]
+
+            # Add ratio column if enabled
+            if ubiome_state.get_has_ratio_step():
+                columns.append({
+                    "id": "ratio",
+                    "name": translate_service.translate("ratio"),
+                    "field": "ratio",
+                    "sortable": True,
+                    "type": FieldType.string,
+                    "filterable": True,
+                    "width": 50,
+                })
+
+            # Add remaining columns after ratio
+            columns.extend([
                 {
                     "id": "16s_functional",
                     "name": translate_service.translate("16s_functional"),
@@ -231,7 +253,7 @@ def render_first_page(ubiome_state : State):
                     "filterable": True,
                     "width": 65,
                 },
-            ]
+            ])
 
             options = {
                 "enableFiltering": True,

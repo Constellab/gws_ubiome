@@ -204,5 +204,6 @@
     "run_ratio": "Run Ratio",
     "configure_new_ratio_scenario": "Configure new Ratio scenario",
     "ratio_scenario_results": "Ratio Scenario Results",
-    "download_ratio_table": "Download Ratio Table"
+    "download_ratio_table": "Download Ratio Table",
+    "ratio": "Ratio"
 }
