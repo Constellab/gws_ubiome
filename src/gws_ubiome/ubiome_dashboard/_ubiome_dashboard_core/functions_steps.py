@@ -369,7 +369,7 @@ def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -
                 scenarios_by_step[step_name][parent_id].append(scenario)
         elif ubiome_state.get_has_ratio_step() and step_name == ubiome_state.TAG_RATIO:
             # Ratio step depends on DB annotator
-            db_annotator_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_DB_ANNOTATOR)
+            db_annotator_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_DB_ANNOTATOR_ID)
             if db_annotator_tags:
                 parent_id = db_annotator_tags[0].to_simple_tag().value
                 if step_name not in scenarios_by_step:
