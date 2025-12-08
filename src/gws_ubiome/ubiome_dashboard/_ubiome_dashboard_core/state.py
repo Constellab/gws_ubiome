@@ -252,11 +252,11 @@ class State:
 
     @classmethod
     def set_current_taxa_composition_scenario_id_parent(cls, scenario_id: str):
-        st.session_state[cls.TAG_DB_ANNOTATOR] = scenario_id
+        st.session_state[cls.TAG_DB_ANNOTATOR_ID] = scenario_id
 
     @classmethod
     def get_current_taxa_composition_scenario_id_parent(cls) -> str:
-        return st.session_state.get(cls.TAG_DB_ANNOTATOR)
+        return st.session_state.get(cls.TAG_DB_ANNOTATOR_ID)
 
     @classmethod
     def get_current_16s_scenario_id_parent(cls) -> str:
