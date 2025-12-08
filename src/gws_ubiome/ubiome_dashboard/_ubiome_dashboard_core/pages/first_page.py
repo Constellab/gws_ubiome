@@ -86,14 +86,18 @@ def render_first_page(ubiome_state : State):
                     (ubiome_state.TAG_TAXONOMY, "taxonomy"),
                     (ubiome_state.TAG_PCOA_DIVERSITY, "pcoa"),
                     (ubiome_state.TAG_ANCOM, "ancom"),
-                    (ubiome_state.TAG_DB_ANNOTATOR, "taxa_composition"),
-                    (ubiome_state.TAG_16S, "16s_functional"),
-                    (ubiome_state.TAG_16S_VISU, "16s_visualization")
+                    (ubiome_state.TAG_DB_ANNOTATOR, "db_annotator"),
                 ]
 
-                # Add ratio step if enabled
+                # Add ratio step if enabled (before 16S steps)
                 if ubiome_state.get_has_ratio_step():
                     step_types.append((ubiome_state.TAG_RATIO, "ratio"))
+
+                # Add 16S steps at the end
+                step_types.extend([
+                    (ubiome_state.TAG_16S, "16s_functional"),
+                    (ubiome_state.TAG_16S_VISU, "16s_visualization")
+                ])
 
                 for tag_value, field_name in step_types:
                     step_scenarios = [s for s in pipeline_scenarios if any(
@@ -110,9 +114,10 @@ def render_first_page(ubiome_state : State):
             else:
                 # Initialize empty status for other steps when no pipeline ID
                 step_fields = ["qc", "multiqc", "feature_inference", "rarefaction", "taxonomy",
-                            "pcoa", "ancom", "taxa_composition", "16s_functional", "16s_visualization"]
+                            "pcoa", "ancom", "db_annotator"]
                 if ubiome_state.get_has_ratio_step():
                     step_fields.append("ratio")
+                step_fields.extend(["16s_functional", "16s_visualization"])
                 for field in step_fields:
                     row_data[field] = ""
 
@@ -211,9 +216,9 @@ def render_first_page(ubiome_state : State):
                     "width": 50,
                 },
                 {
-                    "id": "taxa_composition",
+                    "id": "db_annotator",
                     "name": translate_service.translate("taxa_composition"),
-                    "field": "taxa_composition",
+                    "field": "db_annotator",
                     "sortable": True,
                     "type": FieldType.string,
                     "filterable": True,
