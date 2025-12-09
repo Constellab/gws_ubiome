@@ -59,6 +59,7 @@ ensure_ggplot2 <- function(target = "3.5.2") {
 }
 
 ensure_ggplot2("3.5.2")
+
 # ---- BEGIN: lock cleanup + fBasics/modeest/GUniFrac install helpers ----
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 options(Ncpus = max(1L, parallel::detectCores() - 1L))
@@ -122,12 +123,41 @@ prev_ver <- tryCatch(as.character(utils::packageVersion("ggpicrust2")),
                      error = function(e) NA_character_)
 log_gp("Previously installed version: %s", ifelse(is.na(prev_ver), "none", prev_ver))
 
-need_install <- is.na(prev_ver) || utils::packageVersion("ggpicrust2") != target_ver
+need_install <- is.na(prev_ver) || prev_ver != target_ver
+
 if (need_install) {
-  log_gp("Installing ggpicrust2@v%s from GitHub…", target_ver)
-  if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
-  remotes::install_github(sprintf("cafferychen777/ggpicrust2@v%s", target_ver),
-                          upgrade = "never", dependencies = TRUE)
+  log_gp("ggpicrust2 v%s not found or wrong version (found: %s). Attempting installation…",
+         target_ver, ifelse(is.na(prev_ver), "none", prev_ver))
+
+  ## 1) On essaie d'abord le tar.gz local si présent
+  tarball <- sprintf("ggpicrust2_%s.tar.gz", target_ver)
+  if (file.exists(tarball)) {
+    log_gp("Found local tarball '%s', installing via install.packages()…", tarball)
+    install.packages(tarball, repos = NULL, type = "source")
+  } else {
+    ## 2) Sinon fallback sur devtools::install_github
+    log_gp("No local tarball '%s' found, installing from GitHub…", tarball)
+    if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+    devtools::install_github(
+      sprintf("cafferychen777/ggpicrust2@v%s", target_ver),
+      dependencies = FALSE,   # on laisse conda gérer les dépendances lourdes
+      upgrade      = "never",
+      quiet        = FALSE
+    )
+  }
+
+  ## Re-lire la version après installation
+  prev_ver <- tryCatch(as.character(utils::packageVersion("ggpicrust2")),
+                       error = function(e) NA_character_)
+  if (is.na(prev_ver)) {
+    stop(sprintf("Failed to install ggpicrust2 v%s (package still not found).", target_ver))
+  }
+  if (prev_ver != target_ver) {
+    warning(sprintf(
+      "Installed ggpicrust2 version %s, but script was tested with v%s.",
+      prev_ver, target_ver
+    ))
+  }
 } else {
   log_gp("Exact requested version already present (v%s).", target_ver)
 }
@@ -235,6 +265,13 @@ metadata <- read_delim(metadata_file, delim = "\t", escape_double = FALSE,
 if (tools::file_ext(ko_abundance_file) == "gz") {
   decompressed <- sub(".gz$", "", ko_abundance_file)
   if (!file.exists(decompressed)) R.utils::gunzip(ko_abundance_file, remove = FALSE)
+  # Si le fichier décompressé n’a pas d’extension, ko2kegg_abundance() gueule.
+  # On force donc ".tsv" dans ce cas (cas des fichiers type "filestore_0.gz").
+  if (tools::file_ext(decompressed) == "") {
+    new_name <- paste0(decompressed, ".tsv")
+    file.rename(decompressed, new_name)
+    decompressed <- new_name
+  }
   ko_abundance_file <- decompressed
 }
 if (!file.exists(ko_abundance_file))

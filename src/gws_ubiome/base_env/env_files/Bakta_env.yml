@@ -1,0 +1,10 @@
+name: .picrust2
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - bakta==1.11.4
+  - pycirclize==1.10.0 
+  - matplotlib==3.10.6 
+  - biopython==1.85
+  - mpld3==0.5.11
