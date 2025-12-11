@@ -15,6 +15,8 @@ def dialog_db_annotator_params(ubiome_state: State):
     st.markdown(f"##### {translate_service.translate('select_annotation_table')}")
     # Use StreamlitResourceSelect to let user choose an annotation table
     resource_select = StreamlitResourceSelect()
+    # Filter to show only File resources with tsv extension
+    resource_select.filters['resourceTypingNames'] = ['RESOURCE.gws_core.File']
     resource_select.select_resource(
         placeholder=translate_service.translate('select_annotation_table_placeholder'), key=ubiome_state.SELECTED_ANNOTATION_TABLE_KEY, defaut_resource=None)
 
