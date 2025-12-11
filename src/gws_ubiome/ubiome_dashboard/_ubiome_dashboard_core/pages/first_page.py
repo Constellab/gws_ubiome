@@ -79,7 +79,7 @@ def render_first_page(ubiome_state : State):
 
                 # Check each step type and add status to row data
                 step_types = [
-                    (ubiome_state.TAG_QC, "qc"),
+                    (ubiome_state.TAG_QC, "quality_control"),
                     (ubiome_state.TAG_MULTIQC, "multiqc"),
                     (ubiome_state.TAG_FEATURE_INFERENCE, "feature_inference"),
                     (ubiome_state.TAG_RAREFACTION, "rarefaction"),
@@ -113,7 +113,7 @@ def render_first_page(ubiome_state : State):
                         row_data[field_name] = ""
             else:
                 # Initialize empty status for other steps when no pipeline ID
-                step_fields = ["qc", "multiqc", "feature_inference", "rarefaction", "taxonomy",
+                step_fields = ["quality_control", "multiqc", "feature_inference", "rarefaction", "taxonomy",
                             "pcoa", "ancom", "db_annotator"]
                 if ubiome_state.get_has_ratio_step():
                     step_fields.append("ratio")
@@ -155,7 +155,7 @@ def render_first_page(ubiome_state : State):
                 {
                     "id": "quality_control",
                     "name": translate_service.translate("quality_control"),
-                    "field": "qc",
+                    "field": "quality_control",
                     "sortable": True,
                     "type": FieldType.string,
                     "filterable": True,
