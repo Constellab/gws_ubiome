@@ -37,14 +37,13 @@ def get_step_icon(step_name: str, scenarios_by_step: Dict, list_scenarios: List[
         return ''
     return 'check_circle'
 
-def build_analysis_tree_menu(ubiome_state: State, ubiome_pipeline_id: str):
+def build_analysis_tree_menu(ubiome_state: State):
     """Build the tree menu for analysis workflow steps"""
     translate_service = ubiome_state.get_translate_service()
     button_menu = StreamlitTreeMenu(key=ubiome_state.TREE_ANALYSIS_KEY)
 
     # Build scenarios_by_step dictionary using helper function
-    scenarios_by_step = build_scenarios_by_step_dict(ubiome_pipeline_id, ubiome_state)
-    ubiome_state.set_scenarios_by_step_dict(scenarios_by_step)
+    scenarios_by_step = ubiome_state.get_scenarios_by_step_dict()
 
     # Set in the state if data is single-end or paired-end
     metadata_scenario = ubiome_state.get_scenario_step_metadata()[0]
@@ -331,6 +330,11 @@ def render_analysis_page(ubiome_state : State):
         file_fastq : Folder = protocol_proxy.get_process('metadata_process').get_input('fastq_folder')
         ubiome_state.set_resource_id_fastq(file_fastq.get_model_id())
 
+
+        # Build scenarios_by_step dictionary using helper function
+        scenarios_by_step = build_scenarios_by_step_dict(ubiome_pipeline_id, ubiome_state)
+        ubiome_state.set_scenarios_by_step_dict(scenarios_by_step)
+
         ##### Metadata table
         metadata_updated = search_updated_metadata_table(ubiome_state)
 
@@ -346,7 +350,7 @@ def render_analysis_page(ubiome_state : State):
             st.write(f"**{translate_service.translate('recipe')}:** {analysis_name}")
 
             # Build and render the analysis tree menu, and keep the key of the first element
-            tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state, ubiome_pipeline_id)
+            tree_menu, key_default_item = build_analysis_tree_menu(ubiome_state)
 
             tree_menu.set_default_selected_item(key_default_item)
 
