@@ -95,8 +95,8 @@ def render_first_page(ubiome_state : State):
 
                 # Add 16S steps at the end
                 step_types.extend([
-                    (ubiome_state.TAG_16S, "16s_functional"),
-                    (ubiome_state.TAG_16S_VISU, "16s_visualization")
+                    (ubiome_state.TAG_16S, "16S"),
+                    (ubiome_state.TAG_16S_VISU, "16S_visualization")
                 ])
 
                 for tag_value, field_name in step_types:
@@ -117,7 +117,7 @@ def render_first_page(ubiome_state : State):
                             "pcoa", "ancom", "db_annotator"]
                 if ubiome_state.get_has_ratio_step():
                     step_fields.append("ratio")
-                step_fields.extend(["16s_functional", "16s_visualization"])
+                step_fields.extend(["16S", "16S_visualization"])
                 for field in step_fields:
                     row_data[field] = ""
 
@@ -241,18 +241,18 @@ def render_first_page(ubiome_state : State):
             # Add remaining columns after ratio
             columns.extend([
                 {
-                    "id": "16s_functional",
+                    "id": "16S",
                     "name": translate_service.translate("16s_functional"),
-                    "field": "16s_functional",
+                    "field": "16S",
                     "sortable": True,
                     "type": FieldType.string,
                     "filterable": True,
                     "width": 60,
                 },
                 {
-                    "id": "16s_visualization",
+                    "id": "16S_visualization",
                     "name": translate_service.translate("16s_visualization"),
-                    "field": "16s_visualization",
+                    "field": "16S_visualization",
                     "sortable": True,
                     "type": FieldType.string,
                     "filterable": True,
