@@ -1,16 +1,28 @@
 
 import os
 
-from gws_core import (ConfigParams, File, Folder, InputSpec, InputSpecs,
-                      OutputSpec, OutputSpecs, ResourceSet, ShellProxy,
-                      Table, TableAnnotatorHelper,
-                      TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+import plotly.graph_objects as go
+from gws_core import (
+    ConfigParams,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    OutputSpec,
+    OutputSpecs,
+    ResourceSet,
+    ShellProxy,
+    Table,
+    TableAnnotatorHelper,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 from gws_core.impl.plotly.plotly_resource import PlotlyResource
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-
-import plotly.graph_objects as go
 
 
 @task_decorator("Qiime2TableDbAnnotator", human_name="Qiime2 taxa composition annotator",

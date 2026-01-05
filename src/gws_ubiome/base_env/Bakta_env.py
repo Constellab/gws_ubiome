@@ -7,7 +7,7 @@ import os
 from gws_core import CondaShellProxy, MessageDispatcher
 
 
-class BaktaShellProxyHelper():
+class BaktaShellProxyHelper:
     ENV_DIR_NAME = "BaktaShellProxy"
     ENV_FILE_PATH = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),

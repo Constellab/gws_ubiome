@@ -1,7 +1,13 @@
 import os
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.pages import first_page, new_analysis_page, analysis_page, settings
+
 from gws_core.streamlit import StreamlitRouter
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.pages import (
+    analysis_page,
+    first_page,
+    new_analysis_page,
+    settings,
+)
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 
 sources: list
 params: dict

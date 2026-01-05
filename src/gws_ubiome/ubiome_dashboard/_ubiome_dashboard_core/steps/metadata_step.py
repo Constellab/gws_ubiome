@@ -1,10 +1,14 @@
-import os
 import pandas as pd
 import streamlit as st
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from gws_core import File, ProtocolProxy, Scenario, ScenarioProxy, TableImporter
 from gws_core.streamlit import StreamlitAuthenticateUser
-from gws_core import Settings, Scenario, ScenarioProxy, ProtocolProxy, File, TableImporter, Scenario, ScenarioProxy, ProtocolProxy
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import search_updated_metadata_table, save_metadata_table, add_new_column_dialog
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+    add_new_column_dialog,
+    save_metadata_table,
+    search_updated_metadata_table,
+)
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()
@@ -26,7 +30,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
     # Find where the actual table data starts (usually after comment lines starting with #)
     header_lines = []
     for i, line in enumerate(lines):
-        if line.strip().startswith('#') or (line.strip() and not '\t' in line and not ',' in line):
+        if line.strip().startswith('#') or (line.strip() and '\t' not in line and ',' not in line):
             header_lines.append(line)
         else:
             break
@@ -143,7 +147,7 @@ def upload_metadata_table(ubiome_state : State, protocol_proxy : ProtocolProxy) 
         # Find where the actual table data starts (usually after comment lines starting with #)
         header_lines = []
         for i, line in enumerate(lines):
-            if line.strip().startswith('#') or (line.strip() and not '\t' in line and not ',' in line):
+            if line.strip().startswith('#') or (line.strip() and '\t' not in line and ',' not in line):
                 header_lines.append(line)
             else:
                 break

@@ -6,21 +6,34 @@
 
 import os
 from pathlib import Path
-from typing import Optional, List, Tuple, Final
+from typing import Final
 
 from gws_core import (
-    BoolParam, ConfigParams, ConfigSpecs, File, Folder,
-    InputSpec, InputSpecs, IntParam, OutputSpec, OutputSpecs,
-    ShellProxy, StrParam, Task, TaskInputs, TaskOutputs, task_decorator,
-    ResourceSet, TableImporter
+    BoolParam,
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    ResourceSet,
+    ShellProxy,
+    StrParam,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
 )
 
 from ..base_env.Bakta_env import BaktaShellProxyHelper
 
-
 # ----------------- helpers -----------------
 
-def _find_bakta_db_dir(base: Path) -> Optional[Path]:
+def _find_bakta_db_dir(base: Path) -> Path | None:
     """Return a folder containing 'version.json' among base, base/db, base/db-full, base/db-light."""
     for c in (base, base / "db", base / "db-full", base / "db-light"):
         if (c / "version.json").is_file():
@@ -49,7 +62,7 @@ def _parse_gff_attributes(attr_field: str) -> dict:
     return d
 
 
-def _read_fasta_lengths(fp: Path) -> List[Tuple[str, int]]:
+def _read_fasta_lengths(fp: Path) -> list[tuple[str, int]]:
     """Quick FASTA pass: [(contig_id, length), ...]."""
     rows, cur_id, cur_len = [], None, 0
     with fp.open("rt", encoding="utf-8", errors="ignore") as fh:
@@ -67,8 +80,8 @@ def _read_fasta_lengths(fp: Path) -> List[Tuple[str, int]]:
 
 
 def _write_replicons_for_all(
-    fasta_path: Path, out_dir: Path, rtype: Optional[str], rtopo: Optional[str]
-) -> Optional[Path]:
+    fasta_path: Path, out_dir: Path, rtype: str | None, rtopo: str | None
+) -> Path | None:
     """
     If 'rtype' (chromosome|plasmid) or 'rtopo' (circular|linear) are provided,
     create replicons_all.tsv declaring the same for all contigs.
@@ -101,7 +114,7 @@ def _write_replicons_for_all(
 
 
 # descriptive → NCBI code
-TRANSLATION_TABLE_CHOICES: Final[List[str]] = [
+TRANSLATION_TABLE_CHOICES: Final[list[str]] = [
     "The Bacterial, Archaeal and Plant Plastid Code",  # → 11
     "The Mold, Protozoan, and Coelenterate Mitochondrial Code and the Mycoplasma/Spiroplasma Code",  # → 4
 ]
@@ -193,7 +206,7 @@ class BaktaTask(Task):
             default_value=None, allowed_values=["circular", "linear", " "],
             short_description="Apply a global Topology to all contigs (optional)"
         ),
-        
+
         # Performance
         "threads": IntParam(default_value=8, min_value=1, short_description="CPU threads"),
     })

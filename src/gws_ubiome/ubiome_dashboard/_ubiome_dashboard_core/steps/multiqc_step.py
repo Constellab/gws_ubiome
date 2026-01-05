@@ -1,10 +1,24 @@
 import streamlit as st
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
-from gws_core import GenerateShareLinkDTO, ShareLinkEntityType, ShareLinkService, FsNodeExtractor, Scenario, ScenarioProxy, ProtocolProxy, InputTask, ProcessProxy, Scenario, ScenarioStatus, ScenarioProxy, ProtocolProxy
+from gws_core import (
+    FsNodeExtractor,
+    GenerateShareLinkDTO,
+    InputTask,
+    ProcessProxy,
+    ProtocolProxy,
+    Scenario,
+    ScenarioProxy,
+    ScenarioStatus,
+    ShareLinkEntityType,
+    ShareLinkService,
+)
 from gws_core.streamlit import StreamlitContainers
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+    create_base_scenario_with_tags,
+)
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()

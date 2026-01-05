@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Tuple, Optional
 
 # Same mapping as the Task
 TRANSLATION_TABLE_MAP = {
@@ -36,7 +34,7 @@ def _tt_to_code(s: str) -> str:
         return s
     return TRANSLATION_TABLE_MAP.get(s, "11")
 
-def _read_fasta_lengths(fp: Path) -> List[Tuple[str, int]]:
+def _read_fasta_lengths(fp: Path) -> list[tuple[str, int]]:
     ids_lengths = []
     cur_id = None
     cur_len = 0
@@ -56,8 +54,8 @@ def _read_fasta_lengths(fp: Path) -> List[Tuple[str, int]]:
     return ids_lengths
 
 def _write_replicons_for_all(
-    fasta_path: Path, out_dir: Path, replicon_type: Optional[str], replicon_topology: Optional[str]
-) -> Optional[Path]:
+    fasta_path: Path, out_dir: Path, replicon_type: str | None, replicon_topology: str | None
+) -> Path | None:
     rtype = (replicon_type or "").strip().lower()
     rtopo = (replicon_topology or "").strip().lower()
     if not rtype and not rtopo:

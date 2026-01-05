@@ -2,8 +2,7 @@
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
-
+from gws_core import BaseTestCase, Folder, TaskRunner
 from gws_ubiome import Qiime2FeatureTableExtractorSE
 
 

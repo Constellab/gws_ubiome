@@ -1,11 +1,27 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      ShellProxy, Table, TableAnnotatorHelper, TableImporter,
-                      Task, TaskInputs, TaskOutputs, task_decorator, PlotlyResource)
 import plotly.graph_objects as go
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    PlotlyResource,
+    ShellProxy,
+    Table,
+    TableAnnotatorHelper,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 

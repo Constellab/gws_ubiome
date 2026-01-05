@@ -1,10 +1,24 @@
-import streamlit as st
 import plotly.express as px
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+import streamlit as st
+from gws_core import (
+    InputTask,
+    ResourceModel,
+    Scenario,
+    ScenarioProxy,
+    ScenarioStatus,
+    TableImporter,
+    Tag,
+)
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
-from gws_core import ResourceModel, Scenario, ScenarioProxy, TableImporter, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import Qiime2DifferentialAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+    create_base_scenario_with_tags,
+    display_saved_scenario_actions,
+    display_scenario_parameters,
+    render_scenario_table,
+)
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 @st.dialog("ANCOM parameters")
 def dialog_ancom_params(ubiome_state: State):

@@ -1,21 +1,35 @@
 import os
-from typing import List, Dict
-import streamlit as st
+
 import numpy as np
 import pandas as pd
-from streamlit_slickgrid import (
-    slickgrid,
-    FieldType,
-    ExportServices,
+import streamlit as st
+from gws_core import (
+    File,
+    InputTask,
+    ProtocolProxy,
+    ProtocolService,
+    ResourceModel,
+    ResourceOrigin,
+    Scenario,
+    ScenarioCreationType,
+    ScenarioProxy,
+    ScenarioSearchBuilder,
+    ScenarioStatus,
+    Settings,
+    SpaceFolder,
+    Tag,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
-from gws_core import (ScenarioSearchBuilder, Settings, ResourceModel, ResourceOrigin, Scenario, ScenarioProxy,
-                      File, SpaceFolder, Tag, Scenario, ScenarioStatus, ScenarioProxy, ScenarioCreationType,
-                      ProtocolProxy, InputTask, ProtocolService)
-from gws_core.tag.tag_entity_type import TagEntityType
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag import TagOrigin
+from gws_core.tag.tag_entity_type import TagEntityType
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from streamlit_slickgrid import (
+    ExportServices,
+    FieldType,
+    slickgrid,
+)
+
 
 def get_status_emoji(status: ScenarioStatus) -> str:
     """Return appropriate emoji for scenario status"""
@@ -44,7 +58,7 @@ def get_status_prettify(status: ScenarioStatus) -> str:
     return prettify_map.get(status, "")
 
 # Generic helper functions
-def create_scenario_table_data(scenarios: List[Scenario], process_name: str) -> tuple:
+def create_scenario_table_data(scenarios: list[Scenario], process_name: str) -> tuple:
     """Generic function to create table data from scenarios with their parameters."""
     table_data = []
     all_param_keys = set()
@@ -81,7 +95,7 @@ def create_scenario_table_data(scenarios: List[Scenario], process_name: str) -> 
 
     return table_data, all_param_keys
 
-def create_slickgrid_columns(param_keys: set, ubiome_state: State) -> List[Dict]:
+def create_slickgrid_columns(param_keys: set, ubiome_state: State) -> list[dict]:
     """Generic function to create SlickGrid columns."""
     translate_service = ubiome_state.get_translate_service()
     columns = [
@@ -129,7 +143,7 @@ def create_slickgrid_columns(param_keys: set, ubiome_state: State) -> List[Dict]
 
     return columns
 
-def render_scenario_table(scenarios: List[Scenario], process_name: str, grid_key: str, ubiome_state: State) -> None:
+def render_scenario_table(scenarios: list[Scenario], process_name: str, grid_key: str, ubiome_state: State) -> None:
     """Generic function to render a scenario table with parameters."""
     translate_service = ubiome_state.get_translate_service()
     if scenarios:
@@ -211,7 +225,7 @@ def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title: st
 
     return scenario
 
-def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome_state: State, protocol: ProtocolProxy) -> None:
+def save_metadata_table(edited_df: pd.DataFrame, header_lines: list[str], ubiome_state: State, protocol: ProtocolProxy) -> None:
     """
     Helper function to save metadata table to resource.
     """
@@ -259,7 +273,7 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: List[str], ubiome
 
 
 @st.dialog("Add New Metadata Column")
-def add_new_column_dialog(ubiome_state: State, header_lines: List[str], protocol_proxy: ProtocolProxy) -> None:
+def add_new_column_dialog(ubiome_state: State, header_lines: list[str], protocol_proxy: ProtocolProxy) -> None:
     translate_service = ubiome_state.get_translate_service()
     st.text_input(translate_service.translate("new_column_name"), placeholder=translate_service.translate("enter_column_name"), key=ubiome_state.NEW_COLUMN_INPUT_KEY)
     if st.button(translate_service.translate("add_column"), width="stretch", key="add_column_btn"):
@@ -315,7 +329,7 @@ def search_updated_metadata_table(ubiome_state: State) -> File | None:
     return None
 
 
-def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -> Dict[str, List[Scenario]]:
+def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -> dict[str, list[Scenario]]:
     """
     Build scenarios_by_step dictionary for a given ubiome_pipeline_id.
 
@@ -333,7 +347,7 @@ def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -
         .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=ubiome_pipeline_id_parsed, auto_parse=True)) \
         .add_is_archived_filter(False)
 
-    all_scenarios: List[Scenario] = search_scenario_builder.search_all()
+    all_scenarios: list[Scenario] = search_scenario_builder.search_all()
 
     # Group scenarios by step type with parent relationships
     scenarios_by_step = {}

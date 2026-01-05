@@ -1,6 +1,7 @@
 import streamlit as st
-from gws_core.streamlit import StreamlitTranslateLang, StreamlitContainers
+from gws_core.streamlit import StreamlitContainers, StreamlitTranslateLang
 from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 def render_settings_page(ubiome_state : State):
     style = """

@@ -1,10 +1,10 @@
 # GWS cli module
-# This software is the exclusive property of Gencovery SAS. 
+# This software is the exclusive property of Gencovery SAS.
 # The use and distribution of this software is prohibited without the prior consent of Gencovery SAS.
 # About us: https://gencovery.com
 
 import click
-from gws_core import Settings
+
 
 @click.command(context_settings=dict(
     ignore_unknown_options=True,

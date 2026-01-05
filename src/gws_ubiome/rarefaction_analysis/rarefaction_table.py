@@ -1,10 +1,18 @@
 
 from json import loads
-from typing import Type
 
-from gws_core import (ConfigParams, FSNode, LinePlot2DView, Resource, Table,
-                      TableImporter, TypingDeprecated, importer_decorator,
-                      resource_decorator, view)
+from gws_core import (
+    ConfigParams,
+    FSNode,
+    LinePlot2DView,
+    Resource,
+    Table,
+    TableImporter,
+    TypingDeprecated,
+    importer_decorator,
+    resource_decorator,
+    view,
+)
 from numpy import nanquantile
 from pandas import DataFrame
 
@@ -46,7 +54,7 @@ class RarefactionTable(Table):
                     target_type=Table, supported_extensions=Table.ALLOWED_FILE_FORMATS, hide=True)
 class RarefactionTableImporter(TableImporter):
 
-    def import_from_path(self, source: FSNode, params: ConfigParams, target_type: Type[Resource]) -> Table:
+    def import_from_path(self, source: FSNode, params: ConfigParams, target_type: type[Resource]) -> Table:
         rarefaction_table: Table = super().import_from_path(source, params, target_type)
 
         dataframe: DataFrame = rarefaction_table.get_data()

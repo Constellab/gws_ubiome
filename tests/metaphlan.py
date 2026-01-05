@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import with_statement
 
 __author__ = ('Nicola Segata (nicola.segata@unitn.it), '
               'Duy Tin Truong, '
@@ -22,14 +21,13 @@ except ImportError:
     sys.exit(1)
 
 if float(sys.version_info[0]) < 3.0:
-    sys.stderr.write("MetaPhlAn requires Python 3, your current Python version is {}.{}.{}"
-                    .format(sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+    sys.stderr.write(f"MetaPhlAn requires Python 3, your current Python version is {sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
+                    )
     sys.exit(1)
 
 import argparse as ap
 import bz2
 import hashlib
-import itertools
 import pickle
 import subprocess as subp
 import tempfile as tf
@@ -370,7 +368,7 @@ def read_params(args):
         help="Specify the minimum length of the reads to be considered when parsing the input file with "
              "'read_fastx.py' script, default value is 70")
     arg('-v', '--version', action='version',
-        version="MetaPhlAn version {} ({})".format(__version__, __date__),
+        version=f"MetaPhlAn version {__version__} ({__date__})",
         help="Prints the current MetaPhlAn version and exit")
     arg("-h", "--help", action="help", help="show this help message and exit")
 
@@ -385,7 +383,7 @@ def byte_to_megabyte(byte):
     return byte / (1024.0**2)
 
 
-class ReportHook():
+class ReportHook:
     def __init__(self):
         self.start_time = time.time()
 
@@ -397,11 +395,11 @@ class ReportHook():
         if blocknum == 0:
             self.start_time = time.time()
             if total_size > 0:
-                sys.stderr.write("Downloading file of size: {:.2f} MB\n"
-                                 .format(byte_to_megabyte(total_size)))
+                sys.stderr.write(f"Downloading file of size: {byte_to_megabyte(total_size):.2f} MB\n"
+                                 )
         else:
             total_downloaded = blocknum * block_size
-            status = "{:3.2f} MB ".format(byte_to_megabyte(total_downloaded))
+            status = f"{byte_to_megabyte(total_downloaded):3.2f} MB "
 
             if total_size > 0:
                 percent_downloaded = total_downloaded * 100.0 / total_size
@@ -410,10 +408,8 @@ class ReportHook():
                 estimated_time = (total_size - total_downloaded) / download_rate
                 estimated_minutes = int(estimated_time / 60.0)
                 estimated_seconds = estimated_time - estimated_minutes * 60.0
-                status += ("{:3.2f} %  {:5.2f} MB/sec {:2.0f} min {:2.0f} sec "
-                           .format(percent_downloaded,
-                                   byte_to_megabyte(download_rate),
-                                   estimated_minutes, estimated_seconds))
+                status += (f"{percent_downloaded:3.2f} %  {byte_to_megabyte(download_rate):5.2f} MB/sec {estimated_minutes:2.0f} min {estimated_seconds:2.0f} sec "
+                           )
 
             status += "        \r"
             sys.stderr.write(status)
@@ -429,10 +425,10 @@ def download(url, download_file, force=False):
             sys.stderr.write("\nDownloading " + url + "\n")
             file, headers = urlretrieve(url, download_file,
                                         reporthook=ReportHook().report)
-        except EnvironmentError:
+        except OSError:
             sys.stderr.write("\nWarning: Unable to download " + url + "\n")
     else:
-        sys.stderr.write("\nFile {} already present!\n".format(download_file))
+        sys.stderr.write(f"\nFile {download_file} already present!\n")
 
 
 def download_unpack_tar(FILE_LIST, download_file_name, folder, bowtie2_build, nproc):
@@ -444,7 +440,7 @@ def download_unpack_tar(FILE_LIST, download_file_name, folder, bowtie2_build, np
     if not os.path.isdir(folder):
         try:
             os.makedirs(folder)
-        except EnvironmentError:
+        except OSError:
             sys.exit("ERROR: Unable to create folder for database install: " + folder)
 
     # Check the directory permissions
@@ -477,7 +473,7 @@ def download_unpack_tar(FILE_LIST, download_file_name, folder, bowtie2_build, np
             for row in f:
                 md5_md5 = row.strip().split(' ')[0]
     else:
-        sys.stderr.write('File "{}" not found!\n'.format(md5_file))
+        sys.stderr.write(f'File "{md5_file}" not found!\n')
 
     # compute MD5 of .tar.bz2
     if os.path.isfile(tar_file):
@@ -489,7 +485,7 @@ def download_unpack_tar(FILE_LIST, download_file_name, folder, bowtie2_build, np
 
         md5_tar = hash_md5.hexdigest()[:32]
     else:
-        sys.stderr.write('File "{}" not found!\n'.format(tar_file))
+        sys.stderr.write(f'File "{tar_file}" not found!\n')
 
     if (md5_tar is None) or (md5_md5 is None):
         sys.exit("MD5 checksums not found, something went wrong!")
@@ -504,15 +500,15 @@ def download_unpack_tar(FILE_LIST, download_file_name, folder, bowtie2_build, np
         tarfile_handle = tarfile.open(tar_file)
         tarfile_handle.extractall(path=folder)
         tarfile_handle.close()
-    except EnvironmentError:
-        sys.stderr.write("Warning: Unable to extract {}.\n".format(tar_file))
+    except OSError:
+        sys.stderr.write(f"Warning: Unable to extract {tar_file}.\n")
 
     # uncompress sequences
     bz2_file = os.path.join(folder, download_file_name + ".fna.bz2")
     fna_file = os.path.join(folder, download_file_name + ".fna")
 
     if not os.path.isfile(fna_file):
-        sys.stderr.write('\n\nDecompressing {} into {}\n'.format(bz2_file, fna_file))
+        sys.stderr.write(f'\n\nDecompressing {bz2_file} into {fna_file}\n')
 
         with open(fna_file, 'wb') as fna_h, \
             bz2.BZ2File(bz2_file, 'rb') as bz2_h:
@@ -543,7 +539,7 @@ def download_unpack_tar(FILE_LIST, download_file_name, folder, bowtie2_build, np
     for bt2 in glob(os.path.join(folder, download_file_name + "*.bt2")):
         os.chmod(bt2, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)  # change permissions to 664
 
-    sys.stderr.write('Removing uncompress database {}\n'.format(fna_file))
+    sys.stderr.write(f'Removing uncompress database {fna_file}\n')
     os.remove(fna_file)
 
 
@@ -568,7 +564,7 @@ def check_and_install_database(index, bowtie2_db, bowtie2_build, nproc, force_re
     if not os.path.isdir(bowtie2_db):
         try:
             os.makedirs(bowtie2_db)
-        except EnvironmentError:
+        except OSError:
             sys.exit("ERROR: Unable to create folder for database install: " + bowtie2_db)
 
     # Check the directory permissions
@@ -596,13 +592,13 @@ def check_and_install_database(index, bowtie2_db, bowtie2_build, nproc, force_re
         if index != previous_db_version:
             choice = ''
             while choice.upper() in ['Y','N']:
-                choice = input('A newer version of the database ({}) is available. Do you want to download it and replace the current one ({})?\t[Y/N]'.format(index, previous_db_version))
+                choice = input(f'A newer version of the database ({index}) is available. Do you want to download it and replace the current one ({previous_db_version})?\t[Y/N]')
 
             if choice.upper() == 'N':
                 os.rename(os.path.join(bowtie2_db,'mpa_previous'),os.path.join(bowtie2_db,'mpa_latest'))
                 index = previous_db_version
 
-    if len(glob(os.path.join(bowtie2_db, "*{}*".format(index)))) >= 7:
+    if len(glob(os.path.join(bowtie2_db, f"*{index}*"))) >= 7:
         return index
 
     # download the tar archive and decompress
@@ -616,11 +612,11 @@ def set_mapping_arguments(index, bowtie2_db):
     mpa_pkl = 'mpa_pkl'
     bowtie2db = 'bowtie2db'
 
-    if os.path.isfile(os.path.join(bowtie2_db, "{}.pkl".format(index))):
-        mpa_pkl = os.path.join(bowtie2_db, "{}.pkl".format(index))
+    if os.path.isfile(os.path.join(bowtie2_db, f"{index}.pkl")):
+        mpa_pkl = os.path.join(bowtie2_db, f"{index}.pkl")
 
-    if glob(os.path.join(bowtie2_db, "{}*.bt2".format(index))):
-        bowtie2db = os.path.join(bowtie2_db, "{}".format(index))
+    if glob(os.path.join(bowtie2_db, f"{index}*.bt2")):
+        bowtie2db = os.path.join(bowtie2_db, f"{index}")
 
     return (mpa_pkl, bowtie2db)
 
@@ -632,19 +628,19 @@ def run_bowtie2(fna_in, outfmt6_out, bowtie2_db, preset, nproc, min_mapq_val, fi
 
     try:
         subp.check_call([read_fastx, "-h"], stdout=DEVNULL, stderr=DEVNULL)
-    except Exception as e:
+    except Exception:
         try:
             read_fastx = os.path.join(os.path.join(os.path.dirname(__file__), "utils"), read_fastx)
             subp.check_call([read_fastx, "-h"], stdout=DEVNULL, stderr=DEVNULL)
-        except Exception as e:
-            sys.stderr.write("OSError: fatal error running '{}'. Is it in the system path?\n".format(read_fastx))
+        except Exception:
+            sys.stderr.write(f"OSError: fatal error running '{read_fastx}'. Is it in the system path?\n")
             sys.exit(1)
 
     # checking bowtie2
     try:
         subp.check_call([exe if exe else 'bowtie2', "-h"], stdout=DEVNULL)
     except Exception as e:
-        sys.stderr.write('OSError: "{}"\nFatal error running BowTie2. Is BowTie2 in the system path?\n'.format(e))
+        sys.stderr.write(f'OSError: "{e}"\nFatal error running BowTie2. Is BowTie2 in the system path?\n')
         sys.exit(1)
 
     try:
@@ -654,7 +650,7 @@ def run_bowtie2(fna_in, outfmt6_out, bowtie2_db, preset, nproc, min_mapq_val, fi
         else:
             readin = subp.Popen([read_fastx, '-l', str(read_min_len)], stdin=sys.stdin, stdout=subp.PIPE, stderr=subp.PIPE)
 
-        bowtie2_cmd = [exe if exe else 'bowtie2', "--quiet", "--no-unal", "--{}".format(preset),
+        bowtie2_cmd = [exe if exe else 'bowtie2', "--quiet", "--no-unal", f"--{preset}",
                        "-S", "-", "-x", bowtie2_db]
 
         if int(nproc) > 1:
@@ -674,8 +670,8 @@ def run_bowtie2(fna_in, outfmt6_out, bowtie2_db, preset, nproc, min_mapq_val, fi
                     sam_file = bz2.BZ2File(samout, 'w')
                 else:
                     sam_file = open(samout, 'wb')
-        except IOError as e:
-            sys.stderr.write('IOError: "{}"\nUnable to open sam output file.\n'.format(e))
+        except OSError as e:
+            sys.stderr.write(f'IOError: "{e}"\nUnable to open sam output file.\n')
             sys.exit(1)
         for line in p.stdout:
             if samout:
@@ -701,7 +697,7 @@ def run_bowtie2(fna_in, outfmt6_out, bowtie2_db, preset, nproc, min_mapq_val, fi
             if not nreads:
                 sys.stderr.write('Fatal error running MetaPhlAn. Total metagenome size was not estimated.\nPlease check your input files.\n')
                 sys.exit(1)
-            outf.write(lmybytes('#nreads\t{}'.format(nreads)))
+            outf.write(lmybytes(f'#nreads\t{nreads}'))
             outf.close()
         except ValueError:
             sys.stderr.write(b''.join(read_fastx_stderr).decode())
@@ -710,10 +706,10 @@ def run_bowtie2(fna_in, outfmt6_out, bowtie2_db, preset, nproc, min_mapq_val, fi
             sys.exit(1)
 
     except OSError as e:
-        sys.stderr.write('OSError: "{}"\nFatal error running BowTie2.\n'.format(e))
+        sys.stderr.write(f'OSError: "{e}"\nFatal error running BowTie2.\n')
         sys.exit(1)
-    except IOError as e:
-        sys.stderr.write('IOError: "{}"\nFatal error running BowTie2.\n'.format(e))
+    except OSError as e:
+        sys.stderr.write(f'IOError: "{e}"\nFatal error running BowTie2.\n')
         sys.exit(1)
 
     if p.returncode == 13:
@@ -816,7 +812,7 @@ class TaxClade:
             if not misidentified:
                 rat_nreads.append( (self.markers2lens[marker],n_reads) )
 
-        if not self.avoid_disqm and len(removed):
+        if not self.avoid_disqm and removed:
             n_rat_nreads = float(len(rat_nreads))
             n_removed = float(len(removed))
             n_tot = n_rat_nreads + n_removed
@@ -871,9 +867,7 @@ class TaxClade:
             loc_ab = np.median(sorted([float(n)/r for r,n in rat_nreads])[ql:qr])
 
         self.abundance = loc_ab
-        if rat < self.min_cu_len and self.children:
-            self.abundance = sum_ab
-        elif loc_ab < sum_ab:
+        if rat < self.min_cu_len and self.children or loc_ab < sum_ab:
             self.abundance = sum_ab
 
         if self.abundance > sum_ab and self.children: # *1.1??
@@ -917,7 +911,7 @@ class TaxTree:
             for i in range(len(clade)):
                 clade_lev = clade[i]
                 clade_taxid = taxids[i] if i < 7 and taxids is not None else None
-                if not clade_lev in father.children:
+                if clade_lev not in father.children:
                     father.add_child(clade_lev, tax_id=clade_taxid)
                     self.all_clades[clade_lev] = father.children[clade_lev]
                 if clade_lev[0] == "t":
@@ -1050,21 +1044,17 @@ class TaxTree:
         return ret_d, ret_r, tot_reads
 
 def mapq_filter(marker_name, mapq_value, min_mapq_val):
-    if 'GeneID:' in marker_name:
+    if 'GeneID:' in marker_name or mapq_value > min_mapq_val:
         return True
-    else:
-        if mapq_value > min_mapq_val:
-            return True
     return False
 
 def map2bbh(mapping_f, min_mapq_val, input_type='bowtie2out', min_alignment_len=None):
     if not mapping_f:
         ras, ras_line, inpf = plain_read_and_split, plain_read_and_split_line, sys.stdin
+    elif mapping_f.endswith(".bz2"):
+        ras, ras_line, inpf = read_and_split, read_and_split_line, bz2.BZ2File(mapping_f, "r")
     else:
-        if mapping_f.endswith(".bz2"):
-            ras, ras_line, inpf = read_and_split, read_and_split_line, bz2.BZ2File(mapping_f, "r")
-        else:
-            ras, ras_line, inpf = plain_read_and_split, plain_read_and_split_line, open(mapping_f)
+        ras, ras_line, inpf = plain_read_and_split, plain_read_and_split_line, open(mapping_f)
 
     reads2markers = {}
     n_metagenome_reads = None
@@ -1321,7 +1311,7 @@ def main():
                 outf.write("@SampleID:{}\n"
                            "@Version:0.10.0\n"
                            "@Ranks:superkingdom|phylum|class|order|family|genus|species|strain\n"
-                           "@@TAXID\tRANK\tTAXPATH\tTAXPATHSN\tPERCENTAGE\n".format(pars["sample_id"],__version__))
+                           "@@TAXID\tRANK\tTAXPATH\tTAXPATHSN\tPERCENTAGE\n".format(pars["sample_id"],))
             elif not pars['legacy_output']:
                 outf.write('#clade_name\tNCBI_tax_id\trelative_abundance\n')
 
@@ -1329,7 +1319,7 @@ def main():
                         pars['tax_lev']+"__" if pars['tax_lev'] != 'a' else None )
 
             fraction_mapped_reads = tot_nreads/float(n_metagenome_reads) if pars['unknown_estimation'] else 1.0
-            if fraction_mapped_reads > 1.0: fraction_mapped_reads = 1.0
+            fraction_mapped_reads = min(fraction_mapped_reads, 1.0)
 
             outpred = [(taxstr, taxid,round(relab*100.0,5)) for (taxstr, taxid), relab in cl2ab.items() if relab > 0.0]
             has_repr = False
@@ -1368,11 +1358,10 @@ def main():
                     sys.stderr.write("WARNING: The metagenome profile contains clades that represent multiple species merged into a single representant.\n"
                                      "An additional column listing the merged species is added to the MetaPhlAn output.\n"
                                     )
+            elif not pars['legacy_output']:
+                outf.write( "UNKNOWN\t-1\t100.0\n" )
             else:
-                if not pars['legacy_output']:
-                    outf.write( "UNKNOWN\t-1\t100.0\n" )
-                else:
-                    outf.write( "UNKNOWN\t100.0\n" )
+                outf.write( "UNKNOWN\t100.0\n" )
             maybe_generate_biom_file(tree, pars, outpred)
 
         elif pars['t'] == 'rel_ab_w_read_stats':
@@ -1380,13 +1369,13 @@ def main():
                         pars['tax_lev']+"__" if pars['tax_lev'] != 'a' else None )
 
             fraction_mapped_reads = tot_nreads/float(n_metagenome_reads) if not pars['unknown_estimation'] else 1
-            if fraction_mapped_reads > 1.0: fraction_mapped_reads = 1.0
+            fraction_mapped_reads = min(fraction_mapped_reads, 1.0)
             unmapped_reads = max(n_metagenome_reads - tot_nreads, 0)
 
             outpred = [(taxstr, taxid,round(relab*100.0*fraction_mapped_reads,5)) for (taxstr, taxid),relab in cl2ab.items() if relab > 0.0]
 
             if outpred:
-                outf.write( "#estimated_reads_mapped_to_known_clades:{}\n".format(tot_nreads) )
+                outf.write( f"#estimated_reads_mapped_to_known_clades:{tot_nreads}\n" )
                 outf.write( "\t".join( [    "#clade_name",
                                             "clade_taxid",
                                             "relative_abundance",
@@ -1407,17 +1396,16 @@ def main():
                                                 str(round(rr[(taxstr, taxid)][0],5)) if (taxstr, taxid) in rr else '-',          #coverage
                                                 str( int( round( rr[(taxstr, taxid)][1], 0) )  if (taxstr, taxid) in rr else '-')       #estimated_number_of_reads_from_the_clade
                                                 ] ) + "\n" )
+            elif not pars['legacy_output']:
+                outf.write( "#estimated_reads_mapped_to_known_clades:0\n")
+                outf.write( "\t".join( [    "#clade_name",
+                                            "clade_taxid",
+                                            "relative_abundance",
+                                            "coverage",
+                                            "estimated_number_of_reads_from_the_clade" ]) +"\n" )
+                outf.write( "unclassified\t-1\t100.0\t0\t0\n" )
             else:
-                if not pars['legacy_output']:
-                    outf.write( "#estimated_reads_mapped_to_known_clades:0\n")
-                    outf.write( "\t".join( [    "#clade_name",
-                                                "clade_taxid",
-                                                "relative_abundance",
-                                                "coverage",
-                                                "estimated_number_of_reads_from_the_clade" ]) +"\n" )
-                    outf.write( "unclassified\t-1\t100.0\t0\t0\n" )
-                else:
-                    outf.write( "unclassified\t100.0\n" )
+                outf.write( "unclassified\t100.0\n" )
             maybe_generate_biom_file(tree, pars, outpred)
 
         elif pars['t'] == 'clade_profiles':
@@ -1464,4 +1452,4 @@ def main():
 if __name__ == '__main__':
     t0 = time.time()
     main()
-    sys.stderr.write('Elapsed time to run MetaPhlAn: {} s\n'.format( (time.time()-t0) ) )
+    sys.stderr.write(f'Elapsed time to run MetaPhlAn: {time.time()-t0} s\n' )

@@ -1,11 +1,11 @@
-from typing import List, Dict
-import streamlit as st
-import pandas as pd
 
-from gws_core import Scenario, ResourceModel
-from gws_core.tag.tag_entity_type import TagEntityType
+import pandas as pd
+import streamlit as st
+from gws_core import ResourceModel, Scenario
+from gws_core.streamlit import StreamlitTranslateLang, StreamlitTranslateService
 from gws_core.tag.entity_tag_list import EntityTagList
-from gws_core.streamlit import StreamlitTranslateService, StreamlitTranslateLang
+from gws_core.tag.tag_entity_type import TagEntityType
+
 
 class State:
     """Class to manage the state of the app.
@@ -305,35 +305,35 @@ class State:
     # Functions get config
 
     @classmethod
-    def get_qiime2_metadata_config(cls) -> Dict:
+    def get_qiime2_metadata_config(cls) -> dict:
         return st.session_state.get(cls.QIIME2_METADATA_CONFIG_KEY, {})
 
     @classmethod
-    def get_feature_inference_config(cls) -> Dict:
+    def get_feature_inference_config(cls) -> dict:
         return st.session_state.get(cls.FEATURE_INFERENCE_CONFIG_KEY, {})
 
     @classmethod
-    def get_rarefaction_config(cls) -> Dict:
+    def get_rarefaction_config(cls) -> dict:
         return st.session_state.get(cls.RAREFACTION_CONFIG_KEY, {})
 
     @classmethod
-    def get_taxonomy_config(cls) -> Dict:
+    def get_taxonomy_config(cls) -> dict:
         return st.session_state.get(cls.TAXONOMY_CONFIG_KEY, {})
 
     @classmethod
-    def get_pcoa_config(cls) -> Dict:
+    def get_pcoa_config(cls) -> dict:
         return st.session_state.get(cls.PCOA_CONFIG_KEY, {})
 
     @classmethod
-    def get_ancom_config(cls) -> Dict:
+    def get_ancom_config(cls) -> dict:
         return st.session_state.get(cls.ANCOM_CONFIG_KEY, {})
 
     @classmethod
-    def get_functional_analysis_config(cls) -> Dict:
+    def get_functional_analysis_config(cls) -> dict:
         return st.session_state.get(cls.FUNCTIONAL_ANALYSIS_CONFIG_KEY, {})
 
     @classmethod
-    def get_functional_analysis_visu_config(cls) -> Dict:
+    def get_functional_analysis_visu_config(cls) -> dict:
         return st.session_state.get(cls.FUNCTIONAL_ANALYSIS_VISU_CONFIG_KEY, {})
 
     @classmethod
@@ -346,73 +346,73 @@ class State:
 
     # Get scenarios ids of each step
     @classmethod
-    def get_scenarios_by_step_dict(cls) -> Dict:
+    def get_scenarios_by_step_dict(cls) -> dict:
         return st.session_state.get(cls.SCENARIOS_BY_STEP_KEY, {})
 
     @classmethod
-    def set_scenarios_by_step_dict(cls, scenarios_by_step: Dict) -> None:
+    def set_scenarios_by_step_dict(cls, scenarios_by_step: dict) -> None:
         st.session_state[cls.SCENARIOS_BY_STEP_KEY] = scenarios_by_step
 
     @classmethod
-    def get_scenario_step_metadata(cls) -> List[Scenario]:
+    def get_scenario_step_metadata(cls) -> list[Scenario]:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_METADATA)
 
     @classmethod
-    def get_scenario_step_qc(cls) -> List[Scenario]:
+    def get_scenario_step_qc(cls) -> list[Scenario]:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_QC)
 
     @classmethod
-    def get_scenario_step_multiqc(cls) -> List[Scenario]:
+    def get_scenario_step_multiqc(cls) -> list[Scenario]:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_MULTIQC)
 
     @classmethod
-    def get_scenario_step_feature_inference(cls) -> List[Scenario]:
+    def get_scenario_step_feature_inference(cls) -> list[Scenario]:
         return cls.get_scenarios_by_step_dict().get(cls.TAG_FEATURE_INFERENCE)
 
     @classmethod
-    def get_scenario_step_rarefaction(cls) -> List[Scenario]:
+    def get_scenario_step_rarefaction(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_RAREFACTION, {})
         current_feature_id = cls.get_current_feature_scenario_id_parent()
         return scenarios_dict.get((current_feature_id), [])
 
     @classmethod
-    def get_scenario_step_taxonomy(cls) -> List[Scenario]:
+    def get_scenario_step_taxonomy(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_TAXONOMY, {})
         current_feature_id = cls.get_current_feature_scenario_id_parent()
         return scenarios_dict.get(current_feature_id, [])
 
     @classmethod
-    def get_scenario_step_pcoa(cls) -> List[Scenario]:
+    def get_scenario_step_pcoa(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_PCOA_DIVERSITY, {})
         current_taxonomy_id = cls.get_current_taxonomy_scenario_id_parent()
         return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
-    def get_scenario_step_ancom(cls) -> List[Scenario]:
+    def get_scenario_step_ancom(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_ANCOM, {})
         current_taxonomy_id = cls.get_current_taxonomy_scenario_id_parent()
         return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
-    def get_scenario_step_db_annotator(cls) -> List[Scenario]:
+    def get_scenario_step_db_annotator(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_DB_ANNOTATOR, {})
         current_taxonomy_id = cls.get_current_taxonomy_scenario_id_parent()
         return scenarios_dict.get(current_taxonomy_id, [])
 
     @classmethod
-    def get_scenario_step_ratio(cls) -> List[Scenario]:
+    def get_scenario_step_ratio(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_RATIO, {})
         current_taxa_composition_id = cls.get_current_taxa_composition_scenario_id_parent()
         return scenarios_dict.get(current_taxa_composition_id, [])
 
     @classmethod
-    def get_scenario_step_16s(cls) -> List[Scenario]:
+    def get_scenario_step_16s(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_16S, {})
         current_feature_id = cls.get_current_feature_scenario_id_parent()
         return scenarios_dict.get(current_feature_id, [])
 
     @classmethod
-    def get_scenario_step_16s_visu(cls) -> List[Scenario]:
+    def get_scenario_step_16s_visu(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_16S_VISU, {})
         current_feature_id = cls.get_current_feature_scenario_id_parent()
         return scenarios_dict.get(current_feature_id, [])

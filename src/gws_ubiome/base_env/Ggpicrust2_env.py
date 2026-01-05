@@ -7,7 +7,7 @@ import os
 from gws_core import CondaShellProxy, MessageDispatcher
 
 
-class Ggpicrust2vShellProxyHelper():
+class Ggpicrust2vShellProxyHelper:
     ENV_DIR_NAME = "Ggpicrust2vShellProxy"
     ENV_FILE_PATH = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),

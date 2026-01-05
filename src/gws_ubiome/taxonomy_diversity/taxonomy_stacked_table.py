@@ -1,9 +1,19 @@
 import copy
 
 import numpy as np
-from gws_core import (BoolParam, BoxPlotView, ConfigParams, ConfigSpecs,
-                      StackedBarPlotView, StrParam, Table, TableUnfolderHelper,
-                      TypingDeprecated, resource_decorator, view)
+from gws_core import (
+    BoolParam,
+    BoxPlotView,
+    ConfigParams,
+    ConfigSpecs,
+    StackedBarPlotView,
+    StrParam,
+    Table,
+    TableUnfolderHelper,
+    TypingDeprecated,
+    resource_decorator,
+    view,
+)
 
 
 @resource_decorator(unique_name="TaxonomyTable", hide=True,

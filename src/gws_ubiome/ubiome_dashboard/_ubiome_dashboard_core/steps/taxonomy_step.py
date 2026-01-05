@@ -1,9 +1,15 @@
 import streamlit as st
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from gws_core import InputTask, Scenario, ScenarioProxy, ScenarioStatus, Tag
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
-from gws_core import Scenario, ScenarioProxy, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
-from gws_ubiome import  Qiime2TaxonomyDiversity
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import display_saved_scenario_actions, create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome import Qiime2TaxonomyDiversity
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+    create_base_scenario_with_tags,
+    display_saved_scenario_actions,
+    display_scenario_parameters,
+    render_scenario_table,
+)
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 @st.dialog("Taxonomy parameters")
 def dialog_taxonomy_params(ubiome_state: State):

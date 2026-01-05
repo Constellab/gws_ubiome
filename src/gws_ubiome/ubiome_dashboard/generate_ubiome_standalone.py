@@ -1,8 +1,18 @@
 import os
 
 from gws_core import (
-    ConfigParams, AppConfig, AppType, OutputSpec, OutputSpecs, StreamlitResource, Task, TaskInputs, TaskOutputs,
-    app_decorator, task_decorator, TypingStyle
+    AppConfig,
+    AppType,
+    ConfigParams,
+    OutputSpec,
+    OutputSpecs,
+    StreamlitResource,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    TypingStyle,
+    app_decorator,
+    task_decorator,
 )
 
 

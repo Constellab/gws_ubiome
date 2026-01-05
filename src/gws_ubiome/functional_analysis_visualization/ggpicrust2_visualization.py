@@ -3,11 +3,25 @@ import os
 
 import pandas as pd
 import plotly.express as px
-from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, FloatParam,
-                      InputSpec, InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      PlotlyResource, ResourceSet, ShellProxy, StrParam,
-                      TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+from gws_core import (
+    BoolParam,
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    InputSpec,
+    InputSpecs,
+    OutputSpec,
+    OutputSpecs,
+    PlotlyResource,
+    ResourceSet,
+    ShellProxy,
+    StrParam,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 
 from ..base_env.Ggpicrust2_env import Ggpicrust2vShellProxyHelper
 
@@ -97,9 +111,7 @@ class Ggpicrust2FunctionalAnalysis(Task):
         for filename in os.listdir(shell_proxy.working_dir):
             file_path = os.path.join(shell_proxy.working_dir, filename)
             if os.path.isfile(file_path):
-                if filename.startswith("pathway_errorbar_") and filename.endswith(".png"):
-                    resource_set.add_resource(File(file_path), filename)
-                elif filename.startswith("pathway_heatmap_") and filename.endswith(".png"):
+                if filename.startswith("pathway_errorbar_") and filename.endswith(".png") or filename.startswith("pathway_heatmap_") and filename.endswith(".png"):
                     resource_set.add_resource(File(file_path), filename)
                 elif filename.startswith("daa_annotated_results_") and filename.endswith(".csv"):
                     resource_set.add_resource(
@@ -131,9 +143,6 @@ class Ggpicrust2FunctionalAnalysis(Task):
         marker_outline_width = 0.5
         # --------------------------------------
 
-        import pandas as pd
-        import plotly.express as px
-        from plotly.graph_objs import Figure
 
         data = pd.read_csv(pca_file_path)
         proportion_data = pd.read_csv(pca_proportion_file_path)

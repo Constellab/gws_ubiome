@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 import os
 from typing import Final
+
 from gws_core import (
-    ConfigParams, ConfigSpecs,
-    OutputSpec, OutputSpecs, Folder,
-    ShellProxy, Task, TaskInputs, TaskOutputs,
-    StrParam, BoolParam, task_decorator
+    BoolParam,
+    ConfigParams,
+    ConfigSpecs,
+    Folder,
+    OutputSpec,
+    OutputSpecs,
+    ShellProxy,
+    StrParam,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
 )
 
 from ..base_env.Bakta_env import BaktaShellProxyHelper  # keep your helper import
+
 
 @task_decorator(
     "BaktaDB",

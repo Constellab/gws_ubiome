@@ -1,9 +1,21 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, OutputSpec, OutputSpecs, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 
 from ..base_env.Picrust2_env import Picrust2ShellProxyHelper
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper

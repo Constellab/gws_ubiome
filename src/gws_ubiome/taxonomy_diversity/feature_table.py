@@ -1,6 +1,12 @@
 
-from gws_core import (ConfigParams, StackedBarPlotView, Table,
-                      TypingDeprecated, resource_decorator, view)
+from gws_core import (
+    ConfigParams,
+    StackedBarPlotView,
+    Table,
+    TypingDeprecated,
+    resource_decorator,
+    view,
+)
 
 
 @resource_decorator(unique_name="FeatureTable", hide=False,

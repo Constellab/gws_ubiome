@@ -3,7 +3,7 @@ import os
 from gws_core import MessageDispatcher, PipShellProxy
 
 
-class FunfunShellProxyHelper():
+class FunfunShellProxyHelper:
     ENV_DIR_NAME = "FunfunShellProxy"
     ENV_FILE_PATH = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),

@@ -1,9 +1,20 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, InputSpec, InputSpecs,
-                      OutputSpec, OutputSpecs, StrParam, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    InputSpec,
+    InputSpecs,
+    OutputSpec,
+    OutputSpecs,
+    StrParam,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 from gws_omix import FastqFolder
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper

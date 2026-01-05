@@ -1,8 +1,25 @@
 import streamlit as st
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
-from gws_core.streamlit import StreamlitResourceSelect, StreamlitRouter, StreamlitTaskRunner, StreamlitContainers
-from gws_core import ResourceModel, SpaceFolder, StringHelper, Tag, InputTask, SpaceService, ProcessProxy, ScenarioProxy, ProtocolProxy, ScenarioCreationType
+from gws_core import (
+    InputTask,
+    ProcessProxy,
+    ProtocolProxy,
+    ResourceModel,
+    ScenarioCreationType,
+    ScenarioProxy,
+    SpaceFolder,
+    SpaceService,
+    StringHelper,
+    Tag,
+)
+from gws_core.streamlit import (
+    StreamlitContainers,
+    StreamlitResourceSelect,
+    StreamlitRouter,
+    StreamlitTaskRunner,
+)
 from gws_ubiome import Qiime2MetadataTableMaker
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 def _flatten_folders_recursive(folders, folder_dict, folder_display_names, prefix="-"):
     """Recursively flatten folder hierarchy for display"""

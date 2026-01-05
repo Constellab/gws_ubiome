@@ -1,17 +1,32 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      ResourceSet, ShellProxy, StrParam,
-                      Table, TableAnnotatorHelper, TableImporter, Task,
-                      TaskFileDownloader, TaskInputs, TaskOutputs,
-                      task_decorator)
-
+import plotly.graph_objects as go
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    ResourceSet,
+    ShellProxy,
+    StrParam,
+    Table,
+    TableAnnotatorHelper,
+    TableImporter,
+    Task,
+    TaskFileDownloader,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 from gws_core.impl.plotly.plotly_resource import PlotlyResource
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
-import plotly.graph_objects as go
 
 
 @task_decorator("Qiime2TaxonomyDiversity", human_name="Q2 Taxonomy Diversity",
@@ -107,7 +122,7 @@ class Qiime2TaxonomyDiversity(Task):
         shell_proxy = Qiime2ShellProxyHelper.create_proxy(
             self.message_dispatcher)
 
-        if not db_taxo in self.DB_LOCATIONS or not db_taxo in self.DB_DESTINATIONS:
+        if db_taxo not in self.DB_LOCATIONS or db_taxo not in self.DB_DESTINATIONS:
             raise Exception("Unknown taxonomic affiliation database")
 
         # create the file_downloader from a task.
@@ -243,7 +258,7 @@ class Qiime2TaxonomyDiversity(Task):
             # Si la clé est égale à "Alpha Diversity - Faith pd", ajustez le traitement de la colonne Faith PD
             if key == "Alpha Diversity - Faith pd":
                 # Lisez le contenu du fichier pour déterminer sa structure
-                with open(path, 'r') as file:
+                with open(path) as file:
                     first_line = file.readline().strip()  # Lire la première ligne du fichier
                     # Si la première ligne commence par '#SampleID', la structure est différente
                     if first_line.startswith('#SampleID'):

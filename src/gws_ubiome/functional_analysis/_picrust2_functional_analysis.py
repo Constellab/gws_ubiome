@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import os
 
 
 class PipelineWorkflow:
@@ -21,7 +20,7 @@ class PipelineWorkflow:
             "-o", self.output_dir,
             "-p", str(self.processes)
         ]
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
     def run(self):
         self.set_output_directory()

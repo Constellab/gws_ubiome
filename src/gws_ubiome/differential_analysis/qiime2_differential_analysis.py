@@ -3,11 +3,27 @@
 import os
 
 import pandas as pd
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      ResourceSet, ShellProxy, StrParam, Table,
-                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    ResourceSet,
+    ShellProxy,
+    StrParam,
+    Table,
+    TableAnnotatorHelper,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 

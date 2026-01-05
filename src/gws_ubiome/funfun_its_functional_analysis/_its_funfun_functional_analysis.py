@@ -1,8 +1,9 @@
-import pandas as pd
-import subprocess
-import tempfile
 import os
+import subprocess
 import sys
+import tempfile
+
+import pandas as pd
 
 
 class OTUFilter:
@@ -42,7 +43,7 @@ class OTUFilter:
         # Read the FASTA file into a dictionary
         fasta_dict = {}
         current_otu = ""
-        with open(self.fasta_file, "r") as fasta_file:
+        with open(self.fasta_file) as fasta_file:
             for line in fasta_file:
                 if line.startswith(">"):
                     current_otu = line.strip()[1:]
@@ -74,7 +75,7 @@ class OTUFilter:
             "-type", self.its_type,
             "-out", self.output_folder
         ]
-        subprocess.run(command)
+        subprocess.run(command, check=False)
 
     def clean_up(self):
         # Remove temporary files

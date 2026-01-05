@@ -1,15 +1,29 @@
 
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder,
-                      InputSpec, InputSpecs, OutputSpec,
-                      OutputSpecs, ResourceSet, ShellProxy, StrParam,
-                      TableAnnotatorHelper, TableImporter, Task, TaskInputs,
-                      TaskOutputs, task_decorator)
+import plotly.graph_objects as go
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    OutputSpec,
+    OutputSpecs,
+    ResourceSet,
+    ShellProxy,
+    StrParam,
+    TableAnnotatorHelper,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 from gws_core.impl.plotly.plotly_resource import PlotlyResource
 from gws_omix import FastqFolder
 from pandas import DataFrame
-import plotly.graph_objects as go
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 

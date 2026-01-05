@@ -1,7 +1,15 @@
 
-from gws_core import (ConfigParams, ConfigSpecs, StackedBarPlotView, StrParam,
-                      Table, TableTagAggregatorHelper, TypingDeprecated,
-                      resource_decorator, view)
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    StackedBarPlotView,
+    StrParam,
+    Table,
+    TableTagAggregatorHelper,
+    TypingDeprecated,
+    resource_decorator,
+    view,
+)
 
 
 @resource_decorator(unique_name="TaxonomyTableTagged", hide=True,

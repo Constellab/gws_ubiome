@@ -1,16 +1,29 @@
 import os
 
-from gws_core import (ConfigParams, ConfigSpecs, File, Folder, InputSpec,
-                      InputSpecs, IntParam, OutputSpec,
-                      OutputSpecs, ResourceSet, ShellProxy, Table, Task,
-                      TaskInputs, TaskOutputs, task_decorator)
-from numpy import nanquantile
-
+import plotly.graph_objects as go
+from gws_core import (
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    Folder,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    ResourceSet,
+    ShellProxy,
+    Table,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 from gws_core.impl.plotly.plotly_resource import PlotlyResource
+from numpy import nanquantile
 
 from ..base_env.qiime2_env_task import Qiime2ShellProxyHelper
 from .rarefaction_table import RarefactionTableImporter
-import plotly.graph_objects as go
 
 
 @task_decorator("Qiime2RarefactionAnalysis", human_name="Q2RarefactionAnalysis",

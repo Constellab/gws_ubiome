@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import os
 
 
 class PipelineWorkflow:
@@ -27,7 +26,7 @@ class PipelineWorkflow:
             "--pathway_map", "/lab/.sys/.env/Picrust2ShellProxy/.venv/lib/python3.8/site-packages/picrust2/default_files/pathway_mapfiles/metacyc_path2rxn_struc_filt_fungi_present.txt",
             "--reaction_func", "/lab/.sys/.env/Picrust2ShellProxy/.venv/lib/python3.8/site-packages/picrust2/default_files/fungi/ec_ITS_counts.txt.gz"
         ]
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=False)
 
     def run(self):
         self.set_output_directory()

@@ -1,10 +1,25 @@
 import os
+
 import streamlit as st
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from gws_core import (
+    FsNodeExtractor,
+    InputTask,
+    ResourceModel,
+    Scenario,
+    ScenarioProxy,
+    ScenarioStatus,
+    TableImporter,
+    Tag,
+)
 from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
-from gws_core import FsNodeExtractor, ResourceModel, Scenario, ScenarioProxy, TableImporter, Tag, InputTask, Scenario, ScenarioStatus, ScenarioProxy
 from gws_ubiome import Ggpicrust2FunctionalAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import create_base_scenario_with_tags, render_scenario_table, display_scenario_parameters
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+    create_base_scenario_with_tags,
+    display_scenario_parameters,
+    render_scenario_table,
+)
+from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+
 
 @st.dialog("16S Visualization parameters")
 def dialog_16s_visu_params(ubiome_state: State):
@@ -116,11 +131,10 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
         if not ko_file_available:
             st.warning(f"⚠️ **{translate_service.translate('cannot_run_16s_visualization')}**")
-        else:
-            if not ubiome_state.get_is_standalone():
-                # On click, open a dialog to allow the user to select params of 16S visualization
-                st.button(translate_service.translate("configure_new_16s_visualization_scenario"), icon=":material/edit:", width="content",
-                            on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
+        elif not ubiome_state.get_is_standalone():
+            # On click, open a dialog to allow the user to select params of 16S visualization
+            st.button(translate_service.translate("configure_new_16s_visualization_scenario"), icon=":material/edit:", width="content",
+                        on_click=lambda state=ubiome_state: dialog_16s_visu_params(state))
 
         # Display table of existing 16S Visualization scenarios
         st.markdown(f"### {translate_service.translate('list_scenarios')}")
@@ -205,7 +219,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                             if selected_errorbar:
                                 try:
                                     st.image(error_bar_plots[selected_errorbar].path)
-                                except Exception as e:
+                                except Exception:
                                     st.error(translate_service.translate("error_displaying_image"))
 
                     # Heatmap Plots
@@ -218,7 +232,7 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
                             if selected_heatmap:
                                 try:
                                     st.image(heatmap_plots[selected_heatmap].path)
-                                except Exception as e:
+                                except Exception:
                                     st.error(translate_service.translate("error_displaying_image"))
                 else:
                     st.info(translate_service.translate("no_visualization_results"))

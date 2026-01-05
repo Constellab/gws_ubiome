@@ -1,7 +1,17 @@
 
-from gws_core import (BoxPlotView, ConfigParams, ConfigSpecs, IntParam,
-                      LinePlot2DView, Table, TableImporter, TypingDeprecated,
-                      importer_decorator, resource_decorator, view)
+from gws_core import (
+    BoxPlotView,
+    ConfigParams,
+    ConfigSpecs,
+    IntParam,
+    LinePlot2DView,
+    Table,
+    TableImporter,
+    TypingDeprecated,
+    importer_decorator,
+    resource_decorator,
+    view,
+)
 
 
 @resource_decorator(unique_name="QualityCheckTable", hide=True,
