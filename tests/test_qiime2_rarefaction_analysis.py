@@ -1,33 +1,28 @@
-
 import os
 
 import pandas
-from gws_core import BaseTestCase, File, Folder, Settings, TaskRunner
-
+from gws_core import BaseTestCase, Folder, Settings, TaskRunner
 from gws_ubiome import Qiime2RarefactionAnalysis
 
 
 class TestQiime2RarefactionAnalysis(BaseTestCase):
-
     def test_importer(self):
         settings = Settings.get_instance()
-        large_testdata_dir = settings.get_variable("gws_ubiome:large_testdata_dir")
+        large_testdata_dir = settings.get_variable("gws_ubiome", "large_testdata_dir")
         tester = TaskRunner(
-            params={
-                'min_coverage': 20,
-                'max_coverage': 5000
-            },
+            params={"min_coverage": 20, "max_coverage": 5000},
             inputs={
-                'feature_frequency_folder':   Folder(
-                    path=os.path.join(large_testdata_dir, "sample_freq_details"))
+                "feature_frequency_folder": Folder(
+                    path=os.path.join(large_testdata_dir, "sample_freq_details")
+                )
             },
-            task_type=Qiime2RarefactionAnalysis
+            task_type=Qiime2RarefactionAnalysis,
         )
         outputs = tester.run()
-        result_dir = outputs['result_folder']
+        result_dir = outputs["result_folder"]
 
         boxplot_csv_file_path = os.path.join(result_dir.path, "shannon.for_boxplot.csv")
-        result_in_file = open(boxplot_csv_file_path, 'r', encoding="utf-8")
+        result_in_file = open(boxplot_csv_file_path, encoding="utf-8")
         result_first_line = result_in_file.readline()
 
         # Get the expected file output
