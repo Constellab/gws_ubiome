@@ -81,6 +81,8 @@ def render_new_analysis_page(ubiome_state : State):
                     options=list(folder_display_names.keys()),
                     index=None
                 )
+                # Save in session state the id of the folder
+                ubiome_state.set_selected_folder_id(folder_display_names.get(folder_to_associate_with))
 
             submit_button = st.form_submit_button(
                 label=translate_service.translate("run")
