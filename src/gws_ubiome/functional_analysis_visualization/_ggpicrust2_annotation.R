@@ -418,7 +418,7 @@ pathway_errorbar_patched <- function(
 
   # Filter & de-dup features
   abundance <- as.matrix(abundance)
-  daa_results_filtered_df <- daa_results_df[daa_results_df$p_adjust < p_values_threshold, , drop = FALSE]
+  daa_results_filtered_df <- daa_results_df[daa_results_df$p_adjust <= p_values_threshold, , drop = FALSE]
   daa_results_filtered_sub_df <- if (!is.null(select)) {
     daa_results_filtered_df[daa_results_filtered_df$feature %in% select, , drop = FALSE]
   } else daa_results_filtered_df
@@ -665,15 +665,79 @@ if (DA_method == "ALDEx2") {
   glv <- levels(metadata[[Reference_column]])
   if (length(glv) < 2) stop("ALDEx2 requires at least two groups in '", Reference_column, "'.")
 }
-reference_arg <- if (length(unique(metadata[[Reference_column]])) >= 3) Reference_group else NULL
 
-daa_results_df <- pathway_daa(
-  abundance  = kegg_abundance,
-  metadata   = metadata,
-  group      = Reference_column,
-  daa_method = DA_method,
-  reference  = reference_arg
-)
+# Reference handling: use Reference_group when 3+ groups for case-control comparisons
+num_groups <- length(unique(metadata[[Reference_column]]))
+all_groups <- unique(as.character(metadata[[Reference_column]]))
+message("[DEBUG] Number of groups: ", num_groups)
+message("[DEBUG] All groups: ", paste(all_groups, collapse = ", "))
+message("[DEBUG] Reference_group parameter: '", Reference_group, "'")
+message("[DEBUG] Reference_group in groups? ", Reference_group %in% all_groups)
+
+# Determine if we need manual case-control comparisons
+use_manual_case_control <- FALSE
+if (num_groups >= 3 && nchar(trimws(Reference_group)) > 0 && Reference_group %in% all_groups) {
+  # LinDA ignores reference parameter and always does all pairwise, so use standard call
+  # DESeq2 and ALDEx2 use reference for case-control, need manual looping
+  if (DA_method %in% c("DESeq2", "ALDEx2")) {
+    use_manual_case_control <- TRUE
+    message("[INFO] ", DA_method, " with ", num_groups, " groups: performing case-control comparisons (", 
+            Reference_group, " vs each other group)")
+  } else {
+    message("[INFO] ", DA_method, " with ", num_groups, " groups: using reference group '", 
+            Reference_group, "' (method may ignore it for pairwise)")
+  }
+} else if (num_groups >= 3) {
+  message("[WARNING] Reference_group '", Reference_group, "' not found or invalid. Using all pairwise comparisons.")
+} else {
+  message("[INFO] Only ", num_groups, " groups: performing pairwise comparison")
+}
+
+# Execute differential abundance analysis
+if (use_manual_case_control) {
+  # Manual case-control: run pathway_daa for each pair (REF vs other)
+  # Used for DESeq2/ALDEx2 to ensure proper case-control comparisons
+  other_groups <- setdiff(all_groups, Reference_group)
+  daa_list <- list()
+  
+  for (target_group in other_groups) {
+    message("[INFO] Running ", DA_method, " for: ", Reference_group, " vs ", target_group)
+    
+    # Subset metadata to only these two groups
+    sub_meta <- metadata %>% dplyr::filter(.data[[Reference_column]] %in% c(Reference_group, target_group))
+    sub_samples <- sub_meta[[Samples_column_name]]
+    sub_abundance <- kegg_abundance[, sub_samples, drop = FALSE]
+    
+    # Run DA for this pair
+    pair_result <- pathway_daa(
+      abundance  = sub_abundance,
+      metadata   = sub_meta,
+      group      = Reference_column,
+      daa_method = DA_method,
+      reference  = Reference_group
+    )
+    
+    daa_list[[length(daa_list) + 1]] <- pair_result
+  }
+  
+  # Combine all results
+  daa_results_df <- dplyr::bind_rows(daa_list)
+} else {
+  # Standard call: LinDA does all pairwise, others use reference if provided
+  reference_arg <- if (num_groups >= 3 && nchar(trimws(Reference_group)) > 0 && Reference_group %in% all_groups) {
+    Reference_group
+  } else {
+    NULL
+  }
+  
+  daa_results_df <- pathway_daa(
+    abundance  = kegg_abundance,
+    metadata   = metadata,
+    group      = Reference_column,
+    daa_method = DA_method,
+    reference  = reference_arg
+  )
+}
 
 # Diagnostics
 stopifnot(all(c("group1","group2","feature","p_adjust") %in% colnames(daa_results_df)))
@@ -695,18 +759,42 @@ for (i in seq_len(nrow(contrasts_df))) {
   gB <- as.character(contrasts_df$group2[i])
   message("=== Contrast: ", gA, " vs ", gB, " ===")
 
-  sig <- daa_results_df %>%
-    dplyr::filter(group1 == gA, group2 == gB, p_adjust < padj_cutoff) %>%
-    dplyr::arrange(p_adjust)
+  # Try progressively higher thresholds if no significant features found
+  thresholds_to_try <- c(padj_cutoff, 0.1, 0.2, 0.3, 0.5, 1.0)
+  sig <- NULL
+  used_threshold <- padj_cutoff
+  threshold_message <- ""
+  
+  for (thresh in thresholds_to_try) {
+    sig <- daa_results_df %>%
+      dplyr::filter(group1 == gA, group2 == gB, p_adjust <= thresh) %>%
+      dplyr::arrange(p_adjust)
+    
+    if (nrow(sig) > 0) {
+      used_threshold <- thresh
+      if (thresh > padj_cutoff) {
+        threshold_message <- sprintf(
+          "ATTENTION: Aucun résultat avec p_adjust < %.2f. Threshold augmenté à %.2f pour afficher %d feature(s).",
+          padj_cutoff, thresh, nrow(sig)
+        )
+        message("[WARNING] ", threshold_message)
+      }
+      break
+    }
+  }
 
   if (nrow(sig) == 0) {
-    write.csv(data.frame(message = "Aucun biomarqueur significatif"),
+    threshold_message <- sprintf(
+      "Aucun biomarqueur trouvé même avec p_adjust < 1.0 (threshold initial: %.2f)",
+      padj_cutoff
+    )
+    write.csv(data.frame(message = threshold_message),
               file = sprintf("daa_annotated_results_%s_vs_%s.csv", gA, gB),
               row.names = FALSE)
     diag_rows[[length(diag_rows)+1]] <- data.frame(
       group1 = gA, group2 = gB, sig_features = 0,
       n_group1 = NA_integer_, n_group2 = NA_integer_,
-      note = "no significant features"
+      note = "no features even at p < 1.0"
     )
     next
   }
@@ -724,6 +812,23 @@ for (i in seq_len(nrow(contrasts_df))) {
     full_annot$p_adjust <- sprintf("%.0e", full_annot$p_adjust)
     full_annot$p_adjust <- as.numeric(full_annot$p_adjust)
   }
+  
+  # Add threshold information at the top of the CSV
+  if (nchar(threshold_message) > 0) {
+    header_row <- data.frame(
+      feature = threshold_message,
+      method = NA_character_, group1 = NA_character_, group2 = NA_character_, 
+      p_values = NA_real_, p_adjust = NA_real_, 
+      pathway_name = NA_character_, pathway_class = NA_character_,
+      stringsAsFactors = FALSE
+    )
+    # Match columns between header_row and full_annot
+    for (col in setdiff(names(full_annot), names(header_row))) {
+      header_row[[col]] <- if (is.numeric(full_annot[[col]])) NA_real_ else NA_character_
+    }
+    full_annot <- dplyr::bind_rows(header_row[names(full_annot)], full_annot)
+  }
+  
   write.csv(full_annot,
             file = sprintf("daa_annotated_results_%s_vs_%s.csv", gA, gB),
             row.names = FALSE)
@@ -780,7 +885,7 @@ for (i in seq_len(nrow(contrasts_df))) {
       abundance          = sub_kegg_abundance,
       daa_results_df     = slice_df,
       Group              = sub_metadata[[Reference_column]],
-      p_values_threshold = padj_cutoff,
+      p_values_threshold = used_threshold,  # Use the actual threshold that worked
       order              = "pathway_class",
       p_value_bar        = TRUE,
       x_lab              = "pathway_name",

@@ -1,19 +1,38 @@
-
 import os
 
 import pandas as pd
 import plotly.express as px
-from gws_core import (BoolParam, ConfigParams, ConfigSpecs, File, FloatParam,
-                      InputSpec, InputSpecs, IntParam, OutputSpec, OutputSpecs,
-                      PlotlyResource, ResourceSet, ShellProxy, StrParam,
-                      TableImporter, Task, TaskInputs, TaskOutputs,
-                      task_decorator)
+
+from gws_core import (
+    BoolParam,
+    ConfigParams,
+    ConfigSpecs,
+    File,
+    FloatParam,
+    InputSpec,
+    InputSpecs,
+    IntParam,
+    OutputSpec,
+    OutputSpecs,
+    PlotlyResource,
+    ResourceSet,
+    ShellProxy,
+    StrParam,
+    TableImporter,
+    Task,
+    TaskInputs,
+    TaskOutputs,
+    task_decorator,
+)
 
 from ..base_env.Ggpicrust2_env import Ggpicrust2vShellProxyHelper
 
 
-@task_decorator("Ggpicrust2FunctionalAnalysisVisualization", human_name="16s Functional Analysis Prediction Visualization",
-                short_description="This task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data")
+@task_decorator(
+    "Ggpicrust2FunctionalAnalysisVisualization",
+    human_name="16s Functional Analysis Prediction Visualization",
+    short_description="This task permit to analyze and interpret the results of PICRUSt2 functional prediction of 16s rRNA data",
+)
 class Ggpicrust2FunctionalAnalysis(Task):
     """
     - ggPicrust2 (paper can be found <a href="https://academic.oup.com/bioinformatics/article/39/8/btad470/7234609?login=false">here</a>)  is an R package developed explicitly for PICRUSt2 predicted functional profile.
@@ -25,51 +44,70 @@ class Ggpicrust2FunctionalAnalysis(Task):
         <b style="margin-left: 2.5em">pathway_heatmap() </b> Pairwise comparison between groups in terms of pathway differential abundance.
     """
 
-    input_specs = InputSpecs({
-        'ko_abundance_file':
-        InputSpec(
-            File, human_name="ko_abundance_file",
-            short_description="File containing the kegg orthology (KO) abundance"),
-        'metadata_file':
-        InputSpec(
-            File, human_name="Metadata file",
-            short_description="This file contain informations about the experince")
-    })
-    output_specs = OutputSpecs({
-        'resource_set':
-        OutputSpec(
-            ResourceSet, human_name="Metadata associated to each cell",
-            short_description="This table stores metadata associated with each cell such as mitochondrial content , number of counts etc"),
+    input_specs = InputSpecs(
+        {
+            "ko_abundance_file": InputSpec(
+                File,
+                human_name="ko_abundance_file",
+                short_description="File containing the kegg orthology (KO) abundance",
+            ),
+            "metadata_file": InputSpec(
+                File,
+                human_name="Metadata file",
+                short_description="This file contain informations about the experince",
+            ),
+        }
+    )
+    output_specs = OutputSpecs(
+        {
+            "resource_set": OutputSpec(
+                ResourceSet,
+                human_name="Metadata associated to each cell",
+                short_description="This table stores metadata associated with each cell such as mitochondrial content , number of counts etc",
+            ),
+            "plotly_result": OutputSpec(
+                PlotlyResource,
+                human_name="pathway_pca",
+                short_description="Show the difference after dimensional reduction via principal component analysis.",
+            ),
+        }
+    )
 
-        'plotly_result':
-        OutputSpec(
-            PlotlyResource, human_name="pathway_pca",
-            short_description="Show the difference after dimensional reduction via principal component analysis.")
-    })
-
-    config_specs: ConfigSpecs = ConfigSpecs({
-        "DA_method": StrParam(allowed_values=["LinDA", "DESeq2"], short_description="Differential abundance (DA) method"),
-        "Samples_column_name": StrParam(short_description="Column name in metadata file containing the sample name"),
-        "Reference_column": StrParam(short_description="Column name in metadata file containing the reference group"),
-        "Reference_group": StrParam(short_description="Reference group level for DA"),
-        "Round_digit": BoolParam(
-            default_value=False, human_name="Round Digit",
-            short_description="Remember to click on this button whenever you observe p-adjust values higher than 0.05 in order to ensure accurate and appropriately formatted results."),
-        "PCA_component": BoolParam(
-            default_value=False, human_name="PCA Component",
-            short_description="Perform 3D PCA if True, 2D PCA if False."),
-    })
+    config_specs: ConfigSpecs = ConfigSpecs(
+        {
+            "DA_method": StrParam(
+                allowed_values=["LinDA", "DESeq2"],
+                short_description="Differential abundance (DA) method",
+            ),
+            "Samples_column_name": StrParam(
+                short_description="Column name in metadata file containing the sample name"
+            ),
+            "Reference_column": StrParam(
+                short_description="Column name in metadata file containing the reference group"
+            ),
+            "Reference_group": StrParam(short_description="Reference group level for DA"),
+            "Round_digit": BoolParam(
+                default_value=False,
+                human_name="Round Digit",
+                short_description="Remember to click on this button whenever you observe p-adjust values higher than 0.05 in order to ensure accurate and appropriately formatted results.",
+            ),
+            "PCA_component": BoolParam(
+                default_value=False,
+                human_name="PCA Component",
+                short_description="Perform 3D PCA if True, 2D PCA if False.",
+            ),
+        }
+    )
 
     r_file_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        "_ggpicrust2_annotation.R"
+        os.path.abspath(os.path.dirname(__file__)), "_ggpicrust2_annotation.R"
     )
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        """ Run the task """
+        """Run the task"""
         # retrive the input table
-        ko_abundance_file: File = inputs['ko_abundance_file']
-        metadata_file: File = inputs['metadata_file']
+        ko_abundance_file: File = inputs["ko_abundance_file"]
+        metadata_file: File = inputs["metadata_file"]
         DA_method = params["DA_method"]
         Samples_column_name = params["Samples_column_name"]
         Reference_column = params["Reference_column"]
@@ -78,15 +116,16 @@ class Ggpicrust2FunctionalAnalysis(Task):
         PCA_component = params["PCA_component"]
 
         # retrieve the factor param value
-        shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(
-            self.message_dispatcher)
+        shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(self.message_dispatcher)
 
         # call python file
         cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component}"
         result = shell_proxy.run(cmd, shell_mode=True)
 
         if result != 0:
-            raise Exception("An error occured during the execution of the script. No statistically significant biomarkers found. Statistically significant biomarkers refer to those biomarkers that demonstrate a significant difference in expression between different groups, as determined by a statistical test (p_adjust < 0.05 in this case")
+            raise Exception(
+                "An error occured during the execution of the R script. Please check the logs for details."
+            )
 
         # table_file_path = os.path.join(shell_proxy.working_dir, "daa_annotated_sub_method_results_df1.csv")
         # pathway_errorbar = os.path.join(shell_proxy.working_dir, "pathway_errorbar.png")
@@ -102,32 +141,30 @@ class Ggpicrust2FunctionalAnalysis(Task):
                 elif filename.startswith("pathway_heatmap_") and filename.endswith(".png"):
                     resource_set.add_resource(File(file_path), filename)
                 elif filename.startswith("daa_annotated_results_") and filename.endswith(".csv"):
-                    resource_set.add_resource(
-                        TableImporter.call(File(file_path)), filename)
+                    resource_set.add_resource(TableImporter.call(File(file_path)), filename)
 
-        pca_proportion_file_path = os.path.join(
-            shell_proxy.working_dir, "pca_proportion.csv")
+        pca_proportion_file_path = os.path.join(shell_proxy.working_dir, "pca_proportion.csv")
         pca_file_path = os.path.join(shell_proxy.working_dir, "pca_results.csv")
         plolty_resource = self.build_plotly(
-            pca_file_path, pca_proportion_file_path, Reference_column)
+            pca_file_path, pca_proportion_file_path, Reference_column
+        )
 
         # return the output plotly resource and resource set
-        return {
-            'plotly_result': plolty_resource,
-            'resource_set': resource_set
-        }
+        return {"plotly_result": plolty_resource, "resource_set": resource_set}
 
-    def build_plotly(self, pca_file_path, pca_proportion_file_path, Reference_column) -> PlotlyResource:
+    def build_plotly(
+        self, pca_file_path, pca_proportion_file_path, Reference_column
+    ) -> PlotlyResource:
         # ---------------- KNOBS ----------------
         title_line1 = "Principal Component Analysis (PCA)"
         title_line2 = "applied to pathway abundance data"
-        title_text  = f"{title_line1}<br>{title_line2}"
+        title_text = f"{title_line1}<br>{title_line2}"
 
-        title_font_size       = 17   # <- diminue un peu la taille du titre
-        title_bottom_pad_px   = 17   # <- espace entre le titre et le graphe (augmente si besoin)
-        top_margin_px         = 90   # marge supérieure totale pour ne rien couper
+        title_font_size = 17  # <- diminue un peu la taille du titre
+        title_bottom_pad_px = 17  # <- espace entre le titre et le graphe (augmente si besoin)
+        top_margin_px = 90  # marge supérieure totale pour ne rien couper
 
-        marker_size = 10             # taille des points (laisse tel quel ou ajuste)
+        marker_size = 10  # taille des points (laisse tel quel ou ajuste)
         marker_outline_width = 0.5
         # --------------------------------------
 
@@ -141,27 +178,23 @@ class Ggpicrust2FunctionalAnalysis(Task):
         num_components = data.shape[1] - 2
 
         if num_components == 2:
-            fig = px.scatter(
-                data,
-                x=data.columns[0],
-                y=data.columns[1],
-                color=Reference_column
-            )
+            fig = px.scatter(data, x=data.columns[0], y=data.columns[1], color=Reference_column)
         elif num_components == 3:
             fig = px.scatter_3d(
                 data,
                 x=data.columns[0],
                 y=data.columns[1],
                 z=data.columns[2],
-                color=Reference_column
+                color=Reference_column,
             )
             fig.update_layout(
                 scene=dict(
                     xaxis_title=f"PC1 ({proportion_data.iloc[0, 0]:.2f}%)",
                     yaxis_title=f"PC2 ({proportion_data.iloc[1, 0]:.2f}%)",
-                    zaxis_title=f"PC3 ({proportion_data.iloc[2, 0]:.2f}%)"
+                    zaxis_title=f"PC3 ({proportion_data.iloc[2, 0]:.2f}%)",
                 ),
-                width=800, height=600
+                width=800,
+                height=600,
             )
         else:
             raise ValueError("Number of principal components must be 2 or 3")
@@ -170,31 +203,50 @@ class Ggpicrust2FunctionalAnalysis(Task):
         fig.update_layout(
             title=dict(
                 text=title_text,
-                x=0.5, xanchor="center", yanchor="top",
+                x=0.5,
+                xanchor="center",
+                yanchor="top",
                 font=dict(size=title_font_size),
-                pad=dict(t=0, r=0, b=title_bottom_pad_px, l=0)  # espace sous le titre
+                pad=dict(t=0, r=0, b=title_bottom_pad_px, l=0),  # espace sous le titre
             ),
             margin=dict(t=top_margin_px),  # marge supérieure globale
             xaxis_title=f"{data.columns[0]} ({proportion_data.iloc[0, 0]:.2f}%)",
             yaxis_title=f"{data.columns[1]} ({proportion_data.iloc[1, 0]:.2f}%)",
-            xaxis=dict(showline=True, linecolor='black', mirror=True, showticklabels=True),
-            yaxis=dict(showline=True, linecolor='black', mirror=True, showticklabels=True)
+            xaxis=dict(showline=True, linecolor="black", mirror=True, showticklabels=True),
+            yaxis=dict(showline=True, linecolor="black", mirror=True, showticklabels=True),
         )
 
         # — Points plus gros —
-        fig.update_traces(marker=dict(size=marker_size, line=dict(width=marker_outline_width, color="black")))
+        fig.update_traces(
+            marker=dict(size=marker_size, line=dict(width=marker_outline_width, color="black"))
+        )
 
         # Axes en pointillés passant par l’origine
-        fig.add_shape(type="line",
-                    x0=min(data[data.columns[0]]) - 5, x1=max(data[data.columns[0]]) + 5,
-                    y0=0, y1=0, line=dict(dash="dash", color="black", width=0.5))
-        fig.add_shape(type="line",
-                    x0=0, x1=0,
-                    y0=min(data[data.columns[1]]) - 5, y1=max(data[data.columns[1]]) + 5,
-                    line=dict(dash="dash", color="black", width=0.5))
+        fig.add_shape(
+            type="line",
+            x0=min(data[data.columns[0]]) - 5,
+            x1=max(data[data.columns[0]]) + 5,
+            y0=0,
+            y1=0,
+            line=dict(dash="dash", color="black", width=0.5),
+        )
+        fig.add_shape(
+            type="line",
+            x0=0,
+            x1=0,
+            y0=min(data[data.columns[1]]) - 5,
+            y1=max(data[data.columns[1]]) + 5,
+            line=dict(dash="dash", color="black", width=0.5),
+        )
 
         if num_components == 3:
-            fig.add_shape(type="line", x0=0, x1=0, y0=0, y1=0,
-                        line=dict(dash="dash", color="black", width=0.5))
+            fig.add_shape(
+                type="line",
+                x0=0,
+                x1=0,
+                y0=0,
+                y1=0,
+                line=dict(dash="dash", color="black", width=0.5),
+            )
 
         return PlotlyResource(fig)
