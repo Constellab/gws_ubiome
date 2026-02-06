@@ -11,14 +11,14 @@ from gws_core import (
     StringHelper,
     Tag,
 )
-from gws_core.streamlit import (
+from gws_streamlit_main import (
     StreamlitContainers,
     StreamlitResourceSelect,
     StreamlitRouter,
     StreamlitTaskRunner,
 )
 from gws_ubiome import Qiime2MetadataTableMaker
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 def _flatten_folders_recursive(folders, folder_dict, folder_display_names, prefix="-"):

@@ -1,15 +1,15 @@
 import plotly.express as px
 import streamlit as st
 from gws_core import InputTask, Scenario, ScenarioProxy, ScenarioStatus, Tag
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_gaia import PCoATrainer
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 @st.dialog("PCOA parameters")
@@ -62,37 +62,36 @@ def dialog_pcoa_params(ubiome_state: State):
             st.warning(translate_service.translate("select_diversity_table_required"))
             return
 
-        with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_PCOA_DIVERSITY, ubiome_state.get_scenario_user_name(ubiome_state.PCOA_SCENARIO_NAME_INPUT_KEY))
-            feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
-            protocol = scenario.get_protocol()
+        scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_PCOA_DIVERSITY, ubiome_state.get_scenario_user_name(ubiome_state.PCOA_SCENARIO_NAME_INPUT_KEY))
+        feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
+        scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+        scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
+        protocol = scenario.get_protocol()
 
-            # Add PCOA process
-            pcoa_process = protocol.add_process(PCoATrainer, 'pcoa_process',
-                                              config_params=ubiome_state.get_pcoa_config()["config"])
+        # Add PCOA process
+        pcoa_process = protocol.add_process(PCoATrainer, 'pcoa_process',
+                                          config_params=ubiome_state.get_pcoa_config()["config"])
 
-            # Get the selected diversity table as input
-            diversity_table = resource_set_result_dict[selected_table]
+        # Get the selected diversity table as input
+        diversity_table = resource_set_result_dict[selected_table]
 
-            # Create an input task for the selected diversity table
-            diversity_table_resource = protocol.add_process(InputTask, 'diversity_table_resource',
-                                                          {InputTask.config_name: diversity_table.get_model_id()})
+        # Create an input task for the selected diversity table
+        diversity_table_resource = protocol.add_process(InputTask, 'diversity_table_resource',
+                                                      {InputTask.config_name: diversity_table.get_model_id()})
 
-            # Connect to PCOA process
-            protocol.add_connector(out_port=diversity_table_resource >> 'resource',
-                                 in_port=pcoa_process << 'distance_table')
+        # Connect to PCOA process
+        protocol.add_connector(out_port=diversity_table_resource >> 'resource',
+                             in_port=pcoa_process << 'distance_table')
 
-            # Add outputs
-            protocol.add_output('pcoa_result_output', pcoa_process >> 'result', flag_resource=False)
+        # Add outputs
+        protocol.add_output('pcoa_result_output', pcoa_process >> 'result', flag_resource=False)
 
-            # Only add to queue if Run was clicked
-            if run_clicked:
-                scenario.add_to_queue()
-                ubiome_state.reset_tree_analysis()
-                ubiome_state.set_tree_default_item(scenario.get_model_id())
-            st.rerun()
+        # Only add to queue if Run was clicked
+        if run_clicked:
+            scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
+        st.rerun()
 
 
 def render_pcoa_step(selected_scenario: Scenario, ubiome_state: State) -> None:

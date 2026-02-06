@@ -2,7 +2,7 @@
 import pandas as pd
 import streamlit as st
 from gws_core import ResourceModel, Scenario
-from gws_core.streamlit import StreamlitTranslateLang, StreamlitTranslateService
+from gws_streamlit_main import StreamlitTranslateLang, StreamlitTranslateService
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag_entity_type import TagEntityType
 

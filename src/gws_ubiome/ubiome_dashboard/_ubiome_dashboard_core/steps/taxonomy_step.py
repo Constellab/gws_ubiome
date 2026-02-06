@@ -1,14 +1,14 @@
 import streamlit as st
 from gws_core import InputTask, Scenario, ScenarioProxy, ScenarioStatus, Tag
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_ubiome import Qiime2TaxonomyDiversity
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 @st.dialog("Taxonomy parameters")
@@ -36,37 +36,36 @@ def dialog_taxonomy_params(ubiome_state: State):
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
-        with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_TAXONOMY, ubiome_state.get_scenario_user_name(ubiome_state.TAXONOMY_SCENARIO_NAME_INPUT_KEY))
-            feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
-            protocol = scenario.get_protocol()
+        scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_TAXONOMY, ubiome_state.get_scenario_user_name(ubiome_state.TAXONOMY_SCENARIO_NAME_INPUT_KEY))
+        feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
+        scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+        scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
+        protocol = scenario.get_protocol()
 
-            # Add taxonomy process
-            taxonomy_process = protocol.add_process(Qiime2TaxonomyDiversity, 'taxonomy_process',
-                                                  config_params=ubiome_state.get_taxonomy_config()["config"])
+        # Add taxonomy process
+        taxonomy_process = protocol.add_process(Qiime2TaxonomyDiversity, 'taxonomy_process',
+                                              config_params=ubiome_state.get_taxonomy_config()["config"])
 
-            # Retrieve feature inference output and connect
-            scenario_proxy_fi = ScenarioProxy.from_existing_scenario(feature_scenario_id)
-            protocol_proxy_fi = scenario_proxy_fi.get_protocol()
-            feature_output = protocol_proxy_fi.get_process('feature_process').get_output('result_folder')
+        # Retrieve feature inference output and connect
+        scenario_proxy_fi = ScenarioProxy.from_existing_scenario(feature_scenario_id)
+        protocol_proxy_fi = scenario_proxy_fi.get_protocol()
+        feature_output = protocol_proxy_fi.get_process('feature_process').get_output('result_folder')
 
-            feature_resource = protocol.add_process(InputTask, 'feature_resource', {InputTask.config_name: feature_output.get_model_id()})
-            protocol.add_connector(out_port=feature_resource >> 'resource', in_port=taxonomy_process << 'rarefaction_analysis_result_folder')
+        feature_resource = protocol.add_process(InputTask, 'feature_resource', {InputTask.config_name: feature_output.get_model_id()})
+        protocol.add_connector(out_port=feature_resource >> 'resource', in_port=taxonomy_process << 'rarefaction_analysis_result_folder')
 
-            # Add outputs
-            protocol.add_output('taxonomy_diversity_tables_output', taxonomy_process >> 'diversity_tables', flag_resource=False)
-            protocol.add_output('taxonomy_taxonomy_tables_output', taxonomy_process >> 'taxonomy_tables', flag_resource=False)
-            protocol.add_output('taxonomy_folder_output', taxonomy_process >> 'result_folder', flag_resource=False)
+        # Add outputs
+        protocol.add_output('taxonomy_diversity_tables_output', taxonomy_process >> 'diversity_tables', flag_resource=False)
+        protocol.add_output('taxonomy_taxonomy_tables_output', taxonomy_process >> 'taxonomy_tables', flag_resource=False)
+        protocol.add_output('taxonomy_folder_output', taxonomy_process >> 'result_folder', flag_resource=False)
 
-            # Only add to queue if Run was clicked
-            if run_clicked:
-                scenario.add_to_queue()
-                ubiome_state.reset_tree_analysis()
-                ubiome_state.set_tree_default_item(scenario.get_model_id())
+        # Only add to queue if Run was clicked
+        if run_clicked:
+            scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
 
-            st.rerun()
+        st.rerun()
 
 def render_taxonomy_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()

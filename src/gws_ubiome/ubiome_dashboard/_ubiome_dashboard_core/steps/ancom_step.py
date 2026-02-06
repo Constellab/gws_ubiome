@@ -9,15 +9,15 @@ from gws_core import (
     TableImporter,
     Tag,
 )
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_ubiome import Qiime2DifferentialAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 @st.dialog("ANCOM parameters")
@@ -59,48 +59,47 @@ def dialog_ancom_params(ubiome_state: State):
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
-        with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_ANCOM, ubiome_state.get_scenario_user_name(ubiome_state.ANCOM_SCENARIO_NAME_INPUT_KEY))
-            taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
-            feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
-            protocol = scenario.get_protocol()
+        scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_ANCOM, ubiome_state.get_scenario_user_name(ubiome_state.ANCOM_SCENARIO_NAME_INPUT_KEY))
+        taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
+        feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
+        scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+        scenario.add_tag(Tag(ubiome_state.TAG_TAXONOMY_ID, taxonomy_scenario_id, is_propagable=False, auto_parse=True))
+        protocol = scenario.get_protocol()
 
 
-            # Add ANCOM process
-            ancom_process = protocol.add_process(Qiime2DifferentialAnalysis, 'ancom_process',
-                                               config_params=ubiome_state.get_ancom_config()["config"])
+        # Add ANCOM process
+        ancom_process = protocol.add_process(Qiime2DifferentialAnalysis, 'ancom_process',
+                                           config_params=ubiome_state.get_ancom_config()["config"])
 
-            # Get the taxonomy diversity folder
-            scenario_proxy_tax = ScenarioProxy.from_existing_scenario(taxonomy_scenario_id)
-            protocol_proxy_tax = scenario_proxy_tax.get_protocol()
-            taxonomy_folder_output = protocol_proxy_tax.get_process('taxonomy_process').get_output('result_folder')
+        # Get the taxonomy diversity folder
+        scenario_proxy_tax = ScenarioProxy.from_existing_scenario(taxonomy_scenario_id)
+        protocol_proxy_tax = scenario_proxy_tax.get_protocol()
+        taxonomy_folder_output = protocol_proxy_tax.get_process('taxonomy_process').get_output('result_folder')
 
-            # Add input resources
-            taxonomy_folder_resource = protocol.add_process(InputTask, 'taxonomy_folder_resource',
-                                                          {InputTask.config_name: taxonomy_folder_output.get_model_id()})
+        # Add input resources
+        taxonomy_folder_resource = protocol.add_process(InputTask, 'taxonomy_folder_resource',
+                                                      {InputTask.config_name: taxonomy_folder_output.get_model_id()})
 
-            metadata_file_resource = protocol.add_process(InputTask, 'metadata_file_resource',
-                                                        {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
+        metadata_file_resource = protocol.add_process(InputTask, 'metadata_file_resource',
+                                                    {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
 
-            # Connect inputs to ANCOM process
-            protocol.add_connector(out_port=taxonomy_folder_resource >> 'resource',
-                                 in_port=ancom_process << 'taxonomy_diversity_folder')
-            protocol.add_connector(out_port=metadata_file_resource >> 'resource',
-                                 in_port=ancom_process << 'metadata_file')
+        # Connect inputs to ANCOM process
+        protocol.add_connector(out_port=taxonomy_folder_resource >> 'resource',
+                             in_port=ancom_process << 'taxonomy_diversity_folder')
+        protocol.add_connector(out_port=metadata_file_resource >> 'resource',
+                             in_port=ancom_process << 'metadata_file')
 
-            # Add outputs
-            protocol.add_output('ancom_result_tables_output', ancom_process >> 'result_tables', flag_resource=False)
-            protocol.add_output('ancom_result_folder_output', ancom_process >> 'result_folder', flag_resource=False)
+        # Add outputs
+        protocol.add_output('ancom_result_tables_output', ancom_process >> 'result_tables', flag_resource=False)
+        protocol.add_output('ancom_result_folder_output', ancom_process >> 'result_folder', flag_resource=False)
 
-            # Only add to queue if Run was clicked
-            if run_clicked:
-                scenario.add_to_queue()
-                ubiome_state.reset_tree_analysis()
-                ubiome_state.set_tree_default_item(scenario.get_model_id())
+        # Only add to queue if Run was clicked
+        if run_clicked:
+            scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
 
-            st.rerun()
+        st.rerun()
 
 def render_ancom_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()

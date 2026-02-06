@@ -1,14 +1,14 @@
 import streamlit as st
 from gws_core import InputTask, Scenario, ScenarioProxy, ScenarioStatus, Tag, Task
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_ubiome import Qiime2FeatureTableExtractorPE, Qiime2FeatureTableExtractorSE
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 @st.dialog("Feature inference parameters")
@@ -36,35 +36,34 @@ def dialog_feature_inference_params(task_feature_inference: Task, ubiome_state: 
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
-        with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_FEATURE_INFERENCE, ubiome_state.get_scenario_user_name(ubiome_state.FEATURE_SCENARIO_NAME_INPUT_KEY))
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
-            protocol = scenario.get_protocol()
+        scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_FEATURE_INFERENCE, ubiome_state.get_scenario_user_name(ubiome_state.FEATURE_SCENARIO_NAME_INPUT_KEY))
+        scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
+        protocol = scenario.get_protocol()
 
-            # Add feature inference process
-            qiime2_feature_process = protocol.add_process(task_feature_inference, 'feature_process',
-                                                        config_params=ubiome_state.get_feature_inference_config()["config"])
+        # Add feature inference process
+        qiime2_feature_process = protocol.add_process(task_feature_inference, 'feature_process',
+                                                    config_params=ubiome_state.get_feature_inference_config()["config"])
 
-            # Retrieve qc output and connect
-            scenario_qc_id = ubiome_state.get_scenario_step_qc()[0].id
-            scenario_proxy_qc = ScenarioProxy.from_existing_scenario(scenario_qc_id)
-            protocol_proxy_qc = scenario_proxy_qc.get_protocol()
-            qc_output = protocol_proxy_qc.get_process('qc_process').get_output('result_folder')
+        # Retrieve qc output and connect
+        scenario_qc_id = ubiome_state.get_scenario_step_qc()[0].id
+        scenario_proxy_qc = ScenarioProxy.from_existing_scenario(scenario_qc_id)
+        protocol_proxy_qc = scenario_proxy_qc.get_protocol()
+        qc_output = protocol_proxy_qc.get_process('qc_process').get_output('result_folder')
 
-            qc_resource = protocol.add_process(InputTask, 'qc_resource', {InputTask.config_name: qc_output.get_model_id()})
-            protocol.add_connector(out_port=qc_resource >> 'resource', in_port=qiime2_feature_process << 'quality_check_folder')
+        qc_resource = protocol.add_process(InputTask, 'qc_resource', {InputTask.config_name: qc_output.get_model_id()})
+        protocol.add_connector(out_port=qc_resource >> 'resource', in_port=qiime2_feature_process << 'quality_check_folder')
 
-            # Add outputs
-            protocol.add_output('qiime2_feature_process_boxplot_output', qiime2_feature_process >> 'boxplot', flag_resource=False)
-            protocol.add_output('qiime2_feature_process_stats_output', qiime2_feature_process >> 'stats', flag_resource=False)
-            protocol.add_output('qiime2_feature_process_folder_output', qiime2_feature_process >> 'result_folder', flag_resource=False)
+        # Add outputs
+        protocol.add_output('qiime2_feature_process_boxplot_output', qiime2_feature_process >> 'boxplot', flag_resource=False)
+        protocol.add_output('qiime2_feature_process_stats_output', qiime2_feature_process >> 'stats', flag_resource=False)
+        protocol.add_output('qiime2_feature_process_folder_output', qiime2_feature_process >> 'result_folder', flag_resource=False)
 
-            # Only add to queue if Run was clicked
-            if run_clicked:
-                scenario.add_to_queue()
-                ubiome_state.reset_tree_analysis()
-                ubiome_state.set_tree_default_item(scenario.get_model_id())
-            st.rerun()
+        # Only add to queue if Run was clicked
+        if run_clicked:
+            scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
+        st.rerun()
 
 def render_feature_inference_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()

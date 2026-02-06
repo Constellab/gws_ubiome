@@ -1,6 +1,6 @@
 import streamlit as st
-from gws_core.streamlit import StreamlitContainers, StreamlitTranslateLang
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from gws_streamlit_main import StreamlitContainers, StreamlitTranslateLang
+from ..state import State
 
 
 def render_settings_page(ubiome_state : State):

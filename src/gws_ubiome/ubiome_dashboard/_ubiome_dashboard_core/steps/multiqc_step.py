@@ -11,13 +11,13 @@ from gws_core import (
     ShareLinkEntityType,
     ShareLinkService,
 )
-from gws_core.streamlit import StreamlitContainers
+from gws_streamlit_main import StreamlitContainers
 from gws_omix.rna_seq.multiqc.multiqc import MultiQc
 from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> None:

@@ -11,14 +11,14 @@ from gws_core import (
     TableImporter,
     Tag,
 )
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_ubiome import Ggpicrust2FunctionalAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     display_scenario_parameters,
     render_scenario_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 @st.dialog("16S Visualization parameters")
@@ -52,51 +52,50 @@ def dialog_16s_visu_params(ubiome_state: State):
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
-        with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S_VISU, ubiome_state.get_scenario_user_name(ubiome_state.FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY))
-            feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            functional_scenario_id = ubiome_state.get_current_16s_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_16S_ID, functional_scenario_id, is_propagable=False, auto_parse=True))
-            protocol = scenario.get_protocol()
+        scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S_VISU, ubiome_state.get_scenario_user_name(ubiome_state.FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY))
+        feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
+        functional_scenario_id = ubiome_state.get_current_16s_scenario_id_parent()
+        scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+        scenario.add_tag(Tag(ubiome_state.TAG_16S_ID, functional_scenario_id, is_propagable=False, auto_parse=True))
+        protocol = scenario.get_protocol()
 
-            # Add 16S visualization process
-            visu_process = protocol.add_process(Ggpicrust2FunctionalAnalysis, 'functional_visu_process',
-                                              config_params=ubiome_state.get_functional_analysis_visu_config()["config"])
+        # Add 16S visualization process
+        visu_process = protocol.add_process(Ggpicrust2FunctionalAnalysis, 'functional_visu_process',
+                                          config_params=ubiome_state.get_functional_analysis_visu_config()["config"])
 
-            # Get the 16S functional analysis results folder
-            scenario_proxy_16s = ScenarioProxy.from_existing_scenario(functional_scenario_id)
-            protocol_proxy_16s = scenario_proxy_16s.get_protocol()
-            functional_result_folder = protocol_proxy_16s.get_process('functional_analysis_process').get_output('Folder_result')
+        # Get the 16S functional analysis results folder
+        scenario_proxy_16s = ScenarioProxy.from_existing_scenario(functional_scenario_id)
+        protocol_proxy_16s = scenario_proxy_16s.get_protocol()
+        functional_result_folder = protocol_proxy_16s.get_process('functional_analysis_process').get_output('Folder_result')
 
-            # Extract the KO metagenome file from the results folder
-            functional_folder_resource = protocol.add_process(InputTask, 'functional_folder_resource',
-                                                             {InputTask.config_name: functional_result_folder.get_model_id()})
+        # Extract the KO metagenome file from the results folder
+        functional_folder_resource = protocol.add_process(InputTask, 'functional_folder_resource',
+                                                         {InputTask.config_name: functional_result_folder.get_model_id()})
 
-            # Extract the pred_metagenome_unstrat.tsv.gz file from KO_metagenome_out folder
-            ko_file_extractor = protocol.add_process(FsNodeExtractor, 'ko_file_extractor',
-                                                    {"fs_node_path": "KO_metagenome_out/pred_metagenome_unstrat.tsv.gz"})
+        # Extract the pred_metagenome_unstrat.tsv.gz file from KO_metagenome_out folder
+        ko_file_extractor = protocol.add_process(FsNodeExtractor, 'ko_file_extractor',
+                                                {"fs_node_path": "KO_metagenome_out/pred_metagenome_unstrat.tsv.gz"})
 
-            # Add metadata file resource
-            metadata_file_resource = protocol.add_process(InputTask, 'metadata_file_resource',
-                                                        {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
+        # Add metadata file resource
+        metadata_file_resource = protocol.add_process(InputTask, 'metadata_file_resource',
+                                                    {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
 
-            # Connect inputs
-            protocol.add_connector(out_port=functional_folder_resource >> 'resource',
-                                 in_port=ko_file_extractor << 'source')
-            protocol.add_connector(out_port=ko_file_extractor >> 'target',
-                                 in_port=visu_process << 'ko_abundance_file')
-            protocol.add_connector(out_port=metadata_file_resource >> 'resource',
-                                 in_port=visu_process << 'metadata_file')
+        # Connect inputs
+        protocol.add_connector(out_port=functional_folder_resource >> 'resource',
+                             in_port=ko_file_extractor << 'source')
+        protocol.add_connector(out_port=ko_file_extractor >> 'target',
+                             in_port=visu_process << 'ko_abundance_file')
+        protocol.add_connector(out_port=metadata_file_resource >> 'resource',
+                             in_port=visu_process << 'metadata_file')
 
-            # Add outputs
-            protocol.add_output('visu_resource_set_output', visu_process >> 'resource_set', flag_resource=False)
-            protocol.add_output('visu_plotly_output', visu_process >> 'plotly_result', flag_resource=False)
+        # Add outputs
+        protocol.add_output('visu_resource_set_output', visu_process >> 'resource_set', flag_resource=False)
+        protocol.add_output('visu_plotly_output', visu_process >> 'plotly_result', flag_resource=False)
 
-            scenario.add_to_queue()
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
-            st.rerun()
+        scenario.add_to_queue()
+        ubiome_state.reset_tree_analysis()
+        ubiome_state.set_tree_default_item(scenario.get_model_id())
+        st.rerun()
 
 def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()
