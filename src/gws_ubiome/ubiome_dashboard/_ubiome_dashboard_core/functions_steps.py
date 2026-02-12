@@ -19,11 +19,11 @@ from gws_core import (
     SpaceFolder,
     Tag,
 )
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag import TagOrigin
 from gws_core.tag.tag_entity_type import TagEntityType
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from .state import State
 from streamlit_slickgrid import (
     ExportServices,
     FieldType,
@@ -287,14 +287,13 @@ def add_new_column_dialog(ubiome_state: State, header_lines: list[str], protocol
             st.warning(f"'{column_name}' : {translate_service.translate('column_already_exists')}")
             return
 
-        with StreamlitAuthenticateUser():
-            # Add new column with NaN values
-            df_metadata[column_name] = np.nan
+        # Add new column with NaN values
+        df_metadata[column_name] = np.nan
 
-            # Use the helper function to save
-            save_metadata_table(df_metadata, header_lines, ubiome_state, protocol_proxy)
+        # Use the helper function to save
+        save_metadata_table(df_metadata, header_lines, ubiome_state, protocol_proxy)
 
-            st.rerun()
+        st.rerun()
 
 def add_tags_on_metadata(edited_metadata: File, ubiome_state: State) -> None:
     """
@@ -476,18 +475,17 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
-        with StreamlitAuthenticateUser():
-            # Update the process configuration
-            process.set_config_params(updated_config)
+        # Update the process configuration
+        process.set_config_params(updated_config)
 
-            if run_clicked:
-                # If run is clicked, also add to queue
-                scenario_proxy.add_to_queue()
-                ubiome_state.reset_tree_analysis()
-                ubiome_state.set_tree_default_item(scenario.id)
+        if run_clicked:
+            # If run is clicked, also add to queue
+            scenario_proxy.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.id)
 
-            # Clear the edit session state
-            if edit_config_key in st.session_state:
-                del st.session_state[edit_config_key]
+        # Clear the edit session state
+        if edit_config_key in st.session_state:
+            del st.session_state[edit_config_key]
 
-            st.rerun()
+        st.rerun()

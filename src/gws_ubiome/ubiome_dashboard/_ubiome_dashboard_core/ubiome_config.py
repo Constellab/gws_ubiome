@@ -1,6 +1,6 @@
 import streamlit as st
 from gws_core import Scenario
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from .state import State
 
 
 class UbiomeConfig:

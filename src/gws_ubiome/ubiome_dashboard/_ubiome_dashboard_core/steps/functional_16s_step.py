@@ -11,14 +11,14 @@ from gws_core import (
     ScenarioStatus,
     Tag,
 )
-from gws_core.streamlit import StreamlitAuthenticateUser, StreamlitTaskRunner
+from gws_streamlit_main import StreamlitTaskRunner
 from gws_ubiome import Picrust2FunctionalAnalysis
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     display_scenario_parameters,
     render_scenario_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 @st.dialog("16S parameters")
@@ -37,39 +37,38 @@ def dialog_16s_params(ubiome_state: State):
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
 
-        with StreamlitAuthenticateUser():
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S, ubiome_state.get_scenario_user_name(ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY))
-            feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-            scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
-            scenario.add_tag(Tag(ubiome_state.TAG_16S_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
-            protocol = scenario.get_protocol()
+        scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_16S, ubiome_state.get_scenario_user_name(ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY))
+        feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
+        scenario.add_tag(Tag(ubiome_state.TAG_FEATURE_INFERENCE_ID, feature_scenario_id, is_propagable=False, auto_parse=True))
+        scenario.add_tag(Tag(ubiome_state.TAG_16S_ID, scenario.get_model_id(), is_propagable=False, auto_parse=True))
+        protocol = scenario.get_protocol()
 
-            # Retrieve feature inference outputs and extract table.qza and asv
-            scenario_proxy_fi = ScenarioProxy.from_existing_scenario(feature_scenario_id)
-            protocol_proxy_fi = scenario_proxy_fi.get_protocol()
-            feature_output = protocol_proxy_fi.get_process('feature_process').get_output('result_folder')
+        # Retrieve feature inference outputs and extract table.qza and asv
+        scenario_proxy_fi = ScenarioProxy.from_existing_scenario(feature_scenario_id)
+        protocol_proxy_fi = scenario_proxy_fi.get_protocol()
+        feature_output = protocol_proxy_fi.get_process('feature_process').get_output('result_folder')
 
-            # Get the table.qza and ASV-sequences.fasta from feature inference output
-            feature_resource = protocol.add_process(InputTask, 'feature_resource', {InputTask.config_name: feature_output.get_model_id()})
-            fs_node_extractor_table = protocol.add_process(FsNodeExtractor, 'fs_node_extractor_table', {"fs_node_path": "table.qza"})
-            fs_node_extractor_asv = protocol.add_process(FsNodeExtractor, 'fs_node_extractor_asv', {"fs_node_path": "ASV-sequences.fasta"})
-            # Add connectors
-            protocol.add_connector(out_port=feature_resource >> 'resource', in_port=fs_node_extractor_table << "source")
-            protocol.add_connector(out_port=feature_resource >> 'resource', in_port=fs_node_extractor_asv << "source")
-            # Add 16S functional analysis process
-            functional_analysis_process = protocol.add_process(Picrust2FunctionalAnalysis, 'functional_analysis_process',
-                                                             config_params=ubiome_state.get_functional_analysis_config()["config"])
+        # Get the table.qza and ASV-sequences.fasta from feature inference output
+        feature_resource = protocol.add_process(InputTask, 'feature_resource', {InputTask.config_name: feature_output.get_model_id()})
+        fs_node_extractor_table = protocol.add_process(FsNodeExtractor, 'fs_node_extractor_table', {"fs_node_path": "table.qza"})
+        fs_node_extractor_asv = protocol.add_process(FsNodeExtractor, 'fs_node_extractor_asv', {"fs_node_path": "ASV-sequences.fasta"})
+        # Add connectors
+        protocol.add_connector(out_port=feature_resource >> 'resource', in_port=fs_node_extractor_table << "source")
+        protocol.add_connector(out_port=feature_resource >> 'resource', in_port=fs_node_extractor_asv << "source")
+        # Add 16S functional analysis process
+        functional_analysis_process = protocol.add_process(Picrust2FunctionalAnalysis, 'functional_analysis_process',
+                                                         config_params=ubiome_state.get_functional_analysis_config()["config"])
 
-            # The task expects table.qza for ASV_count_abundance and ASV-sequences.fasta for FASTA_of_asv
-            protocol.add_connector(out_port=fs_node_extractor_table >> "target", in_port=functional_analysis_process << 'ASV_count_abundance')
-            protocol.add_connector(out_port=fs_node_extractor_asv >> "target", in_port=functional_analysis_process << 'FASTA_of_asv')
+        # The task expects table.qza for ASV_count_abundance and ASV-sequences.fasta for FASTA_of_asv
+        protocol.add_connector(out_port=fs_node_extractor_table >> "target", in_port=functional_analysis_process << 'ASV_count_abundance')
+        protocol.add_connector(out_port=fs_node_extractor_asv >> "target", in_port=functional_analysis_process << 'FASTA_of_asv')
 
-            # Add outputs
-            protocol.add_output('functional_analysis_result_output', functional_analysis_process >> 'Folder_result', flag_resource=False)
+        # Add outputs
+        protocol.add_output('functional_analysis_result_output', functional_analysis_process >> 'Folder_result', flag_resource=False)
 
-            ubiome_state.reset_tree_analysis()
-            ubiome_state.set_tree_default_item(scenario.get_model_id())
-            st.rerun()
+        ubiome_state.reset_tree_analysis()
+        ubiome_state.set_tree_default_item(scenario.get_model_id())
+        st.rerun()
 
 def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     translate_service = ubiome_state.get_translate_service()

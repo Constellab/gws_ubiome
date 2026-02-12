@@ -1,14 +1,14 @@
 
 import streamlit as st
 from gws_core import Scenario, ScenarioSearchBuilder, Tag
-from gws_core.streamlit import StreamlitContainers, StreamlitRouter
+from gws_streamlit_main import StreamlitContainers, StreamlitRouter
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag_entity_type import TagEntityType
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     build_scenarios_by_step_dict,
     get_status_emoji,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 from streamlit_slickgrid import (
     ExportServices,
     FieldType,

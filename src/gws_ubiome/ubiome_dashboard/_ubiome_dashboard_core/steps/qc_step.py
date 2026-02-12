@@ -9,11 +9,11 @@ from gws_core import (
     ScenarioStatus,
 )
 from gws_ubiome import Qiime2QualityCheck
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     create_base_scenario_with_tags,
     search_updated_metadata_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:

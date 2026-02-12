@@ -1,6 +1,6 @@
 import streamlit as st
 from gws_core import File, Folder, ProtocolProxy, Scenario, ScenarioProxy, ScenarioStatus, Settings
-from gws_core.streamlit import (
+from gws_streamlit_main import (
     StreamlitContainers,
     StreamlitRouter,
     StreamlitTreeMenu,
@@ -8,43 +8,43 @@ from gws_core.streamlit import (
 )
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag_entity_type import TagEntityType
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+from ..functions_steps import (
     build_scenarios_by_step_dict,
     get_status_emoji,
     get_status_prettify,
     search_updated_metadata_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.ancom_step import render_ancom_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.db_annotator_step import (
+from ..state import State
+from ..steps.ancom_step import render_ancom_step
+from ..steps.db_annotator_step import (
     render_db_annotator_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.feature_inference_step import (
+from ..steps.feature_inference_step import (
     render_feature_inference_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.functional_16s_step import (
+from ..steps.functional_16s_step import (
     render_16s_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.functional_16s_visu_step import (
+from ..steps.functional_16s_visu_step import (
     render_16s_visu_step,
 )
 
 # Steps functions
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.metadata_step import (
+from ..steps.metadata_step import (
     render_metadata_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.multiqc_step import (
+from ..steps.multiqc_step import (
     render_multiqc_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.pcoa_step import render_pcoa_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.qc_step import render_qc_step
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.rarefaction_step import (
+from ..steps.pcoa_step import render_pcoa_step
+from ..steps.qc_step import render_qc_step
+from ..steps.rarefaction_step import (
     render_rarefaction_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.steps.taxonomy_step import (
+from ..steps.taxonomy_step import (
     render_taxonomy_step,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.ubiome_config import UbiomeConfig
+from ..ubiome_config import UbiomeConfig
 
 
 # Check if steps are completed (have successful scenarios)

@@ -1,13 +1,13 @@
 import pandas as pd
 import streamlit as st
 from gws_core import File, ProtocolProxy, Scenario, ScenarioProxy, TableImporter
-from gws_core.streamlit import StreamlitAuthenticateUser
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.functions_steps import (
+
+from ..functions_steps import (
     add_new_column_dialog,
     save_metadata_table,
     search_updated_metadata_table,
 )
-from gws_ubiome.ubiome_dashboard._ubiome_dashboard_core.state import State
+from ..state import State
 
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -104,10 +104,9 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
 
             with cols[0]:
                 if st.button(translate_service.translate("save"), disabled=save_disabled, width="content"):
-                    with StreamlitAuthenticateUser():
-                        # Use the helper function to save
-                        save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state, protocol_proxy)
-                        st.rerun()
+                    # Use the helper function to save
+                    save_metadata_table(ubiome_state.get_edited_df_metadata(), header_lines, ubiome_state, protocol_proxy)
+                    st.rerun()
 
             with cols[1]:
                 # Add a button to download the table
@@ -152,7 +151,6 @@ def upload_metadata_table(ubiome_state : State, protocol_proxy : ProtocolProxy) 
             else:
                 break
 
-        with StreamlitAuthenticateUser():
-            # Use the helper function to save
-            save_metadata_table(df_uploaded, header_lines, ubiome_state, protocol_proxy)
-            st.rerun()
+        # Use the helper function to save
+        save_metadata_table(df_uploaded, header_lines, ubiome_state, protocol_proxy)
+        st.rerun()
