@@ -262,6 +262,19 @@ slice_size  <- 29
 metadata <- read_delim(metadata_file, delim = "\t", escape_double = FALSE,
                        trim_ws = TRUE, comment = "#")
 
+# ---- FIX: fail-fast metadata column checks ----
+message("[DEBUG] metadata columns: ", paste(colnames(metadata), collapse = " | "))
+message("[DEBUG] Samples_column_name: ", Samples_column_name)
+message("[DEBUG] Reference_column: ", Reference_column)
+if (!Samples_column_name %in% colnames(metadata)) {
+  stop("Samples_column_name='", Samples_column_name, "' not found in metadata. Available: ",
+       paste(colnames(metadata), collapse = ", "))
+}
+if (!Reference_column %in% colnames(metadata)) {
+  stop("Reference_column='", Reference_column, "' not found in metadata. Available: ",
+       paste(colnames(metadata), collapse = ", "))
+}
+
 if (tools::file_ext(ko_abundance_file) == "gz") {
   decompressed <- sub(".gz$", "", ko_abundance_file)
   if (!file.exists(decompressed)) R.utils::gunzip(ko_abundance_file, remove = FALSE)
@@ -269,8 +282,12 @@ if (tools::file_ext(ko_abundance_file) == "gz") {
   # On force donc ".tsv" dans ce cas (cas des fichiers type "filestore_0.gz").
   if (tools::file_ext(decompressed) == "") {
     new_name <- paste0(decompressed, ".tsv")
-    file.rename(decompressed, new_name)
-    decompressed <- new_name
+    # ---- FIX: safer rename ----
+    if (file.exists(decompressed) && !file.exists(new_name)) {
+      ok <- file.rename(decompressed, new_name)
+      if (!ok) warning("cannot rename file '", decompressed, "' to '", new_name, "'. Proceeding with original.")
+      if (ok) decompressed <- new_name
+    }
   }
   ko_abundance_file <- decompressed
 }
@@ -291,6 +308,7 @@ kegg_abundance <- kegg_abundance[keep, , drop = FALSE]
 ## Align sample order
 ## ------------------------------
 common <- intersect(colnames(kegg_abundance), metadata[[Samples_column_name]])
+message("[DEBUG] common samples: ", length(common))
 if (length(common) < 3)
   stop("Fewer than 3 common samples between abundance matrix and metadata.")
 
@@ -323,6 +341,9 @@ validate_group_factors <- function(Group, context = "analysis") {
 metadata[[Reference_column]] <- validate_group_factors(
   metadata[[Reference_column]], context = "global DA"
 )
+
+# ---- FIX: normalize Reference_group too ----
+Reference_group <- trimws(as.character(Reference_group))
 
 # Detect ID type
 row_ids <- rownames(kegg_abundance)
@@ -681,10 +702,10 @@ if (num_groups >= 3 && nchar(trimws(Reference_group)) > 0 && Reference_group %in
   # DESeq2 and ALDEx2 use reference for case-control, need manual looping
   if (DA_method %in% c("DESeq2", "ALDEx2")) {
     use_manual_case_control <- TRUE
-    message("[INFO] ", DA_method, " with ", num_groups, " groups: performing case-control comparisons (", 
+    message("[INFO] ", DA_method, " with ", num_groups, " groups: performing case-control comparisons (",
             Reference_group, " vs each other group)")
   } else {
-    message("[INFO] ", DA_method, " with ", num_groups, " groups: using reference group '", 
+    message("[INFO] ", DA_method, " with ", num_groups, " groups: using reference group '",
             Reference_group, "' (method may ignore it for pairwise)")
   }
 } else if (num_groups >= 3) {
@@ -699,15 +720,15 @@ if (use_manual_case_control) {
   # Used for DESeq2/ALDEx2 to ensure proper case-control comparisons
   other_groups <- setdiff(all_groups, Reference_group)
   daa_list <- list()
-  
+
   for (target_group in other_groups) {
     message("[INFO] Running ", DA_method, " for: ", Reference_group, " vs ", target_group)
-    
+
     # Subset metadata to only these two groups
     sub_meta <- metadata %>% dplyr::filter(.data[[Reference_column]] %in% c(Reference_group, target_group))
     sub_samples <- sub_meta[[Samples_column_name]]
     sub_abundance <- kegg_abundance[, sub_samples, drop = FALSE]
-    
+
     # Run DA for this pair
     pair_result <- pathway_daa(
       abundance  = sub_abundance,
@@ -716,10 +737,10 @@ if (use_manual_case_control) {
       daa_method = DA_method,
       reference  = Reference_group
     )
-    
+
     daa_list[[length(daa_list) + 1]] <- pair_result
   }
-  
+
   # Combine all results
   daa_results_df <- dplyr::bind_rows(daa_list)
 } else {
@@ -729,7 +750,7 @@ if (use_manual_case_control) {
   } else {
     NULL
   }
-  
+
   daa_results_df <- pathway_daa(
     abundance  = kegg_abundance,
     metadata   = metadata,
@@ -741,7 +762,26 @@ if (use_manual_case_control) {
 
 # Diagnostics
 stopifnot(all(c("group1","group2","feature","p_adjust") %in% colnames(daa_results_df)))
-contrasts_df <- daa_results_df %>% dplyr::select(group1, group2) %>% distinct()
+
+# ---- FIX: normalize and drop self-contrasts robustly ----
+daa_results_df$group1 <- trimws(as.character(daa_results_df$group1))
+daa_results_df$group2 <- trimws(as.character(daa_results_df$group2))
+daa_results_df <- daa_results_df %>% dplyr::filter(!is.na(group1), !is.na(group2), group1 != "", group2 != "", group1 != group2)
+
+# ---- FIX: FORCE contrasts = Reference_group vs ALL other groups present in *metadata after intersect* ----
+all_groups_clean <- trimws(as.character(metadata[[Reference_column]]))
+all_groups_clean <- unique(all_groups_clean[!is.na(all_groups_clean) & all_groups_clean != ""])
+ref <- trimws(as.character(Reference_group))
+
+if (nchar(ref) > 0 && ref %in% all_groups_clean) {
+  contrasts_df <- tibble::tibble(group1 = ref, group2 = setdiff(all_groups_clean, ref)) %>%
+    dplyr::filter(group1 != group2)
+  message("[INFO] Forced contrasts: ", paste0(contrasts_df$group1, " vs ", contrasts_df$group2, collapse = " | "))
+} else {
+  message("[WARNING] Reference_group invalid or empty; using contrasts returned by pathway_daa().")
+  contrasts_df <- daa_results_df %>% dplyr::select(group1, group2) %>% distinct() %>% dplyr::filter(group1 != group2)
+}
+
 write.csv(contrasts_df, "diagnostic_contrasts_found.csv", row.names = FALSE)
 cat("Contrasts found:\n"); print(contrasts_df)
 
@@ -764,12 +804,12 @@ for (i in seq_len(nrow(contrasts_df))) {
   sig <- NULL
   used_threshold <- padj_cutoff
   threshold_message <- ""
-  
+
   for (thresh in thresholds_to_try) {
     sig <- daa_results_df %>%
       dplyr::filter(group1 == gA, group2 == gB, p_adjust <= thresh) %>%
       dplyr::arrange(p_adjust)
-    
+
     if (nrow(sig) > 0) {
       used_threshold <- thresh
       if (thresh > padj_cutoff) {
@@ -812,13 +852,13 @@ for (i in seq_len(nrow(contrasts_df))) {
     full_annot$p_adjust <- sprintf("%.0e", full_annot$p_adjust)
     full_annot$p_adjust <- as.numeric(full_annot$p_adjust)
   }
-  
+
   # Add threshold information at the top of the CSV
   if (nchar(threshold_message) > 0) {
     header_row <- data.frame(
       feature = threshold_message,
-      method = NA_character_, group1 = NA_character_, group2 = NA_character_, 
-      p_values = NA_real_, p_adjust = NA_real_, 
+      method = NA_character_, group1 = NA_character_, group2 = NA_character_,
+      p_values = NA_real_, p_adjust = NA_real_,
       pathway_name = NA_character_, pathway_class = NA_character_,
       stringsAsFactors = FALSE
     )
@@ -828,7 +868,7 @@ for (i in seq_len(nrow(contrasts_df))) {
     }
     full_annot <- dplyr::bind_rows(header_row[names(full_annot)], full_annot)
   }
-  
+
   write.csv(full_annot,
             file = sprintf("daa_annotated_results_%s_vs_%s.csv", gA, gB),
             row.names = FALSE)
@@ -874,6 +914,15 @@ for (i in seq_len(nrow(contrasts_df))) {
     # De-dup per slice
     slice_df <- slice_df %>% dplyr::mutate(feature = as.character(feature)) %>%
       dplyr::distinct(feature, .keep_all = TRUE)
+
+    # Consider only rows matching this contrast (defensive)
+    slice_df$group1 <- trimws(as.character(slice_df$group1))
+    slice_df$group2 <- trimws(as.character(slice_df$group2))
+    slice_df <- slice_df %>% dplyr::filter(group1 == gA, group2 == gB)
+    if (nrow(slice_df) == 0) {
+      message("[INFO] No rows for this contrast after filtering: ", gA, " vs ", gB, " (skipping plots).")
+      next
+    }
 
     # Colors (no legend anyway)
     group_levels <- levels(factor(sub_metadata[[Reference_column]]))

@@ -1,4 +1,5 @@
 import os
+import shlex  # FIX: robust quoting
 
 import pandas as pd
 import plotly.express as px
@@ -118,8 +119,40 @@ class Ggpicrust2FunctionalAnalysis(Task):
         # retrieve the factor param value
         shell_proxy: ShellProxy = Ggpicrust2vShellProxyHelper.create_proxy(self.message_dispatcher)
 
+        # ---- FIX: clean stale outputs from previous runs in the same working_dir ----
+        prefixes = (
+            "pathway_errorbar_",
+            "pathway_heatmap_",
+            "daa_annotated_results_",
+            "diagnostic_",
+            "pca_results",
+            "pca_proportion",
+        )
+        for fn in os.listdir(shell_proxy.working_dir):
+            fp = os.path.join(shell_proxy.working_dir, fn)
+            if os.path.isfile(fp) and (fn.startswith(prefixes) or fn in ("pca_results.csv", "pca_proportion.csv")):
+                try:
+                    os.remove(fp)
+                except Exception:
+                    pass
+
         # call python file
-        cmd = f"Rscript --vanilla {self.r_file_path} {ko_abundance_file.path} {metadata_file.path} {DA_method} {Samples_column_name} {Reference_column} {Reference_group} {Round_digit} {PCA_component}"
+        # FIX: quote every argument to avoid spaces / special chars breaking argv order
+        cmd_parts = [
+            "Rscript",
+            "--vanilla",
+            self.r_file_path,
+            ko_abundance_file.path,
+            metadata_file.path,
+            DA_method,
+            Samples_column_name,
+            Reference_column,
+            Reference_group,
+            str(Round_digit),
+            str(PCA_component),
+        ]
+        cmd = " ".join(shlex.quote(x) for x in cmd_parts)
+
         result = shell_proxy.run(cmd, shell_mode=True)
 
         if result != 0:
@@ -127,18 +160,21 @@ class Ggpicrust2FunctionalAnalysis(Task):
                 "An error occured during the execution of the R script. Please check the logs for details."
             )
 
-        # table_file_path = os.path.join(shell_proxy.working_dir, "daa_annotated_sub_method_results_df1.csv")
-        # pathway_errorbar = os.path.join(shell_proxy.working_dir, "pathway_errorbar.png")
-        # pathway_heatmap = os.path.join(shell_proxy.working_dir, "pathway_heatmap.png")
-
         # Loop through the working directory and add files to the resource set
         resource_set = ResourceSet()
         for filename in os.listdir(shell_proxy.working_dir):
             file_path = os.path.join(shell_proxy.working_dir, filename)
             if os.path.isfile(file_path):
-                if filename.startswith("pathway_errorbar_") and filename.endswith(".png") or filename.startswith("pathway_heatmap_") and filename.endswith(".png"):
+                # FIX: add parentheses so OR logic does what you intended
+                if (
+                    (filename.startswith("pathway_errorbar_") and filename.endswith(".png"))
+                    or (filename.startswith("pathway_heatmap_") and filename.endswith(".png"))
+                ):
                     resource_set.add_resource(File(file_path), filename)
                 elif filename.startswith("daa_annotated_results_") and filename.endswith(".csv"):
+                    resource_set.add_resource(TableImporter.call(File(file_path)), filename)
+                elif filename.startswith("diagnostic_") and filename.endswith(".csv"):
+                    # useful: includes contrasts + counts
                     resource_set.add_resource(TableImporter.call(File(file_path)), filename)
 
         pca_proportion_file_path = os.path.join(shell_proxy.working_dir, "pca_proportion.csv")
@@ -165,7 +201,6 @@ class Ggpicrust2FunctionalAnalysis(Task):
         marker_size = 10  # taille des points (laisse tel quel ou ajuste)
         marker_outline_width = 0.5
         # --------------------------------------
-
 
         data = pd.read_csv(pca_file_path)
         proportion_data = pd.read_csv(pca_proportion_file_path)
