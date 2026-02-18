@@ -10,6 +10,7 @@ from ..functions_steps import (
     render_scenario_table,
 )
 from ..state import State
+from ..ubiome_config import UbiomeConfig
 
 
 @st.dialog("DB annotator parameters")
@@ -28,11 +29,17 @@ def dialog_db_annotator_params(ubiome_state: State):
     resource_select = StreamlitResourceSelect()
     # Filter to show only File resources with tsv extension
     resource_select.filters["resourceTypingNames"] = ["RESOURCE.gws_core.File"]
-    resource_select.select_resource(
+    # Get default annotation table from config (overridable by specific dashboards)
+    ubiome_config = UbiomeConfig.get_instance()
+    default_annotation_table = ubiome_config.get_default_annotation_table_resource(resource_select)
+    annotation_table_selected = resource_select.select_resource(
         placeholder=translate_service.translate("select_annotation_table_placeholder"),
         key=ubiome_state.SELECTED_ANNOTATION_TABLE_KEY,
-        default_resource=None,
+        default_resource=default_annotation_table,
     )
+    # Use first_resource as fallback if no selection is made
+    if annotation_table_selected is None and default_annotation_table is not None:
+        annotation_table_selected = default_annotation_table
 
     # Add both Save and Run buttons
     col1, col2 = st.columns(2)
@@ -54,10 +61,10 @@ def dialog_db_annotator_params(ubiome_state: State):
         )
 
     if save_clicked or run_clicked:
-        selected_annotation_table_id = ubiome_state.get_selected_annotation_table()["resourceId"]
-        if not selected_annotation_table_id:
+        if not annotation_table_selected:
             st.warning(translate_service.translate("select_annotation_table_required"))
             return
+        selected_annotation_table_id = annotation_table_selected.get_resource().get_model_id()
 
         scenario = create_base_scenario_with_tags(
             ubiome_state,
