@@ -20,3 +20,9 @@ class UbiomeConfig:
 
     def render_ratio_step(self, selected_scenario: Scenario, ubiome_state: State) -> None:
         pass
+
+    def get_default_annotation_table_resource(self, resource_select: "StreamlitResourceSelect"):
+        """Return the default annotation table resource for preselection.
+        Override in subclasses to provide a default resource and configure resource_select filters.
+        """
+        return None
