@@ -112,6 +112,63 @@ class Qiime2TaxonomyDiversity(Task):
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     })
 
+    def _verify_diversity_files_generated(self, working_dir: str) -> None:
+        """
+        Verify that critical diversity files were generated after the diversity indexes step.
+        If files are missing, raise an exception indicating insufficient RAM.
+
+        :param working_dir: The working directory where files should be located
+        :raises Exception: If critical files are missing
+        """
+        # List of critical files that should exist in core-metrics-results after the diversity step
+        critical_files = [
+            "shannon_vector.qza",
+            "evenness_vector.qza",
+            "faith_pd_vector.qza",
+            "observed_features_vector.qza",
+            "bray_curtis_distance_matrix.qza",
+            "jaccard_distance_matrix.qza",
+            "weighted_unifrac_distance_matrix.qza",
+            "unweighted_unifrac_distance_matrix.qza"
+        ]
+
+        core_metrics_dir = os.path.join(working_dir, "core-metrics-results")
+
+        # Check if core-metrics-results directory exists
+        if not os.path.exists(core_metrics_dir):
+            self.log_error_message(
+                "The core-metrics-results directory was not created. "
+                "This usually indicates insufficient RAM memory for the diversity calculations."
+            )
+            raise Exception(
+                "Diversity calculation failed: core-metrics-results directory not found. "
+                "This is likely due to insufficient RAM memory. "
+                "Please increase the RAM capacity and try again."
+            )
+
+        # Check for missing critical files
+        missing_files = []
+        for file_name in critical_files:
+            file_path = os.path.join(core_metrics_dir, file_name)
+            if not os.path.exists(file_path):
+                missing_files.append(file_name)
+
+        if missing_files:
+            self.log_error_message(
+                f"Critical diversity files were not generated: {', '.join(missing_files)}. "
+                "This usually indicates insufficient RAM memory for the diversity calculations."
+            )
+            raise Exception(
+                f"Diversity calculation failed: {len(missing_files)} critical file(s) missing. "
+                "This is likely due to insufficient RAM memory. "
+                "Please increase the RAM capacity and try again. "
+                f"Missing files: {', '.join(missing_files[:3])}{'...' if len(missing_files) > 3 else ''}"
+            )
+
+        self.log_info_message(
+            f"All {len(critical_files)} critical diversity files were successfully generated."
+        )
+
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
         qiime2_folder: Folder = inputs["rarefaction_analysis_result_folder"]
         plateau_val = params["rarefaction_plateau_value"]
@@ -160,7 +217,11 @@ class Qiime2TaxonomyDiversity(Task):
         res = shell_proxy.run(cmd_1)
         if res != 0:
             raise Exception(
-                "Core diversity indexes geenration did not finished")
+                "Core diversity indexes generation did not finished.")
+
+        # Verify that critical intermediate files were generated
+        self._verify_diversity_files_generated(shell_proxy.working_dir)
+
         self.update_progress_value(16, "Done")
 
         # This script perform Qiime2 taxonomix assignment using pre-trained taxonomic DB
