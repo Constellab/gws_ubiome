@@ -1,15 +1,13 @@
-
 import pandas as pd
 import streamlit as st
 from gws_core import ResourceModel, Scenario
-from gws_streamlit_main import StreamlitTranslateLang, StreamlitTranslateService
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag_entity_type import TagEntityType
+from gws_streamlit_main import StreamlitTranslateLang, StreamlitTranslateService
 
 
 class State:
-    """Class to manage the state of the app.
-    """
+    """Class to manage the state of the app."""
 
     TAG_BRICK = "brick"
     TAG_UBIOME = "ubiome"
@@ -49,7 +47,9 @@ class State:
     DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY = "db_annotator_scenario_name_input"
     RATIO_SCENARIO_NAME_INPUT_KEY = "ratio_scenario_name_input"
     FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY = "functional_analysis_scenario_name_input"
-    FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY = "functional_analysis_visu_scenario_name_input"
+    FUNCTIONAL_ANALYSIS_VISU_SCENARIO_NAME_INPUT_KEY = (
+        "functional_analysis_visu_scenario_name_input"
+    )
 
     SELECTED_SCENARIO_KEY = "selected_scenario"
     SELECTED_ANALYSIS_KEY = "selected_analysis"
@@ -118,7 +118,7 @@ class State:
         return st.session_state.get(cls.TRANSLATE_SERVICE, None)
 
     @classmethod
-    def set_translate_service(cls, value : StreamlitTranslateService) -> None:
+    def set_translate_service(cls, value: StreamlitTranslateService) -> None:
         st.session_state[cls.TRANSLATE_SERVICE] = value
 
     @classmethod
@@ -128,6 +128,7 @@ class State:
     @classmethod
     def set_has_ratio_step(cls, value: bool) -> None:
         st.session_state[cls.HAS_RATIO_STEP_KEY] = value
+
     @classmethod
     def get_is_standalone(cls) -> bool:
         return st.session_state.get(cls.STANDALONE_KEY, False)
@@ -165,11 +166,11 @@ class State:
         return True
 
     @classmethod
-    def get_edited_df_metadata(cls)-> str:
+    def get_edited_df_metadata(cls) -> str:
         return st.session_state.get(cls.EDITED_DF_METADATA, None)
 
     @classmethod
-    def set_edited_df_metadata(cls, df_metadata : pd.DataFrame) -> None:
+    def set_edited_df_metadata(cls, df_metadata: pd.DataFrame) -> None:
         st.session_state[cls.EDITED_DF_METADATA] = df_metadata
 
     @classmethod
@@ -217,7 +218,7 @@ class State:
 
     @classmethod
     def get_current_tag_value_by_key(cls, key: str) -> str:
-        metadata_scenario : Scenario = cls.get_selected_analysis()
+        metadata_scenario: Scenario = cls.get_selected_analysis()
         entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, metadata_scenario.id)
         tag = entity_tag_list.get_tags_by_key(key)[0].to_simple_tag()
         return tag.value
@@ -449,7 +450,7 @@ class State:
         return None
 
     @classmethod
-    def get_parent_feature_inference_scenario_from_step(cls) -> 'Scenario':
+    def get_parent_feature_inference_scenario_from_step(cls) -> "Scenario":
         """Get the parent feature inference scenario from the current step pipeline."""
         scenario_id = cls.get_parent_feature_inference_scenario_id_from_step()
         if scenario_id:
@@ -466,7 +467,7 @@ class State:
         return None
 
     @classmethod
-    def get_parent_taxa_composition_scenario_from_step(cls) -> 'Scenario':
+    def get_parent_taxa_composition_scenario_from_step(cls) -> "Scenario":
         """Get the parent taxa composition scenario from the current step pipeline."""
         scenario_id = cls.get_parent_taxa_composition_scenario_id_from_step()
         if scenario_id:
@@ -487,7 +488,7 @@ class State:
         return None
 
     @classmethod
-    def get_parent_taxonomy_scenario_from_step(cls) -> 'Scenario':
+    def get_parent_taxonomy_scenario_from_step(cls) -> "Scenario":
         """Get the parent taxonomy scenario from the current step pipeline."""
         scenario_id = cls.get_parent_taxonomy_scenario_id_from_step()
         if scenario_id:
@@ -499,23 +500,35 @@ class State:
         """Get the feature inference ID from a taxonomy scenario ID."""
         taxonomy_scenario = Scenario.get_by_id(taxonomy_scenario_id)
         entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, taxonomy_scenario.id)
-        feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
+        feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[
+            0
+        ].to_simple_tag()
         return feature_inference_id_tag.value
 
     @classmethod
-    def get_taxonomy_scenario_id_from_db_annotator_scenario(cls, db_annotator_scenario_id: str) -> str:
+    def get_taxonomy_scenario_id_from_db_annotator_scenario(
+        cls, db_annotator_scenario_id: str
+    ) -> str:
         """Get the taxonomy scenario ID from a ratio scenario ID."""
         db_annotator_scenario = Scenario.get_by_id(db_annotator_scenario_id)
-        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, db_annotator_scenario.id)
-        taxonomy_scenario_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_TAXONOMY_ID)[0].to_simple_tag()
+        entity_tag_list = EntityTagList.find_by_entity(
+            TagEntityType.SCENARIO, db_annotator_scenario.id
+        )
+        taxonomy_scenario_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_TAXONOMY_ID)[
+            0
+        ].to_simple_tag()
         return taxonomy_scenario_id_tag.value
 
     @classmethod
     def get_feature_inference_id_from_16s_scenario(cls, functional_16s_scenario_id: str) -> str:
         """Get the feature inference ID from a 16S scenario ID."""
         functional_16s_scenario = Scenario.get_by_id(functional_16s_scenario_id)
-        entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, functional_16s_scenario.id)
-        feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[0].to_simple_tag()
+        entity_tag_list = EntityTagList.find_by_entity(
+            TagEntityType.SCENARIO, functional_16s_scenario.id
+        )
+        feature_inference_id_tag = entity_tag_list.get_tags_by_key(cls.TAG_FEATURE_INFERENCE_ID)[
+            0
+        ].to_simple_tag()
         return feature_inference_id_tag.value
 
     @classmethod
@@ -527,7 +540,7 @@ class State:
         return None
 
     @classmethod
-    def get_parent_16s_scenario_from_step(cls) -> 'Scenario':
+    def get_parent_16s_scenario_from_step(cls) -> "Scenario":
         """Get the parent 16S scenario from the current step pipeline."""
         scenario_id = cls.get_parent_16s_scenario_id_from_step()
         if scenario_id:
