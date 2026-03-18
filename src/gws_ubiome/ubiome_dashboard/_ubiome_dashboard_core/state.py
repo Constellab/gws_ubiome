@@ -1,3 +1,7 @@
+import json
+import os
+import tempfile
+
 import pandas as pd
 import streamlit as st
 from gws_core import ResourceModel, Scenario
@@ -93,9 +97,35 @@ class State:
 
     HAS_RATIO_STEP_KEY = "has_ratio_step"
 
-    def __init__(cls, file_lang: str):
+    def __init__(cls, file_lang: str, lang_specific_folder_path: str | None = None):
+        if lang_specific_folder_path:
+            temp_dir = tempfile.mkdtemp(prefix="translations_")
+            for lang in ["en", "fr"]:
+                cls.merge_translation_files(file_lang, lang_specific_folder_path, temp_dir, lang)
+            file_lang = temp_dir
+
         translate_service = StreamlitTranslateService(file_lang)
         st.session_state[cls.TRANSLATE_SERVICE] = translate_service
+
+    @classmethod
+    def merge_translation_files(cls, base_path, specific_path, output_path, lang):
+        """Merge base and specific translation files for a given language."""
+        base_file = os.path.join(base_path, f"{lang}.json")
+        specific_file = os.path.join(specific_path, f"{lang}_specific.json")
+        output_file = os.path.join(output_path, f"{lang}.json")
+
+        merged_data = {}
+
+        if os.path.exists(base_file):
+            with open(base_file, encoding="utf-8") as f:
+                merged_data.update(json.load(f))
+
+        if os.path.exists(specific_file):
+            with open(specific_file, encoding="utf-8") as f:
+                merged_data.update(json.load(f))
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(merged_data, f, ensure_ascii=False, indent=4)
 
     @classmethod
     def get_lang(cls) -> StreamlitTranslateLang:
