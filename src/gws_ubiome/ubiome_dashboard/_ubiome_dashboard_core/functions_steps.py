@@ -549,6 +549,7 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
         ubiome_state.TAG_PCOA_DIVERSITY: "pcoa_process",
         ubiome_state.TAG_ANCOM: "ancom_process",
         ubiome_state.TAG_DB_ANNOTATOR: "db_annotator_process",
+        ubiome_state.TAG_16S_VISU: "functional_visu_process",
     }
 
     if step_tag not in step_mapping:

@@ -16,6 +16,7 @@ from gws_ubiome import Ggpicrust2FunctionalAnalysis
 
 from ..functions_steps import (
     create_base_scenario_with_tags,
+    display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
@@ -54,12 +55,25 @@ def dialog_16s_visu_params(ubiome_state: State):
         ),
     )
 
-    if st.button(
-        translate_service.translate("run_16s_visualization"),
-        width="stretch",
-        icon=":material/play_arrow:",
-        key="button_16s_visu",
-    ):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button(
+            translate_service.translate("save_16s_visualization"),
+            width="stretch",
+            icon=":material/save:",
+            key="button_16s_visu_save",
+        )
+
+    with col2:
+        run_clicked = st.button(
+            translate_service.translate("run_16s_visualization"),
+            width="stretch",
+            icon=":material/play_arrow:",
+            key="button_16s_visu_run",
+        )
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_functional_analysis_visu_config()["is_valid"]:
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
@@ -145,9 +159,11 @@ def dialog_16s_visu_params(ubiome_state: State):
             "visu_plotly_output", visu_process >> "plotly_result", flag_resource=False
         )
 
-        scenario.add_to_queue()
-        ubiome_state.reset_tree_analysis()
-        ubiome_state.set_tree_default_item(scenario.get_model_id())
+        if run_clicked:
+            scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
+
         st.rerun()
 
 
@@ -214,6 +230,9 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         st.markdown(f"##### {translate_service.translate('16s_visualization_scenario_results')}")
         display_scenario_parameters(selected_scenario, "functional_visu_process", ubiome_state)
 
+        if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
+
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
 
@@ -246,20 +265,32 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         if resource_set_output:
             resource_dict = resource_set_output.get_resources()
 
-            error_bar_plot = next(r for k, r in resource_dict.items() if "pathway_errorbar" in k and k.endswith(".png"))
-            heatmap_plot = next(r for k, r in resource_dict.items() if "pathway_heatmap" in k and k.endswith(".png"))
-            analysis_table = next(r for k, r in resource_dict.items() if "daa_annotated_results" in k and k.endswith(".csv"))
+            error_bar_plots = [r for k, r in resource_dict.items() if "pathway_errorbar" in k and k.endswith(".png")]
+            heatmap_plots = [r for k, r in resource_dict.items() if "pathway_heatmap" in k and k.endswith(".png")]
+            analysis_tables = [r for k, r in resource_dict.items() if "daa_annotated_results" in k and k.endswith(".csv")]
 
             with tab_tables:
                 st.markdown(
                     f"##### {translate_service.translate('differential_abundance_analysis_table')}"
                 )
-                st.dataframe(analysis_table.get_data())
+                if analysis_tables:
+                    for table in analysis_tables:
+                        st.dataframe(table.get_data())
+                else:
+                    st.info(translate_service.translate("no_results_available"))
 
             with tab_error_bar:
                 st.markdown(f"##### {translate_service.translate('pathway_error_bar_plots')}")
-                st.image(error_bar_plot.path)
+                if error_bar_plots:
+                    for plot in error_bar_plots:
+                        st.image(plot.path)
+                else:
+                    st.info(translate_service.translate("no_results_available"))
 
             with tab_heatmap:
                 st.markdown(f"##### {translate_service.translate('pathway_heatmap_plots')}")
-                st.image(heatmap_plot.path)
+                if heatmap_plots:
+                    for plot in heatmap_plots:
+                        st.image(plot.path)
+                else:
+                    st.info(translate_service.translate("no_results_available"))

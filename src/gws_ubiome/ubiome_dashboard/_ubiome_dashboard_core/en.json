@@ -79,6 +79,7 @@
     "16s_visualization_parameters": "16S Visualization parameters",
     "reminder_metadata_columns": "Reminder metadata columns:",
     "run_16s_visualization": "Run 16S Visualization",
+    "save_16s_visualization": "Save 16S Visualization",
     "configure_new_16s_visualization_scenario": "Configure new 16S Visualization scenario",
     "16s_visualization_scenario_results": "16S Visualization Scenario Results",
     "cannot_run_16s_visualization": "Cannot run 16S Visualization: The required file `KO_metagenome_out/pred_metagenome_unstrat.tsv.gz` is not available from the 16S Functional Analysis results.",
@@ -197,13 +198,5 @@
     "upload_table_info": "To upload a metadata table, please select a TSV file containing your metadata. Make sure you know what you're doing before you upload.",
     "ratio_table": "Ratio Table",
     "select_ratios_definition_required": "Please select a ratios definition.",
-    "select_ratio_definition_table": "Select Ratio Definition Table",
-    "ratio_scenario_name": "Ratio scenario name",
-    "enter_ratio_scenario_name": "Enter ratio scenario name",
-    "save_ratio": "Save Ratio",
-    "run_ratio": "Run Ratio",
-    "configure_new_ratio_scenario": "Configure new Ratio scenario",
-    "ratio_scenario_results": "Ratio Scenario Results",
-    "download_ratio_table": "Download Ratio Table",
     "ratio": "Ratio"
 }
