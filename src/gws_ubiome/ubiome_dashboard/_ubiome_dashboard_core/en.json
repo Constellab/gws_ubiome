@@ -198,5 +198,6 @@
     "upload_table_info": "To upload a metadata table, please select a TSV file containing your metadata. Make sure you know what you're doing before you upload.",
     "ratio_table": "Ratio Table",
     "select_ratios_definition_required": "Please select a ratios definition.",
-    "ratio": "Ratio"
+    "ratio": "Ratio",
+    "no_results_available": "No results available."
 }

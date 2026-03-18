@@ -198,5 +198,6 @@
     "upload_table_info": "Pour télécharger une table de métadonnées, veuillez sélectionner un fichier TSV contenant vos métadonnées. Assurez-vous de savoir ce que vous faites avant de télécharger.",
     "ratio_table": "Table de ratio",
     "select_ratios_definition_required": "Veuillez sélectionner une définition de ratios.",
-    "ratio": "Ratio"
+    "ratio": "Ratio",
+    "no_results_available": "Aucun résultat disponible."
 }
