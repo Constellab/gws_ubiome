@@ -25,8 +25,8 @@ class State:
     TAG_PCOA_DIVERSITY = "pcoa_diversity"
     TAG_ANCOM = "ancom"
     TAG_DB_ANNOTATOR = "db_annotator"
-    TAG_16S = "16S"
-    TAG_16S_VISU = "16S_visualization"
+    TAG_16S = "16s"
+    TAG_16S_VISU = "16s_visualization"
     TAG_RATIO = "ratio"
 
     # Tags unique ids
@@ -36,7 +36,7 @@ class State:
     TAG_TAXONOMY_ID = "taxonomy_id"
     TAG_DB_ANNOTATOR_ID = "db_annotator_id"
     TAG_PCOA_ID = "pcoa_id"
-    TAG_16S_ID = "16S_id"
+    TAG_16S_ID = "16s_id"
 
     # Scenario names
     FEATURE_SCENARIO_NAME_INPUT_KEY = "feature_scenario_name_input"
@@ -415,8 +415,8 @@ class State:
     @classmethod
     def get_scenario_step_16s_visu(cls) -> list[Scenario]:
         scenarios_dict = cls.get_scenarios_by_step_dict().get(cls.TAG_16S_VISU, {})
-        current_feature_id = cls.get_current_feature_scenario_id_parent()
-        return scenarios_dict.get(current_feature_id, [])
+        current_16s_id = cls.get_current_16s_scenario_id_parent()
+        return scenarios_dict.get(current_16s_id, [])
 
     @classmethod
     def get_tree_menu_object(cls):
@@ -522,7 +522,11 @@ class State:
     @classmethod
     def get_feature_inference_id_from_16s_scenario(cls, functional_16s_scenario_id: str) -> str:
         """Get the feature inference ID from a 16S scenario ID."""
+        if not functional_16s_scenario_id:
+            return None
         functional_16s_scenario = Scenario.get_by_id(functional_16s_scenario_id)
+        if functional_16s_scenario is None:
+            return None
         entity_tag_list = EntityTagList.find_by_entity(
             TagEntityType.SCENARIO, functional_16s_scenario.id
         )
@@ -535,8 +539,8 @@ class State:
     def get_parent_16s_scenario_id_from_step(cls) -> str:
         """Extract the parent 16S scenario ID from the current step pipeline."""
         step = cls.get_step_pipeline()
-        if step and step.startswith(cls.TAG_16S + "_"):
-            return step.replace(cls.TAG_16S + "_", "")
+        if step and step.startswith(cls.TAG_16S_VISU + "_"):
+            return step.replace(cls.TAG_16S_VISU + "_", "")
         return None
 
     @classmethod
