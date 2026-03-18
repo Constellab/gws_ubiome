@@ -520,7 +520,9 @@ class State:
         return taxonomy_scenario_id_tag.value
 
     @classmethod
-    def get_feature_inference_id_from_16s_scenario(cls, functional_16s_scenario_id: str) -> str:
+    def get_feature_inference_id_from_16s_scenario(
+        cls, functional_16s_scenario_id: str
+    ) -> str | None:
         """Get the feature inference ID from a 16S scenario ID."""
         if not functional_16s_scenario_id:
             return None
