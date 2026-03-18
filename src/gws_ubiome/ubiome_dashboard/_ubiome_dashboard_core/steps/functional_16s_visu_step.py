@@ -265,20 +265,32 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         if resource_set_output:
             resource_dict = resource_set_output.get_resources()
 
-            error_bar_plot = next(r for k, r in resource_dict.items() if "pathway_errorbar" in k and k.endswith(".png"))
-            heatmap_plot = next(r for k, r in resource_dict.items() if "pathway_heatmap" in k and k.endswith(".png"))
-            analysis_table = next(r for k, r in resource_dict.items() if "daa_annotated_results" in k and k.endswith(".csv"))
+            error_bar_plots = [r for k, r in resource_dict.items() if "pathway_errorbar" in k and k.endswith(".png")]
+            heatmap_plots = [r for k, r in resource_dict.items() if "pathway_heatmap" in k and k.endswith(".png")]
+            analysis_tables = [r for k, r in resource_dict.items() if "daa_annotated_results" in k and k.endswith(".csv")]
 
             with tab_tables:
                 st.markdown(
                     f"##### {translate_service.translate('differential_abundance_analysis_table')}"
                 )
-                st.dataframe(analysis_table.get_data())
+                if analysis_tables:
+                    for table in analysis_tables:
+                        st.dataframe(table.get_data())
+                else:
+                    st.info(translate_service.translate("no_results_available"))
 
             with tab_error_bar:
                 st.markdown(f"##### {translate_service.translate('pathway_error_bar_plots')}")
-                st.image(error_bar_plot.path)
+                if error_bar_plots:
+                    for plot in error_bar_plots:
+                        st.image(plot.path)
+                else:
+                    st.info(translate_service.translate("no_results_available"))
 
             with tab_heatmap:
                 st.markdown(f"##### {translate_service.translate('pathway_heatmap_plots')}")
-                st.image(heatmap_plot.path)
+                if heatmap_plots:
+                    for plot in heatmap_plots:
+                        st.image(plot.path)
+                else:
+                    st.info(translate_service.translate("no_results_available"))
