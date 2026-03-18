@@ -79,6 +79,7 @@
     "16s_visualization_parameters": "16S Visualization parameters",
     "reminder_metadata_columns": "Reminder metadata columns:",
     "run_16s_visualization": "Run 16S Visualization",
+    "save_16s_visualization": "Save 16S Visualization",
     "configure_new_16s_visualization_scenario": "Configure new 16S Visualization scenario",
     "16s_visualization_scenario_results": "16S Visualization Scenario Results",
     "cannot_run_16s_visualization": "Cannot run 16S Visualization: The required file `KO_metagenome_out/pred_metagenome_unstrat.tsv.gz` is not available from the 16S Functional Analysis results.",

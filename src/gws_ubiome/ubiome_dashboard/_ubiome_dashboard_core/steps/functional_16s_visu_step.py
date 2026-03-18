@@ -16,6 +16,7 @@ from gws_ubiome import Ggpicrust2FunctionalAnalysis
 
 from ..functions_steps import (
     create_base_scenario_with_tags,
+    display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
@@ -54,12 +55,25 @@ def dialog_16s_visu_params(ubiome_state: State):
         ),
     )
 
-    if st.button(
-        translate_service.translate("run_16s_visualization"),
-        width="stretch",
-        icon=":material/play_arrow:",
-        key="button_16s_visu",
-    ):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button(
+            translate_service.translate("save_16s_visualization"),
+            width="stretch",
+            icon=":material/save:",
+            key="button_16s_visu_save",
+        )
+
+    with col2:
+        run_clicked = st.button(
+            translate_service.translate("run_16s_visualization"),
+            width="stretch",
+            icon=":material/play_arrow:",
+            key="button_16s_visu_run",
+        )
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_functional_analysis_visu_config()["is_valid"]:
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
@@ -145,9 +159,11 @@ def dialog_16s_visu_params(ubiome_state: State):
             "visu_plotly_output", visu_process >> "plotly_result", flag_resource=False
         )
 
-        scenario.add_to_queue()
-        ubiome_state.reset_tree_analysis()
-        ubiome_state.set_tree_default_item(scenario.get_model_id())
+        if run_clicked:
+            scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
+
         st.rerun()
 
 
@@ -213,6 +229,9 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         # Display details about scenario 16S visualization
         st.markdown(f"##### {translate_service.translate('16s_visualization_scenario_results')}")
         display_scenario_parameters(selected_scenario, "functional_visu_process", ubiome_state)
+
+        if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
             return
