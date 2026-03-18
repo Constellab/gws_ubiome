@@ -1,13 +1,14 @@
 import streamlit as st
 from gws_core import File, Folder, ProtocolProxy, Scenario, ScenarioProxy, ScenarioStatus, Settings
+from gws_core.tag.entity_tag_list import EntityTagList
+from gws_core.tag.tag_entity_type import TagEntityType
 from gws_streamlit_main import (
     StreamlitContainers,
     StreamlitRouter,
     StreamlitTreeMenu,
     StreamlitTreeMenuItem,
 )
-from gws_core.tag.entity_tag_list import EntityTagList
-from gws_core.tag.tag_entity_type import TagEntityType
+
 from ..functions_steps import (
     build_scenarios_by_step_dict,
     get_status_emoji,
@@ -344,10 +345,19 @@ def build_analysis_tree_menu(ubiome_state: State):
                             material_icon="description",
                         )
                         if functional_16s_scenario.status == ScenarioStatus.SUCCESS:
+                            # Get 16S scenario ID for visu filtering (consistent with taxonomy pattern)
+                            scenario_16s_id_tags = EntityTagList.find_by_entity(
+                                TagEntityType.SCENARIO, functional_16s_scenario.id
+                            ).get_tags_by_key(ubiome_state.TAG_16S_ID)
+                            parent_16s_id = (
+                                scenario_16s_id_tags[0].to_simple_tag().value
+                                if scenario_16s_id_tags
+                                else functional_16s_scenario.id
+                            )
                             # Sub-analysis items under 16S
                             s16_visu_scenarios = scenarios_by_step.get(
                                 ubiome_state.TAG_16S_VISU, {}
-                            ).get(parent_feature_id, [])
+                            ).get(parent_16s_id, [])
                             ggpicrust_item = StreamlitTreeMenuItem(
                                 label="16s Functional abundances visualisation",
                                 key=f"{ubiome_state.TAG_16S_VISU}_{functional_16s_scenario.id}",
@@ -362,6 +372,7 @@ def build_analysis_tree_menu(ubiome_state: State):
                                     material_icon="description",
                                 )
                                 ggpicrust_item.add_children([ggpicrust_child_item])
+                            s16_item_child.add_children([ggpicrust_item])
 
                         s16_item.add_children([s16_item_child])
 

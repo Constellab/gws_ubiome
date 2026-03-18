@@ -19,16 +19,17 @@ from gws_core import (
     SpaceFolder,
     Tag,
 )
-from gws_streamlit_main import StreamlitTaskRunner
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag import TagOrigin
 from gws_core.tag.tag_entity_type import TagEntityType
-from .state import State
+from gws_streamlit_main import StreamlitTaskRunner
 from streamlit_slickgrid import (
     ExportServices,
     FieldType,
     slickgrid,
 )
+
+from .state import State
 
 
 def get_status_emoji(status: ScenarioStatus) -> str:
@@ -40,9 +41,10 @@ def get_status_emoji(status: ScenarioStatus) -> str:
         ScenarioStatus.RUNNING: "🔄",
         ScenarioStatus.SUCCESS: "✅",
         ScenarioStatus.ERROR: "❌",
-        ScenarioStatus.PARTIALLY_RUN: "✔️"
+        ScenarioStatus.PARTIALLY_RUN: "✔️",
     }
     return emoji_map.get(status, "")
+
 
 def get_status_prettify(status: ScenarioStatus) -> str:
     """Return a human-readable string for scenario status"""
@@ -53,9 +55,10 @@ def get_status_prettify(status: ScenarioStatus) -> str:
         ScenarioStatus.RUNNING: "Running",
         ScenarioStatus.SUCCESS: "Success",
         ScenarioStatus.ERROR: "Error",
-        ScenarioStatus.PARTIALLY_RUN: "Partially Run"
+        ScenarioStatus.PARTIALLY_RUN: "Partially Run",
     }
     return prettify_map.get(status, "")
+
 
 # Generic helper functions
 def create_scenario_table_data(scenarios: list[Scenario], process_name: str) -> tuple:
@@ -72,8 +75,10 @@ def create_scenario_table_data(scenarios: list[Scenario], process_name: str) -> 
         config_params = process._process_model.config.to_simple_dto().values
 
         # For PCOA scenarios, add diversity table name from input resource
-        if process_name == 'pcoa_process':
-            config_params["Diversity Table"] = process.get_input('distance_table').name.split(" - ")[1]
+        if process_name == "pcoa_process":
+            config_params["Diversity Table"] = process.get_input("distance_table").name.split(
+                " - "
+            )[1]
 
         scenarios_params.append((scenario, config_params))
         all_param_keys.update(config_params.keys())
@@ -83,8 +88,12 @@ def create_scenario_table_data(scenarios: list[Scenario], process_name: str) -> 
         row_data = {
             "id": scenario.id,
             "Scenario Name": scenario.title,
-            "Creation Date": scenario.created_at.strftime("%Y-%m-%d %H:%M") if scenario.created_at else "",
-            "Status": f"{get_status_emoji(scenario.status)} {get_status_prettify(scenario.status)}" if scenario.status else ""
+            "Creation Date": scenario.created_at.strftime("%Y-%m-%d %H:%M")
+            if scenario.created_at
+            else "",
+            "Status": f"{get_status_emoji(scenario.status)} {get_status_prettify(scenario.status)}"
+            if scenario.status
+            else "",
         }
 
         # Add each parameter as a separate column
@@ -94,6 +103,7 @@ def create_scenario_table_data(scenarios: list[Scenario], process_name: str) -> 
         table_data.append(row_data)
 
     return table_data, all_param_keys
+
 
 def create_slickgrid_columns(param_keys: set, ubiome_state: State) -> list[dict]:
     """Generic function to create SlickGrid columns."""
@@ -131,19 +141,24 @@ def create_slickgrid_columns(param_keys: set, ubiome_state: State) -> list[dict]
     # Add parameter columns
     for param_key in sorted(param_keys):
         column_name = param_key.replace("_", " ").replace("-", " ").title()
-        columns.append({
-            "id": param_key,
-            "name": column_name,
-            "field": param_key,
-            "sortable": True,
-            "type": FieldType.string,
-            "filterable": True,
-            "width": 70,
-        })
+        columns.append(
+            {
+                "id": param_key,
+                "name": column_name,
+                "field": param_key,
+                "sortable": True,
+                "type": FieldType.string,
+                "filterable": True,
+                "width": 70,
+            }
+        )
 
     return columns
 
-def render_scenario_table(scenarios: list[Scenario], process_name: str, grid_key: str, ubiome_state: State) -> None:
+
+def render_scenario_table(
+    scenarios: list[Scenario], process_name: str, grid_key: str, ubiome_state: State
+) -> None:
     """Generic function to render a scenario table with parameters."""
     translate_service = ubiome_state.get_translate_service()
     if scenarios:
@@ -165,7 +180,9 @@ def render_scenario_table(scenarios: list[Scenario], process_name: str, grid_key
             "multiColumnSort": False,
         }
 
-        out = slickgrid(table_data, columns=columns, options=options, key=grid_key, on_click="rerun")
+        out = slickgrid(
+            table_data, columns=columns, options=options, key=grid_key, on_click="rerun"
+        )
 
         if out is not None:
             row_id, col = out
@@ -174,7 +191,10 @@ def render_scenario_table(scenarios: list[Scenario], process_name: str, grid_key
                 ubiome_state.update_tree_menu_selection(selected_scenario.id)
                 st.rerun()
     else:
-        st.info(f"{translate_service.translate('no_analyses_found_prefix')} {process_name.replace('_', ' ').title()} {translate_service.translate('no_analyses_found')}")
+        st.info(
+            f"{translate_service.translate('no_analyses_found_prefix')} {process_name.replace('_', ' ').title()} {translate_service.translate('no_analyses_found')}"
+        )
+
 
 def display_scenario_parameters(scenario: Scenario, process_name: str, ubiome_state: State) -> None:
     """Generic function to display scenario parameters in an expander."""
@@ -191,41 +211,73 @@ def display_scenario_parameters(scenario: Scenario, process_name: str, ubiome_st
         param_data = []
 
         # Add task name as first parameter
-        param_data.append({
-            translate_service.translate("parameter"): translate_service.translate("task"),
-            translate_service.translate("value"): readable_task_name
-        })
+        param_data.append(
+            {
+                translate_service.translate("parameter"): translate_service.translate("task"),
+                translate_service.translate("value"): readable_task_name,
+            }
+        )
 
         for key, value in config_params.items():
             readable_key = key.replace("_", " ").replace("-", " ").title()
-            param_data.append({
-                translate_service.translate("parameter"): readable_key,
-                translate_service.translate("value"): str(value)
-            })
+            param_data.append(
+                {
+                    translate_service.translate("parameter"): readable_key,
+                    translate_service.translate("value"): str(value),
+                }
+            )
 
         if param_data:
             param_df = pd.DataFrame(param_data)
             st.dataframe(param_df, width="stretch", hide_index=True)
 
+
 def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title: str) -> ScenarioProxy:
     """Generic function to create a scenario with base tags."""
-    folder : SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
+    folder: SpaceFolder = SpaceFolder.get_by_id(ubiome_state.get_selected_folder_id())
     scenario: ScenarioProxy = ScenarioProxy(
-        None, folder=folder,
+        None,
+        folder=folder,
         title=title,
         creation_type=ScenarioCreationType.MANUAL,
     )
 
     # Add base tags
-    scenario.add_tag(Tag(ubiome_state.TAG_FASTQ, ubiome_state.get_current_fastq_name(), is_propagable=False, auto_parse=True))
-    scenario.add_tag(Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True))
+    scenario.add_tag(
+        Tag(
+            ubiome_state.TAG_FASTQ,
+            ubiome_state.get_current_fastq_name(),
+            is_propagable=False,
+            auto_parse=True,
+        )
+    )
+    scenario.add_tag(
+        Tag(ubiome_state.TAG_BRICK, ubiome_state.TAG_UBIOME, is_propagable=False, auto_parse=True)
+    )
     scenario.add_tag(Tag(ubiome_state.TAG_UBIOME, step_tag, is_propagable=False))
-    scenario.add_tag(Tag(ubiome_state.TAG_ANALYSIS_NAME, ubiome_state.get_current_analysis_name(), is_propagable=False, auto_parse=True))
-    scenario.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False, auto_parse=True))
+    scenario.add_tag(
+        Tag(
+            ubiome_state.TAG_ANALYSIS_NAME,
+            ubiome_state.get_current_analysis_name(),
+            is_propagable=False,
+            auto_parse=True,
+        )
+    )
+    scenario.add_tag(
+        Tag(
+            ubiome_state.TAG_UBIOME_PIPELINE_ID,
+            ubiome_state.get_current_ubiome_pipeline_id(),
+            is_propagable=False,
+            auto_parse=True,
+        )
+    )
 
     return scenario
 
-def save_metadata_table(edited_df: pd.DataFrame, header_lines: list[str], ubiome_state: State, protocol: ProtocolProxy) -> None:
+
+def save_metadata_table(
+    edited_df: pd.DataFrame, header_lines: list[str], ubiome_state: State, protocol: ProtocolProxy
+) -> None:
     """
     Helper function to save metadata table to resource.
     """
@@ -236,23 +288,25 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: list[str], ubiome
     # If there's an existing resource, delete it first
     if existing_resource:
         # Reset
-        ProtocolService.reset_process_of_protocol(protocol._process_model, 'updated_metadata')
+        ProtocolService.reset_process_of_protocol(protocol._process_model, "updated_metadata")
         # Delete the process in the protocol
-        protocol.refresh().delete_process('updated_metadata')
+        protocol.refresh().delete_process("updated_metadata")
         ResourceModel.get_by_id(existing_resource.get_model_id()).delete_instance()
 
     # Create a new file with the updated content
     path_temp = os.path.join(os.path.abspath(os.path.dirname(__file__)), Settings.make_temp_dir())
-    full_path = os.path.join(path_temp, f"{ubiome_state.get_current_analysis_name()}_Metadata_updated.tsv")
+    full_path = os.path.join(
+        path_temp, f"{ubiome_state.get_current_analysis_name()}_Metadata_updated.tsv"
+    )
 
     # Prepare content to save
     content_to_save = ""
     if header_lines:
-        content_to_save = '\n'.join(header_lines) + '\n'
-    content_to_save += edited_df.to_csv(index=False, sep='\t')
+        content_to_save = "\n".join(header_lines) + "\n"
+    content_to_save += edited_df.to_csv(index=False, sep="\t")
 
     # Write content to file
-    with open(full_path, 'w') as f:
+    with open(full_path, "w") as f:
         f.write(content_to_save)
 
     # Create File resource and save it properly using save_from_resource
@@ -260,22 +314,28 @@ def save_metadata_table(edited_df: pd.DataFrame, header_lines: list[str], ubiome
 
     # Use save_from_resource which properly handles fs_node creation
     resource_model = ResourceModel.save_from_resource(
-        metadata_file,
-        origin=ResourceOrigin.UPLOADED,
-        flagged=True
+        metadata_file, origin=ResourceOrigin.UPLOADED, flagged=True
     )
     add_tags_on_metadata(metadata_file, ubiome_state)
 
     # Add the metadata table on the scenario
     protocol.add_process(
-        InputTask, 'updated_metadata',
-        {InputTask.config_name: resource_model.get_resource().get_model_id()})
+        InputTask,
+        "updated_metadata",
+        {InputTask.config_name: resource_model.get_resource().get_model_id()},
+    )
 
 
 @st.dialog("Add New Metadata Column")
-def add_new_column_dialog(ubiome_state: State, header_lines: list[str], protocol_proxy: ProtocolProxy) -> None:
+def add_new_column_dialog(
+    ubiome_state: State, header_lines: list[str], protocol_proxy: ProtocolProxy
+) -> None:
     translate_service = ubiome_state.get_translate_service()
-    st.text_input(translate_service.translate("new_column_name"), placeholder=translate_service.translate("enter_column_name"), key=ubiome_state.NEW_COLUMN_INPUT_KEY)
+    st.text_input(
+        translate_service.translate("new_column_name"),
+        placeholder=translate_service.translate("enter_column_name"),
+        key=ubiome_state.NEW_COLUMN_INPUT_KEY,
+    )
     if st.button(translate_service.translate("add_column"), width="stretch", key="add_column_btn"):
         df_metadata = ubiome_state.get_edited_df_metadata()
         if not ubiome_state.get_new_column_name():
@@ -295,6 +355,7 @@ def add_new_column_dialog(ubiome_state: State, header_lines: list[str], protocol
 
         st.rerun()
 
+
 def add_tags_on_metadata(edited_metadata: File, ubiome_state: State) -> None:
     """
     Helper function to add tags on metadata resource.
@@ -304,13 +365,22 @@ def add_tags_on_metadata(edited_metadata: File, ubiome_state: State) -> None:
     # Add tags using EntityTagList
     user_origin = TagOrigin.current_user_origin()
     entity_tags = EntityTagList.find_by_entity(TagEntityType.RESOURCE, metadata_model_id)
-    entity_tags._default_origin = user_origin # TODO will be fixed in future releases of core to set the default origin in the constructor
+    entity_tags._default_origin = user_origin  # TODO will be fixed in future releases of core to set the default origin in the constructor
 
     # Add the required tags
-    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=False))
-    entity_tags.add_tag(Tag(ubiome_state.TAG_UBIOME_PIPELINE_ID, ubiome_state.get_current_ubiome_pipeline_id(), is_propagable=False))
+    entity_tags.add_tag(
+        Tag(ubiome_state.TAG_UBIOME, ubiome_state.TAG_METADATA_UPDATED, is_propagable=False)
+    )
+    entity_tags.add_tag(
+        Tag(
+            ubiome_state.TAG_UBIOME_PIPELINE_ID,
+            ubiome_state.get_current_ubiome_pipeline_id(),
+            is_propagable=False,
+        )
+    )
 
     ubiome_state.set_resource_id_metadata_table(metadata_model_id)
+
 
 def search_updated_metadata_table(ubiome_state: State) -> File | None:
     """
@@ -318,9 +388,13 @@ def search_updated_metadata_table(ubiome_state: State) -> File | None:
     Returns the File resource if found, None otherwise.
     """
     scenario_step_metadata = ubiome_state.get_scenario_step_metadata()
-    protocol_proxy: ProtocolProxy = ScenarioProxy.from_existing_scenario(scenario_step_metadata[0].id).get_protocol()
+    protocol_proxy: ProtocolProxy = ScenarioProxy.from_existing_scenario(
+        scenario_step_metadata[0].id
+    ).get_protocol()
     try:
-        updated_metadata_resource: File = protocol_proxy.get_process('updated_metadata').get_output('resource')
+        updated_metadata_resource: File = protocol_proxy.get_process("updated_metadata").get_output(
+            "resource"
+        )
         return updated_metadata_resource
     except Exception:
         pass
@@ -328,7 +402,9 @@ def search_updated_metadata_table(ubiome_state: State) -> File | None:
     return None
 
 
-def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -> dict[str, list[Scenario]]:
+def build_scenarios_by_step_dict(
+    ubiome_pipeline_id: str, ubiome_state: State
+) -> dict[str, list[Scenario]]:
     """
     Build scenarios_by_step dictionary for a given ubiome_pipeline_id.
 
@@ -342,9 +418,17 @@ def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -
     ubiome_pipeline_id_parsed = Tag.parse_tag(ubiome_pipeline_id)
 
     # Get all scenarios for this analysis, we retrieve all the other thanks to the id ubiome pipeline id
-    search_scenario_builder = ScenarioSearchBuilder() \
-        .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=ubiome_pipeline_id_parsed, auto_parse=True)) \
+    search_scenario_builder = (
+        ScenarioSearchBuilder()
+        .add_tag_filter(
+            Tag(
+                key=ubiome_state.TAG_UBIOME_PIPELINE_ID,
+                value=ubiome_pipeline_id_parsed,
+                auto_parse=True,
+            )
+        )
         .add_is_archived_filter(False)
+    )
 
     all_scenarios: list[Scenario] = search_scenario_builder.search_all()
 
@@ -355,12 +439,21 @@ def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -
         tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag()
         step_name = tag_step_name.value
 
-        if step_name in [ubiome_state.TAG_METADATA, ubiome_state.TAG_QC, ubiome_state.TAG_MULTIQC, ubiome_state.TAG_FEATURE_INFERENCE]:
+        if step_name in [
+            ubiome_state.TAG_METADATA,
+            ubiome_state.TAG_QC,
+            ubiome_state.TAG_MULTIQC,
+            ubiome_state.TAG_FEATURE_INFERENCE,
+        ]:
             # These steps don't have parent dependencies
             if step_name not in scenarios_by_step:
                 scenarios_by_step[step_name] = []
             scenarios_by_step[step_name].append(scenario)
-        elif step_name in [ubiome_state.TAG_RAREFACTION, ubiome_state.TAG_TAXONOMY, ubiome_state.TAG_16S, ubiome_state.TAG_16S_VISU]:
+        elif step_name in [
+            ubiome_state.TAG_RAREFACTION,
+            ubiome_state.TAG_TAXONOMY,
+            ubiome_state.TAG_16S,
+        ]:
             # These steps depend on feature inference
             feature_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
             if feature_id_tags:
@@ -370,7 +463,21 @@ def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -
                 if parent_id not in scenarios_by_step[step_name]:
                     scenarios_by_step[step_name][parent_id] = []
                 scenarios_by_step[step_name][parent_id].append(scenario)
-        elif step_name in [ubiome_state.TAG_PCOA_DIVERSITY, ubiome_state.TAG_ANCOM, ubiome_state.TAG_DB_ANNOTATOR]:
+        elif step_name == ubiome_state.TAG_16S_VISU:
+            # This step depends on the parent 16S functional analysis scenario
+            s16_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_16S_ID)
+            if s16_id_tags:
+                parent_id = s16_id_tags[0].to_simple_tag().value
+                if step_name not in scenarios_by_step:
+                    scenarios_by_step[step_name] = {}
+                if parent_id not in scenarios_by_step[step_name]:
+                    scenarios_by_step[step_name][parent_id] = []
+                scenarios_by_step[step_name][parent_id].append(scenario)
+        elif step_name in [
+            ubiome_state.TAG_PCOA_DIVERSITY,
+            ubiome_state.TAG_ANCOM,
+            ubiome_state.TAG_DB_ANNOTATOR,
+        ]:
             # These steps depend on taxonomy
             taxonomy_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
             if taxonomy_id_tags:
@@ -393,13 +500,19 @@ def build_scenarios_by_step_dict(ubiome_pipeline_id: str, ubiome_state: State) -
 
     return scenarios_by_step
 
+
 def display_saved_scenario_actions(scenario: Scenario, ubiome_state: State) -> None:
     """Display Run and Edit actions for saved scenarios."""
     translate_service = ubiome_state.get_translate_service()
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button(translate_service.translate("run"), icon=":material/play_arrow:", key=f"run_{scenario.id}", width="stretch"):
+        if st.button(
+            translate_service.translate("run"),
+            icon=":material/play_arrow:",
+            key=f"run_{scenario.id}",
+            width="stretch",
+        ):
             scenario_proxy = ScenarioProxy.from_existing_scenario(scenario.id)
             scenario_proxy.add_to_queue()
             ubiome_state.reset_tree_analysis()
@@ -407,8 +520,14 @@ def display_saved_scenario_actions(scenario: Scenario, ubiome_state: State) -> N
             st.rerun()
 
     with col2:
-        if st.button(translate_service.translate("edit"), icon=":material/edit:", key=f"edit_{scenario.id}", width="stretch"):
+        if st.button(
+            translate_service.translate("edit"),
+            icon=":material/edit:",
+            key=f"edit_{scenario.id}",
+            width="stretch",
+        ):
             dialog_edit_scenario_params(scenario, ubiome_state)
+
 
 @st.dialog("Edit Scenario Parameters")
 def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
@@ -424,12 +543,12 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
 
     # Map step tags to process names and task classes
     step_mapping = {
-        ubiome_state.TAG_FEATURE_INFERENCE: 'feature_process',
-        ubiome_state.TAG_RAREFACTION: 'rarefaction_process',
-        ubiome_state.TAG_TAXONOMY: 'taxonomy_process',
-        ubiome_state.TAG_PCOA_DIVERSITY: 'pcoa_process',
-        ubiome_state.TAG_ANCOM: 'ancom_process',
-        ubiome_state.TAG_DB_ANNOTATOR: 'db_annotator_process'
+        ubiome_state.TAG_FEATURE_INFERENCE: "feature_process",
+        ubiome_state.TAG_RAREFACTION: "rarefaction_process",
+        ubiome_state.TAG_TAXONOMY: "taxonomy_process",
+        ubiome_state.TAG_PCOA_DIVERSITY: "pcoa_process",
+        ubiome_state.TAG_ANCOM: "ancom_process",
+        ubiome_state.TAG_DB_ANNOTATOR: "db_annotator_process",
     }
 
     if step_tag not in step_mapping:
@@ -455,17 +574,27 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
     form_config.generate_config_form_without_run(
         session_state_key=edit_config_key,
         default_config_values=current_config,
-        is_default_config_valid=True
+        is_default_config_valid=True,
     )
 
     # Add Save and Run buttons
     col1, col2 = st.columns(2)
 
     with col1:
-        save_clicked = st.button(translate_service.translate("save_changes"), icon=":material/save:", width="stretch", key=f"save_edit_{scenario.id}")
+        save_clicked = st.button(
+            translate_service.translate("save_changes"),
+            icon=":material/save:",
+            width="stretch",
+            key=f"save_edit_{scenario.id}",
+        )
 
     with col2:
-        run_clicked = st.button(translate_service.translate("save_and_run"), icon=":material/play_arrow:", width="stretch", key=f"run_edit_{scenario.id}")
+        run_clicked = st.button(
+            translate_service.translate("save_and_run"),
+            icon=":material/play_arrow:",
+            width="stretch",
+            key=f"run_edit_{scenario.id}",
+        )
 
     if save_clicked or run_clicked:
         # Get the updated configuration from session state

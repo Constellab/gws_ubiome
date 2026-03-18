@@ -1,22 +1,22 @@
-
 import streamlit as st
 from gws_core import Scenario, ScenarioSearchBuilder, Tag
-from gws_streamlit_main import StreamlitContainers, StreamlitRouter
 from gws_core.tag.entity_tag_list import EntityTagList
 from gws_core.tag.tag_entity_type import TagEntityType
-from ..functions_steps import (
-    build_scenarios_by_step_dict,
-    get_status_emoji,
-)
-from ..state import State
+from gws_streamlit_main import StreamlitContainers, StreamlitRouter
 from streamlit_slickgrid import (
     ExportServices,
     FieldType,
     slickgrid,
 )
 
+from ..functions_steps import (
+    build_scenarios_by_step_dict,
+    get_status_emoji,
+)
+from ..state import State
 
-def render_first_page(ubiome_state : State):
+
+def render_first_page(ubiome_state: State):
     translate_service = ubiome_state.get_translate_service()
 
     style = """
@@ -25,32 +25,38 @@ def render_first_page(ubiome_state : State):
     }
     """
 
-    with StreamlitContainers.container_full_min_height('container-center_first_page',
-                additional_style=style):
-
+    with StreamlitContainers.container_full_min_height(
+        "container-center_first_page", additional_style=style
+    ):
         # Add a button create new analysis using config
         # Create a container for the header with project title and action buttons
         col_title, col_button_new = StreamlitContainers.columns_with_fit_content(
-                key="button_new",
-                cols=[1, 'fit-content'], vertical_align_items='center')
+            key="button_new", cols=[1, "fit-content"], vertical_align_items="center"
+        )
 
         with col_title:
             st.markdown(f"## {translate_service.translate('retrieve_recipes')}")
 
         with col_button_new:
             if not ubiome_state.get_is_standalone():
-                if st.button(translate_service.translate("create_new_recipe"), icon=":material/add:", width="content", type = "primary"):
+                if st.button(
+                    translate_service.translate("create_new_recipe"),
+                    icon=":material/add:",
+                    width="content",
+                    type="primary",
+                ):
                     # On click, navigate to a hidden page 'run new recipe'
                     router = StreamlitRouter.load_from_session()
                     router.navigate("new-analysis")
 
-
         # Add the table to retrieve the previous analysis
 
-        search_scenario_builder = ScenarioSearchBuilder() \
-            .add_tag_filter(Tag(key=ubiome_state.TAG_BRICK, value=ubiome_state.TAG_UBIOME)) \
-            .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME, value=ubiome_state.TAG_METADATA)) \
+        search_scenario_builder = (
+            ScenarioSearchBuilder()
+            .add_tag_filter(Tag(key=ubiome_state.TAG_BRICK, value=ubiome_state.TAG_UBIOME))
+            .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME, value=ubiome_state.TAG_METADATA))
             .add_is_archived_filter(False)
+        )
 
         # We got here all the metadata scenarios
         list_scenario_user: list[Scenario] = search_scenario_builder.search_all()
@@ -59,14 +65,16 @@ def render_first_page(ubiome_state : State):
         table_data = []
         for scenario in list_scenario_user:
             entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
-            tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[0].to_simple_tag()
+            tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[
+                0
+            ].to_simple_tag()
 
             # Initialize row data with basic info
             row_data = {
                 "id": scenario.id,
                 "Name given": tag_analysis_name.value,
                 "Folder": scenario.folder.name if scenario.folder else "",
-                "metadata": get_status_emoji(scenario.status)
+                "metadata": get_status_emoji(scenario.status),
             }
 
             # Get pipeline ID to find all related scenarios
@@ -75,9 +83,11 @@ def render_first_page(ubiome_state : State):
                 pipeline_id = pipeline_id_tags[0].to_simple_tag().value
 
                 # Search for all scenarios with this pipeline ID
-                pipeline_search_builder = ScenarioSearchBuilder() \
-                    .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=pipeline_id)) \
+                pipeline_search_builder = (
+                    ScenarioSearchBuilder()
+                    .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=pipeline_id))
                     .add_is_archived_filter(False)
+                )
 
                 pipeline_scenarios = pipeline_search_builder.search_all()
 
@@ -98,16 +108,24 @@ def render_first_page(ubiome_state : State):
                     step_types.append((ubiome_state.TAG_RATIO, "ratio"))
 
                 # Add 16S steps at the end
-                step_types.extend([
-                    (ubiome_state.TAG_16S, "16S"),
-                    (ubiome_state.TAG_16S_VISU, "16S_visualization")
-                ])
+                step_types.extend(
+                    [
+                        (ubiome_state.TAG_16S, "16s"),
+                        (ubiome_state.TAG_16S_VISU, "16s_visualization"),
+                    ]
+                )
 
                 for tag_value, field_name in step_types:
-                    step_scenarios = [s for s in pipeline_scenarios if any(
-                        tag.tag_key == ubiome_state.TAG_UBIOME and tag.tag_value == tag_value
-                        for tag in EntityTagList.find_by_entity(TagEntityType.SCENARIO, s.id).get_tags()
-                    )]
+                    step_scenarios = [
+                        s
+                        for s in pipeline_scenarios
+                        if any(
+                            tag.tag_key == ubiome_state.TAG_UBIOME and tag.tag_value == tag_value
+                            for tag in EntityTagList.find_by_entity(
+                                TagEntityType.SCENARIO, s.id
+                            ).get_tags()
+                        )
+                    ]
 
                     if step_scenarios:
                         # Get the most recent scenario for this step
@@ -117,11 +135,19 @@ def render_first_page(ubiome_state : State):
                         row_data[field_name] = ""
             else:
                 # Initialize empty status for other steps when no pipeline ID
-                step_fields = ["quality_control", "multiqc", "feature_inference", "rarefaction", "taxonomy",
-                            "pcoa", "ancom", "db_annotator"]
+                step_fields = [
+                    "quality_control",
+                    "multiqc",
+                    "feature_inference",
+                    "rarefaction",
+                    "taxonomy",
+                    "pcoa",
+                    "ancom",
+                    "db_annotator",
+                ]
                 if ubiome_state.get_has_ratio_step():
                     step_fields.append("ratio")
-                step_fields.extend(["16S", "16S_visualization"])
+                step_fields.extend(["16s", "16s_visualization"])
                 for field in step_fields:
                     row_data[field] = ""
 
@@ -232,37 +258,41 @@ def render_first_page(ubiome_state : State):
 
             # Add ratio column if enabled
             if ubiome_state.get_has_ratio_step():
-                columns.append({
-                    "id": "ratio",
-                    "name": translate_service.translate("ratio"),
-                    "field": "ratio",
-                    "sortable": True,
-                    "type": FieldType.string,
-                    "filterable": True,
-                    "width": 50,
-                })
+                columns.append(
+                    {
+                        "id": "ratio",
+                        "name": translate_service.translate("ratio"),
+                        "field": "ratio",
+                        "sortable": True,
+                        "type": FieldType.string,
+                        "filterable": True,
+                        "width": 50,
+                    }
+                )
 
             # Add remaining columns after ratio
-            columns.extend([
-                {
-                    "id": "16S",
-                    "name": translate_service.translate("16s_functional"),
-                    "field": "16S",
-                    "sortable": True,
-                    "type": FieldType.string,
-                    "filterable": True,
-                    "width": 60,
-                },
-                {
-                    "id": "16S_visualization",
-                    "name": translate_service.translate("16s_visualization"),
-                    "field": "16S_visualization",
-                    "sortable": True,
-                    "type": FieldType.string,
-                    "filterable": True,
-                    "width": 65,
-                },
-            ])
+            columns.extend(
+                [
+                    {
+                        "id": "16s",
+                        "name": translate_service.translate("16s_functional"),
+                        "field": "16s",
+                        "sortable": True,
+                        "type": FieldType.string,
+                        "filterable": True,
+                        "width": 60,
+                    },
+                    {
+                        "id": "16s_visualization",
+                        "name": translate_service.translate("16s_visualization"),
+                        "field": "16s_visualization",
+                        "sortable": True,
+                        "type": FieldType.string,
+                        "filterable": True,
+                        "width": 65,
+                    },
+                ]
+            )
 
             options = {
                 "enableFiltering": True,
@@ -279,40 +309,62 @@ def render_first_page(ubiome_state : State):
                 "multiColumnSort": False,
             }
 
-            out = slickgrid(table_data, columns=columns, options=options, key="analysis_grid", on_click="rerun")
+            out = slickgrid(
+                table_data, columns=columns, options=options, key="analysis_grid", on_click="rerun"
+            )
 
             if out is not None:
                 row_id, col = out
-                if col != 0 and col != 1: # because two first columns are not related to a step
+                if col != 0 and col != 1:  # because two first columns are not related to a step
                     # Parse the table_data to find the scenario with the matching id
                     dict_id = next((entry for entry in table_data if entry["id"] == row_id), None)
                     # Parse the dict_id and keep the n key where n is the number given by the col variable
                     n = 0
                     for key, value in dict_id.items():
-                        if n == col+1:# because first column is the id (not displayed)
+                        if n == col + 1:  # because first column is the id (not displayed)
                             if value != "":
-                                selected_scenario = next((s for s in list_scenario_user if s.id == row_id), None)
+                                selected_scenario = next(
+                                    (s for s in list_scenario_user if s.id == row_id), None
+                                )
                                 ubiome_state.set_selected_analysis(selected_scenario)
                                 # Get analysis name from scenario tag
-                                entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_scenario.id)
+                                entity_tag_list = EntityTagList.find_by_entity(
+                                    TagEntityType.SCENARIO, selected_scenario.id
+                                )
 
                                 # Get ubiome pipeline id from scenario tag
-                                tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)[0].to_simple_tag()
+                                tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(
+                                    ubiome_state.TAG_UBIOME_PIPELINE_ID
+                                )[0].to_simple_tag()
                                 ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
                                 # Build scenarios_by_step dictionary using helper function
-                                scenarios_by_step = build_scenarios_by_step_dict(ubiome_pipeline_id, ubiome_state)
+                                scenarios_by_step = build_scenarios_by_step_dict(
+                                    ubiome_pipeline_id, ubiome_state
+                                )
                                 ubiome_state.set_scenarios_by_step_dict(scenarios_by_step)
-                                if isinstance(ubiome_state.get_scenarios_by_step_dict().get(key), list):
-                                    list_scenario = ubiome_state.get_scenarios_by_step_dict().get(key)
+                                if isinstance(
+                                    ubiome_state.get_scenarios_by_step_dict().get(key), list
+                                ):
+                                    list_scenario = ubiome_state.get_scenarios_by_step_dict().get(
+                                        key
+                                    )
                                     # Get the most recent scenario for this step
                                     latest_scenario = max(list_scenario, key=lambda x: x.created_at)
                                     ubiome_state.set_tree_default_item(latest_scenario.id)
-                                elif isinstance(ubiome_state.get_scenarios_by_step_dict().get(key), dict):
-                                    keys_parent = list(ubiome_state.get_scenarios_by_step_dict().get(key))
+                                elif isinstance(
+                                    ubiome_state.get_scenarios_by_step_dict().get(key), dict
+                                ):
+                                    keys_parent = list(
+                                        ubiome_state.get_scenarios_by_step_dict().get(key)
+                                    )
                                     list_scenario = []
                                     for key_parent in keys_parent:
-                                        for scenario in ubiome_state.get_scenarios_by_step_dict().get(key).get(key_parent):
+                                        for scenario in (
+                                            ubiome_state.get_scenarios_by_step_dict()
+                                            .get(key)
+                                            .get(key_parent)
+                                        ):
                                             list_scenario.append(scenario)
                                     # Get the most recent scenario for this step
                                     latest_scenario = max(list_scenario, key=lambda x: x.created_at)
@@ -321,7 +373,7 @@ def render_first_page(ubiome_state : State):
                                 router = StreamlitRouter.load_from_session()
                                 router.navigate("analysis")
                             break
-                        n +=1
+                        n += 1
 
                 # Handle row click
                 selected_scenario = next((s for s in list_scenario_user if s.id == row_id), None)
