@@ -199,5 +199,7 @@
     "ratio_table": "Table de ratio",
     "select_ratios_definition_required": "Veuillez sélectionner une définition de ratios.",
     "ratio": "Ratio",
-    "no_results_available": "Aucun résultat disponible."
+    "no_results_available": "Aucun résultat disponible.",
+    "metadata_summary": "Résumé des métadonnées",
+    "select_pairwise_comparison": "Sélectionnez votre comparaison par paire"
 }
