@@ -230,7 +230,10 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         st.markdown(f"##### {translate_service.translate('16s_visualization_scenario_results')}")
         display_scenario_parameters(selected_scenario, "functional_visu_process", ubiome_state)
 
-        if selected_scenario.status == ScenarioStatus.DRAFT and not ubiome_state.get_is_standalone():
+        if (
+            selected_scenario.status == ScenarioStatus.DRAFT
+            and not ubiome_state.get_is_standalone()
+        ):
             display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
@@ -240,8 +243,68 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
         scenario_proxy = ScenarioProxy.from_existing_scenario(selected_scenario.id)
         protocol_proxy = scenario_proxy.get_protocol()
 
-        tab_pca, tab_tables, tab_error_bar, tab_heatmap = st.tabs(
+        resource_set_output = protocol_proxy.get_process("functional_visu_process").get_output(
+            "resource_set"
+        )
+
+        if resource_set_output:
+            resource_dict = resource_set_output.get_resources()
+
+            metadata_summary = [
+                res
+                for k, res in resource_dict.items()
+                if "diagnostic_per_contrast_counts" in k and k.endswith(".csv")
+            ]
+
+            # Build dicts keyed by pairwise comparison (e.g. "HC_vs_PD")
+            analysis_tables_dict = {}
+            for k, r in resource_dict.items():
+                if "daa_annotated_results" in k and k.endswith(".csv"):
+                    pairwise = k.replace("daa_annotated_results_", "", 1).removesuffix(".csv")
+                    analysis_tables_dict[pairwise] = r
+
+            error_bar_plots_dict = {}
+            for k, r in resource_dict.items():
+                if "pathway_errorbar" in k and k.endswith(".png"):
+                    # Strip the prefix; the remainder may be "<pairwise>_<suffix>.png"
+                    # The pairwise key is identified by matching against known analysis_tables keys.
+                    remainder = k.replace("pathway_errorbar_", "", 1).removesuffix(".png")
+                    matched_pairwise = next(
+                        (p for p in analysis_tables_dict if remainder == p or remainder.startswith(p + "_")),
+                        remainder,
+                    )
+                    error_bar_plots_dict.setdefault(matched_pairwise, []).append(r)
+
+            heatmap_plots_dict = {}
+            for k, r in resource_dict.items():
+                if "pathway_heatmap" in k and k.endswith(".png"):
+                    remainder = k.replace("pathway_heatmap_", "", 1).removesuffix(".png")
+                    matched_pairwise = next(
+                        (p for p in analysis_tables_dict if remainder == p or remainder.startswith(p + "_")),
+                        remainder,
+                    )
+                    heatmap_plots_dict.setdefault(matched_pairwise, []).append(r)
+
+        else:
+            return
+
+        pairwise_keys = list(analysis_tables_dict.keys())
+        pairwise_display = [p.replace("_vs_", " vs ") for p in pairwise_keys]
+
+        selected_display = st.selectbox(
+            translate_service.translate("select_pairwise_comparison"),
+            options=pairwise_display,
+        )
+
+        # Map the display label back to the raw key used in the dicts
+        selected_pairwise = None
+        if selected_display and pairwise_keys:
+            idx = pairwise_display.index(selected_display)
+            selected_pairwise = pairwise_keys[idx]
+
+        tab_metadata, tab_pca, tab_tables, tab_error_bar, tab_heatmap = st.tabs(
             [
+                translate_service.translate("metadata_summary"),
                 translate_service.translate("pca_plot"),
                 translate_service.translate("analysis_table"),
                 translate_service.translate("error_bar_plots"),
@@ -258,39 +321,35 @@ def render_16s_visu_step(selected_scenario: Scenario, ubiome_state: State) -> No
             if plotly_result:
                 st.plotly_chart(plotly_result.get_figure())
 
-        resource_set_output = protocol_proxy.get_process("functional_visu_process").get_output(
-            "resource_set"
-        )
+        with tab_metadata:
+            # Display metadata summary
+            st.markdown(f"##### {translate_service.translate('metadata_summary')}")
+            if metadata_summary:
+                st.dataframe(metadata_summary[0].get_data())
+            else:
+                st.info(translate_service.translate("no_results_available"))
 
-        if resource_set_output:
-            resource_dict = resource_set_output.get_resources()
+        with tab_tables:
+            st.markdown(
+                f"##### {translate_service.translate('differential_abundance_analysis_table')}"
+            )
+            if selected_pairwise and selected_pairwise in analysis_tables_dict:
+                st.dataframe(analysis_tables_dict[selected_pairwise].get_data())
+            else:
+                st.info(translate_service.translate("no_results_available"))
 
-            error_bar_plots = [r for k, r in resource_dict.items() if "pathway_errorbar" in k and k.endswith(".png")]
-            heatmap_plots = [r for k, r in resource_dict.items() if "pathway_heatmap" in k and k.endswith(".png")]
-            analysis_tables = [r for k, r in resource_dict.items() if "daa_annotated_results" in k and k.endswith(".csv")]
+        with tab_error_bar:
+            st.markdown(f"##### {translate_service.translate('pathway_error_bar_plots')}")
+            if selected_pairwise and selected_pairwise in error_bar_plots_dict:
+                for plot in error_bar_plots_dict[selected_pairwise]:
+                    st.image(plot.path)
+            else:
+                st.info(translate_service.translate("no_results_available"))
 
-            with tab_tables:
-                st.markdown(
-                    f"##### {translate_service.translate('differential_abundance_analysis_table')}"
-                )
-                if analysis_tables:
-                    for table in analysis_tables:
-                        st.dataframe(table.get_data())
-                else:
-                    st.info(translate_service.translate("no_results_available"))
-
-            with tab_error_bar:
-                st.markdown(f"##### {translate_service.translate('pathway_error_bar_plots')}")
-                if error_bar_plots:
-                    for plot in error_bar_plots:
-                        st.image(plot.path)
-                else:
-                    st.info(translate_service.translate("no_results_available"))
-
-            with tab_heatmap:
-                st.markdown(f"##### {translate_service.translate('pathway_heatmap_plots')}")
-                if heatmap_plots:
-                    for plot in heatmap_plots:
-                        st.image(plot.path)
-                else:
-                    st.info(translate_service.translate("no_results_available"))
+        with tab_heatmap:
+            st.markdown(f"##### {translate_service.translate('pathway_heatmap_plots')}")
+            if selected_pairwise and selected_pairwise in heatmap_plots_dict:
+                for plot in heatmap_plots_dict[selected_pairwise]:
+                    st.image(plot.path)
+            else:
+                st.info(translate_service.translate("no_results_available"))
