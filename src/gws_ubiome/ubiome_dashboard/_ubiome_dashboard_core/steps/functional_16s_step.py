@@ -168,4 +168,4 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
             return
 
         st.success("The scenario has been successfully created. Here is the link:")
-        st.write(FrontService.get_scenario_url(selected_scenario.id))
+        st.write(FrontService().get_scenario_url(selected_scenario.id))
