@@ -113,6 +113,9 @@ def render_new_analysis_page(ubiome_state: State):
                     )
                 )
                 list_required_fields_filled.append(
+                    ubiome_state.get_resource_selector_fastq().get("resourceId") is not None
+                )
+                list_required_fields_filled.append(
                     ubiome_state.check_if_required_is_filled(ubiome_state.get_analysis_name_user())
                 )
                 list_required_fields_filled.append(
