@@ -98,7 +98,7 @@ def render_first_page(ubiome_state: State):
                     (ubiome_state.TAG_FEATURE_INFERENCE, "feature_inference"),
                     (ubiome_state.TAG_RAREFACTION, "rarefaction"),
                     (ubiome_state.TAG_TAXONOMY, "taxonomy"),
-                    (ubiome_state.TAG_PCOA_DIVERSITY, "pcoa"),
+                    (ubiome_state.TAG_PCOA_DIVERSITY, "pcoa_diversity"),
                     (ubiome_state.TAG_ANCOM, "ancom"),
                     (ubiome_state.TAG_DB_ANNOTATOR, "db_annotator"),
                 ]
@@ -141,7 +141,7 @@ def render_first_page(ubiome_state: State):
                     "feature_inference",
                     "rarefaction",
                     "taxonomy",
-                    "pcoa",
+                    "pcoa_diversity",
                     "ancom",
                     "db_annotator",
                 ]
@@ -228,9 +228,9 @@ def render_first_page(ubiome_state: State):
                     "width": 60,
                 },
                 {
-                    "id": "pcoa",
+                    "id": "pcoa_diversity",
                     "name": translate_service.translate("pcoa"),
-                    "field": "pcoa",
+                    "field": "pcoa_diversity",
                     "sortable": True,
                     "type": FieldType.string,
                     "filterable": True,
