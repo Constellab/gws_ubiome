@@ -9,6 +9,8 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
     def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome", "large_testdata_dir")
+        if not large_testdata_dir or not os.path.isdir(large_testdata_dir):
+            self.skipTest(f"large_testdata_dir not found: {large_testdata_dir}")
         tester = TaskRunner(
             params={"rarefaction_plateau_value": 100, "threads": 2},
             inputs={
@@ -33,8 +35,8 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
         result_content = boxplot_csv.read()
 
         # Get the expected file output
-        # expected_file_path = os.path.join(large_testdata_dir, "diversity", "table_files", "level-1.tsv")
-        expected_file_path = "/lab/user/bricks/gws_ubiome/tests/testdata/level-1.tsv"
+        testdata_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "testdata"))
+        expected_file_path = os.path.join(testdata_dir, "level-1.tsv")
         expected_in_file = open(expected_file_path, encoding="utf-8")
         expected_first_line = expected_in_file.readline()
 

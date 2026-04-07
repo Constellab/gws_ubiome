@@ -11,6 +11,8 @@ class TestQiime2QualityCheck(BaseTestCase):
     def test_quality_check(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome", "large_testdata_dir")
+        if not large_testdata_dir or not os.path.isdir(large_testdata_dir):
+            self.skipTest(f"large_testdata_dir not found: {large_testdata_dir}")
         testdata_dir = settings.get_variable("gws_ubiome", "testdata_dir")
 
         metadata_file: File = File(path=os.path.join(testdata_dir, "gws_metadata.csv"))

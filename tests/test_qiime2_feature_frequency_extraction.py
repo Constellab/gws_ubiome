@@ -9,6 +9,8 @@ class TestQiime2SampleFrequencies(BaseTestCase):
     def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome", "large_testdata_dir")
+        if not large_testdata_dir or not os.path.isdir(large_testdata_dir):
+            self.skipTest(f"large_testdata_dir not found: {large_testdata_dir}")
         quality_check_folder = Folder(path=os.path.join(large_testdata_dir, "quality_check"))
         tester = TaskRunner(
             params={
