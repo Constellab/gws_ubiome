@@ -28,7 +28,7 @@ def dialog_db_annotator_params(ubiome_state: State):
     # Use StreamlitResourceSelect to let user choose an annotation table
     resource_select = StreamlitResourceSelect()
     # Filter to show only File resources with tsv extension
-    resource_select.filters["resourceTypingNames"] = ["RESOURCE.gws_core.File"]
+    resource_select.add_filter("resourceTypingNames", ["RESOURCE.gws_core.File"])
     # Get default annotation table from config (overridable by specific dashboards)
     ubiome_config = UbiomeConfig.get_instance()
     default_annotation_table = ubiome_config.get_default_annotation_table_resource(resource_select)
