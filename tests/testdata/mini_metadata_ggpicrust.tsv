@@ -1,0 +1,7 @@
+sample-id	group	body-site
+sample1	control	gut
+sample2	control	gut
+sample3	treatment	gut
+sample4	control	gut
+sample5	treatment	gut
+sample6	treatment	gut

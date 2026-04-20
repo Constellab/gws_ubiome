@@ -9,10 +9,16 @@ class TestQiime2TaxonomyDiversityExtractor(BaseTestCase):
     def test_importer(self):
         settings = Settings.get_instance()
         large_testdata_dir = settings.get_variable("gws_ubiome", "large_testdata_dir")
-        taxonomy_result_folder = Folder(path=os.path.join(large_testdata_dir, "diversity"))
+        if not large_testdata_dir or not os.path.isdir(large_testdata_dir):
+            self.skipTest(f"large_testdata_dir not found: {large_testdata_dir}")
+        taxonomy_diversity_folder = Folder(path=os.path.join(large_testdata_dir, "diversity"))
+        metadata_file = File(path=os.path.join(large_testdata_dir, "metadata", "qiime2_metadata.csv"))
         tester = TaskRunner(
-            params={"taxonomic_level": 6, "metadata_column": "subject"},
-            inputs={"taxonomy_result_folder": taxonomy_result_folder},
+            params={"metadata_column": "subject", "threads": 2},
+            inputs={
+                "taxonomy_diversity_folder": taxonomy_diversity_folder,
+                "metadata_file": metadata_file,
+            },
             task_type=Qiime2DifferentialAnalysis,
         )
         outputs = tester.run()
