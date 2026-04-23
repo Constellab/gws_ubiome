@@ -203,7 +203,7 @@
     "no_results_available": "No results available.",
     "metadata_summary": "Metadata summary",
     "select_pairwise_comparison": "Select your pairwise comparison",
-    "sending_data": "Send scenario to lab large, it may take a few minutes",
+    "sending_data": "Sending scenario to Lab Large; this may take a few minutes",
     "data_sent_successfully": "Scenario sent successfully!",
     "error_sending_data": "Error sending scenario.",
     "lab_large_must_be_open": "Lab large must be open to execute the scenario. Please note that both labs need to be open throughout the execution."
