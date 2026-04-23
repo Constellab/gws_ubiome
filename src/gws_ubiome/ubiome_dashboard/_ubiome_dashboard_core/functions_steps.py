@@ -15,6 +15,8 @@ from gws_core import (
     ScenarioProxy,
     ScenarioSearchBuilder,
     ScenarioStatus,
+    ScenarioTransfertService,
+    SendScenarioToLab,
     Settings,
     SpaceFolder,
     Tag,
@@ -230,6 +232,24 @@ def display_scenario_parameters(scenario: Scenario, process_name: str, ubiome_st
         if param_data:
             param_df = pd.DataFrame(param_data)
             st.dataframe(param_df, width="stretch", hide_index=True)
+
+
+def export_scenario_to_lab_large(scenario_id: str, credentials, translate_service) -> None:
+    """Export a scenario to Lab Large and display success/error feedback."""
+    try:
+        with st.spinner(translate_service.translate("sending_data")):
+            ScenarioTransfertService.export_scenario_to_lab(
+                scenario_id=scenario_id,
+                values=SendScenarioToLab.build_config(
+                    credentials,
+                    "All",
+                    "Force new scenario",
+                    True,
+                ),
+            )
+        st.success(translate_service.translate("data_sent_successfully"))
+    except Exception:
+        st.error(translate_service.translate("error_sending_data"))
 
 
 def create_base_scenario_with_tags(ubiome_state: State, step_tag: str, title: str) -> ScenarioProxy:
@@ -504,6 +524,14 @@ def build_scenarios_by_step_dict(
 def display_saved_scenario_actions(scenario: Scenario, ubiome_state: State) -> None:
     """Display Run and Edit actions for saved scenarios."""
     translate_service = ubiome_state.get_translate_service()
+    scenario_proxy = ScenarioProxy.from_existing_scenario(scenario.id)
+    # Detect the process type based on scenario tags
+    entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
+    step_tag = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[0].to_simple_tag().value
+    # if there is a param credential to lab large entered in the dashboard, we will send the scenario to lab large to be executed
+    # so the lab large need to be open
+    if step_tag == ubiome_state.TAG_16S and ubiome_state.get_credentials_lab_large():
+        st.info(translate_service.translate("lab_large_must_be_open"))
     col1, col2 = st.columns(2)
 
     with col1:
@@ -513,8 +541,14 @@ def display_saved_scenario_actions(scenario: Scenario, ubiome_state: State) -> N
             key=f"run_{scenario.id}",
             width="stretch",
         ):
-            scenario_proxy = ScenarioProxy.from_existing_scenario(scenario.id)
-            scenario_proxy.add_to_queue()
+            if step_tag == ubiome_state.TAG_16S and ubiome_state.get_credentials_lab_large():
+                export_scenario_to_lab_large(
+                    scenario.id,
+                    ubiome_state.get_credentials_lab_large(),
+                    translate_service,
+                )
+            else:
+                scenario_proxy.add_to_queue()
             ubiome_state.reset_tree_analysis()
             ubiome_state.set_tree_default_item(scenario.id)
             st.rerun()
@@ -549,6 +583,7 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
         ubiome_state.TAG_PCOA_DIVERSITY: "pcoa_process",
         ubiome_state.TAG_ANCOM: "ancom_process",
         ubiome_state.TAG_DB_ANNOTATOR: "db_annotator_process",
+        ubiome_state.TAG_16S: "functional_analysis_process",
         ubiome_state.TAG_16S_VISU: "functional_visu_process",
     }
 
@@ -577,6 +612,9 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
         default_config_values=current_config,
         is_default_config_valid=True,
     )
+
+    if step_tag == ubiome_state.TAG_16S and ubiome_state.get_credentials_lab_large():
+        st.info(translate_service.translate("lab_large_must_be_open"))
 
     # Add Save and Run buttons
     col1, col2 = st.columns(2)
@@ -610,7 +648,14 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
 
         if run_clicked:
             # If run is clicked, also add to queue
-            scenario_proxy.add_to_queue()
+            if step_tag == ubiome_state.TAG_16S and ubiome_state.get_credentials_lab_large():
+                export_scenario_to_lab_large(
+                    scenario.id,
+                    ubiome_state.get_credentials_lab_large(),
+                    translate_service,
+                )
+            else:
+                scenario_proxy.add_to_queue()
             ubiome_state.reset_tree_analysis()
             ubiome_state.set_tree_default_item(scenario.id)
 

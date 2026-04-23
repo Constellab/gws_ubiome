@@ -1,9 +1,5 @@
-import os
-
-import pandas as pd
 import streamlit as st
 from gws_core import (
-    FrontService,
     FsNodeExtractor,
     InputTask,
     Scenario,
@@ -16,7 +12,9 @@ from gws_ubiome import Picrust2FunctionalAnalysis
 
 from ..functions_steps import (
     create_base_scenario_with_tags,
+    display_saved_scenario_actions,
     display_scenario_parameters,
+    export_scenario_to_lab_large,
     render_scenario_table,
 )
 from ..state import State
@@ -39,13 +37,30 @@ def dialog_16s_params(ubiome_state: State):
             Picrust2FunctionalAnalysis.config_specs.get_default_values()
         ),
     )
+    # if there is a param credential to lab large entered in the dashboard, we will send the scenario to lab large to be executed
+    # so the lab large need to be open
+    if ubiome_state.get_credentials_lab_large():
+        st.info(translate_service.translate("lab_large_must_be_open"))
 
-    if st.button(
-        translate_service.translate("run_16s_functional_analysis"),
-        width="stretch",
-        icon=":material/play_arrow:",
-        key="button_16s",
-    ):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        save_clicked = st.button(
+            translate_service.translate("save_16s_functional_analysis"),
+            width="stretch",
+            icon=":material/save:",
+            key="button_16s_save",
+        )
+
+    with col2:
+        run_clicked = st.button(
+            translate_service.translate("run_16s_functional_analysis"),
+            width="stretch",
+            icon=":material/play_arrow:",
+            key="button_16s_run",
+        )
+
+    if save_clicked or run_clicked:
         if not ubiome_state.get_functional_analysis_config()["is_valid"]:
             st.warning(translate_service.translate("fill_mandatory_fields"))
             return
@@ -124,8 +139,21 @@ def dialog_16s_params(ubiome_state: State):
             flag_resource=False,
         )
 
-        ubiome_state.reset_tree_analysis()
-        ubiome_state.set_tree_default_item(scenario.get_model_id())
+        # Only add to queue or transfer if Run was clicked
+        if run_clicked:
+            # if there is a param credential to lab large entered in the dashboard, send the scenario to lab large to be executed
+            if ubiome_state.get_credentials_lab_large():
+                export_scenario_to_lab_large(
+                    scenario.get_model_id(),
+                    ubiome_state.get_credentials_lab_large(),
+                    translate_service,
+                )
+
+            # if there is no param credential to lab large entered in the dashboard, the scenario will be executed in the current environment
+            else:
+                scenario.add_to_queue()
+            ubiome_state.reset_tree_analysis()
+            ubiome_state.set_tree_default_item(scenario.get_model_id())
         st.rerun()
 
 
@@ -167,5 +195,11 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         if ubiome_state.get_is_standalone():
             return
 
-        st.success("The scenario has been successfully created. Here is the link:")
-        st.write(FrontService().get_scenario_url(selected_scenario.id))
+        if (
+            selected_scenario.status == ScenarioStatus.DRAFT
+            and not ubiome_state.get_is_standalone()
+        ):
+            display_saved_scenario_actions(selected_scenario, ubiome_state)
+
+        if selected_scenario.status != ScenarioStatus.SUCCESS:
+            return

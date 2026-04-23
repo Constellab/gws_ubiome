@@ -4,10 +4,8 @@ from gws_core import (
     BoolParam,
     ConfigParams,
     ConfigSpecs,
-    CredentialsDataLab,
-    CredentialsParam,
-    CredentialsType,
     InputSpecs,
+    LabModelParam,
     OutputSpec,
     OutputSpecs,
     StreamlitResource,
@@ -19,8 +17,11 @@ from gws_core import (
 )
 
 
-@app_decorator("UbiomeDashboardAppConfig", app_type=AppType.STREAMLIT,
-               human_name="Generate Constellab 16S rRNA-seq app")
+@app_decorator(
+    "UbiomeDashboardAppConfig",
+    app_type=AppType.STREAMLIT,
+    human_name="Generate Constellab 16S rRNA-seq app",
+)
 class UbiomeDashboardAppConfig(AppConfig):
     """
     Configuration class for the Constellab 16S rRNA-seq Streamlit application.
@@ -35,8 +36,11 @@ class UbiomeDashboardAppConfig(AppConfig):
         return self.get_app_folder_from_relative_path(__file__, "_ubiome_dashboard")
 
 
-@task_decorator("GenerateUbiomeDashboard", human_name="Generate Constellab 16S rRNA-seq app",
-                style=StreamlitResource.copy_style())
+@task_decorator(
+    "GenerateUbiomeDashboard",
+    human_name="Generate Constellab 16S rRNA-seq app",
+    style=StreamlitResource.copy_style(),
+)
 class GenerateUbiomeDashboard(Task):
     """
     Task that generates the Constellab 16S rRNA-seq app.
@@ -63,20 +67,26 @@ class GenerateUbiomeDashboard(Task):
     """
 
     input_specs = InputSpecs()
-    output_specs = OutputSpecs({
-        'streamlit_app': OutputSpec(StreamlitResource)
-    })
+    output_specs = OutputSpecs({"streamlit_app": OutputSpec(StreamlitResource)})
 
-    config_specs : ConfigSpecs = ConfigSpecs({'associate_scenario_with_folder': BoolParam(
-        default_value=False, human_name="Associate Scenario with Folder", short_description="Set to True if it is mandatory to associate scenarios with a folder."
-    ),
-    'credentials_lab_large' : CredentialsParam(
-        credentials_type=CredentialsType.LAB, human_name="Credentials lab large to run 16s step", short_description="Credentials to request lab large's API", optional = True)})
-
+    config_specs: ConfigSpecs = ConfigSpecs(
+        {
+            "associate_scenario_with_folder": BoolParam(
+                default_value=False,
+                human_name="Associate Scenario with Folder",
+                short_description="Set to True if it is mandatory to associate scenarios with a folder.",
+            ),
+            "credentials_lab_large": LabModelParam(
+                optional=True,
+                human_name="Credentials lab large to run 16s step",
+                short_description="Credentials to request lab large's API",
+            ),
+        }
+    )
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        credentials_data: CredentialsDataLab = params.get_value(
-            'credentials_lab_large')
+        credentials_lab_large = params.get_value("credentials_lab_large")
+        credentials_data = credentials_lab_large.lab.id if credentials_lab_large else None
 
         """ Run the task """
 
@@ -86,12 +96,9 @@ class GenerateUbiomeDashboard(Task):
         streamlit_app.name = "Constellab 16S rRNA-seq"
 
         # Add param
-        associate_scenario_with_folder: bool = params.get_value(
-            'associate_scenario_with_folder')
-        streamlit_app.set_param(
-            'associate_scenario_with_folder', associate_scenario_with_folder)
+        associate_scenario_with_folder: bool = params.get_value("associate_scenario_with_folder")
+        streamlit_app.set_param("associate_scenario_with_folder", associate_scenario_with_folder)
         if credentials_data:
-            streamlit_app.set_param(
-                "credentials_name", credentials_data.meta.name)
+            streamlit_app.set_param("credentials_lab_large", credentials_data)
 
         return {"streamlit_app": streamlit_app}

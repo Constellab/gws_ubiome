@@ -192,6 +192,7 @@
     "creation_date": "Date de création",
     "no_analyses_found": "analyse trouvée.",
     "no_analyses_found_prefix": "Aucune",
+    "save_16s_functional_analysis": "Enregistrer l'analyse fonctionnelle 16S",
     "run_16s_functional_analysis": "Exécuter l'analyse fonctionnelle 16S",
     "download_table": "Télécharger la table",
     "upload_table": "Télécharger la table de métadonnées mise à jour",
@@ -201,5 +202,9 @@
     "ratio": "Ratio",
     "no_results_available": "Aucun résultat disponible.",
     "metadata_summary": "Résumé des métadonnées",
-    "select_pairwise_comparison": "Sélectionnez votre comparaison par paire"
+    "select_pairwise_comparison": "Sélectionnez votre comparaison par paire",
+    "sending_data": "Envoi du scénario au lab large, cela peut prendre quelques minutes",
+    "data_sent_successfully": "Scénario envoyé avec succès !",
+    "error_sending_data": "Erreur lors de l'envoi du scénario.",
+    "lab_large_must_be_open": "Le lab large doit être ouvert pour exécuter le scénario. Veuillez noter que les deux labs doivent être ouverts tout au long de l'exécution."
 }

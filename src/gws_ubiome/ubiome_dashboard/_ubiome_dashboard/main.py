@@ -23,6 +23,7 @@ lang_translation_folder_path = os.path.join(
 )
 ubiome_state = State(lang_translation_folder_path)
 ubiome_state.set_associate_scenario_with_folder(associate_scenario_with_folder)
+ubiome_state.set_credentials_lab_large(credentials_data)
 
 
 def display_first_page(ubiome_state: State):

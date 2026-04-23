@@ -75,6 +75,8 @@ class State:
 
     ASSOCIATE_FOLDER_KEY = "associate_folder"
 
+    CREDENTIALS_LAB_LARGE_KEY = "credentials_lab_large"
+
     RESOURCE_SELECTOR_FASTQ_KEY = "resource_selector_fastq"
     ANALYSIS_NAME_USER = "analysis_name_user"
 
@@ -182,6 +184,14 @@ class State:
     @classmethod
     def get_associate_scenario_with_folder(cls) -> bool:
         return st.session_state.get(cls.ASSOCIATE_FOLDER_KEY, False)
+
+    @classmethod
+    def set_credentials_lab_large(cls, value: str | None) -> None:
+        st.session_state[cls.CREDENTIALS_LAB_LARGE_KEY] = value
+
+    @classmethod
+    def get_credentials_lab_large(cls) -> str | None:
+        return st.session_state.get(cls.CREDENTIALS_LAB_LARGE_KEY, None)
 
     @classmethod
     def reset_tree_analysis(cls) -> None:
