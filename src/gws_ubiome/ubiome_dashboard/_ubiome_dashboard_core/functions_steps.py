@@ -15,6 +15,8 @@ from gws_core import (
     ScenarioProxy,
     ScenarioSearchBuilder,
     ScenarioStatus,
+    ScenarioTransfertService,
+    SendScenarioToLab,
     Settings,
     SpaceFolder,
     Tag,
@@ -549,6 +551,7 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
         ubiome_state.TAG_PCOA_DIVERSITY: "pcoa_process",
         ubiome_state.TAG_ANCOM: "ancom_process",
         ubiome_state.TAG_DB_ANNOTATOR: "db_annotator_process",
+        ubiome_state.TAG_16S: "functional_analysis_process",
         ubiome_state.TAG_16S_VISU: "functional_visu_process",
     }
 
@@ -577,6 +580,9 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
         default_config_values=current_config,
         is_default_config_valid=True,
     )
+
+    if step_tag == ubiome_state.TAG_16S and ubiome_state.get_credentials_lab_large():
+        st.info(translate_service.translate("lab_large_must_be_open"))
 
     # Add Save and Run buttons
     col1, col2 = st.columns(2)
@@ -610,7 +616,23 @@ def dialog_edit_scenario_params(scenario: Scenario, ubiome_state: State):
 
         if run_clicked:
             # If run is clicked, also add to queue
-            scenario_proxy.add_to_queue()
+            if step_tag == ubiome_state.TAG_16S and ubiome_state.get_credentials_lab_large():
+                try:
+                    with st.spinner(translate_service.translate("sending_data")):
+                        ScenarioTransfertService.export_scenario_to_lab(
+                            scenario_id=scenario.id,
+                            values=SendScenarioToLab.build_config(
+                                ubiome_state.get_credentials_lab_large(),
+                                "All",
+                                "Force new scenario",
+                                True,
+                            ),
+                        )
+                    st.success(translate_service.translate("data_sent_successfully"))
+                except Exception:
+                    st.error(translate_service.translate("error_sending_data"))
+            else:
+                scenario_proxy.add_to_queue()
             ubiome_state.reset_tree_analysis()
             ubiome_state.set_tree_default_item(scenario.id)
 
