@@ -186,11 +186,11 @@ class State:
         return st.session_state.get(cls.ASSOCIATE_FOLDER_KEY, False)
 
     @classmethod
-    def set_credentials_lab_large(cls, value: str) -> None:
+    def set_credentials_lab_large(cls, value: str | None) -> None:
         st.session_state[cls.CREDENTIALS_LAB_LARGE_KEY] = value
 
     @classmethod
-    def get_credentials_lab_large(cls) -> str:
+    def get_credentials_lab_large(cls) -> str | None:
         return st.session_state.get(cls.CREDENTIALS_LAB_LARGE_KEY, None)
 
     @classmethod
