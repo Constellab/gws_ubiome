@@ -85,11 +85,8 @@ class GenerateUbiomeDashboard(Task):
     )
 
     def run(self, params: ConfigParams, inputs: TaskInputs) -> TaskOutputs:
-        credentials_data = (
-            params.get_value("credentials_lab_large").lab.id
-            if params.get_value("credentials_lab_large")
-            else None
-        )
+        credentials_lab_large = params.get_value("credentials_lab_large")
+        credentials_data = credentials_lab_large.lab.id if credentials_lab_large else None
 
         """ Run the task """
 
