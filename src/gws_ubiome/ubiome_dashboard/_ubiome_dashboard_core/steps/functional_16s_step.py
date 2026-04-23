@@ -5,8 +5,6 @@ from gws_core import (
     Scenario,
     ScenarioProxy,
     ScenarioStatus,
-    ScenarioTransfertService,
-    SendScenarioToLab,
     Tag,
 )
 from gws_streamlit_main import StreamlitTaskRunner
@@ -16,6 +14,7 @@ from ..functions_steps import (
     create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
+    export_scenario_to_lab_large,
     render_scenario_table,
 )
 from ..state import State
@@ -39,7 +38,7 @@ def dialog_16s_params(ubiome_state: State):
         ),
     )
     # if there is a param credential to lab large entered in the dashboard, we will send the scenario to lab large to be executed
-    # so the lab large need to be executed
+    # so the lab large need to be open
     if ubiome_state.get_credentials_lab_large():
         st.info(translate_service.translate("lab_large_must_be_open"))
 
@@ -144,20 +143,11 @@ def dialog_16s_params(ubiome_state: State):
         if run_clicked:
             # if there is a param credential to lab large entered in the dashboard, send the scenario to lab large to be executed
             if ubiome_state.get_credentials_lab_large():
-                try:
-                    with st.spinner(translate_service.translate("sending_data")):
-                        ScenarioTransfertService.export_scenario_to_lab(
-                            scenario_id=scenario.get_model_id(),
-                            values=SendScenarioToLab.build_config(
-                                ubiome_state.get_credentials_lab_large(),
-                                "All",
-                                "Force new scenario",
-                                True,
-                            ),
-                        )
-                    st.success(translate_service.translate("data_sent_successfully"))
-                except Exception:
-                    st.error(translate_service.translate("error_sending_data"))
+                export_scenario_to_lab_large(
+                    scenario.get_model_id(),
+                    ubiome_state.get_credentials_lab_large(),
+                    translate_service,
+                )
 
             # if there is no param credential to lab large entered in the dashboard, the scenario will be executed in the current environment
             else:
@@ -205,7 +195,10 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         if ubiome_state.get_is_standalone():
             return
 
-        if selected_scenario.status == ScenarioStatus.DRAFT:
+        if (
+            selected_scenario.status == ScenarioStatus.DRAFT
+            and not ubiome_state.get_is_standalone()
+        ):
             display_saved_scenario_actions(selected_scenario, ubiome_state)
 
         if selected_scenario.status != ScenarioStatus.SUCCESS:
