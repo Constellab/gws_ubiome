@@ -1,19 +1,18 @@
 import streamlit as st
 from gws_core import (
-    InputTask,
-    ProcessProxy,
     ProtocolProxy,
     ResourceSet,
     Scenario,
     ScenarioProxy,
     ScenarioStatus,
 )
-from gws_ubiome import Qiime2QualityCheck
+
 from ..functions_steps import (
     create_base_scenario_with_tags,
     search_updated_metadata_table,
 )
 from ..state import State
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -30,36 +29,26 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
         if ubiome_state.get_is_standalone():
             return
 
-        if st.button(translate_service.translate("run_quality_check"), icon=":material/play_arrow:", width="content"):
-            # Create a new scenario in the lab
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_QC, f"{ubiome_state.get_current_analysis_name()} - Quality check")
-            protocol: ProtocolProxy = scenario.get_protocol()
-
-            metadata_resource = protocol.add_process(
-                InputTask, 'metadata_resource',
-                {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
-
-            fastq_resource = protocol.add_process(
-                InputTask, 'fastq_resource',
-                {InputTask.config_name: ubiome_state.get_resource_id_fastq()})
-
-
-            # Step 2 : QC task
-            qc_process : ProcessProxy = protocol.add_process(Qiime2QualityCheck, 'qc_process', config_params= {"sequencing_type": ubiome_state.get_sequencing_type()})
-            protocol.add_connector(out_port=fastq_resource >> 'resource',
-                                       in_port=qc_process << 'fastq_folder')
-            protocol.add_connector(out_port=metadata_resource >> 'resource',
-                                   in_port=qc_process << 'metadata_table')
-            # Add output
-            protocol.add_output('qc_process_output_folder', qc_process >> 'result_folder', flag_resource=False)
-            protocol.add_output('qc_process_output_quality_table', qc_process >> 'quality_table', flag_resource=False)
+        if st.button(
+            translate_service.translate("run_quality_check"),
+            icon=":material/play_arrow:",
+            width="content",
+        ):
+            scenario = UbiomeScenarioService.create_qc_scenario(
+                folder_id=ubiome_state.get_selected_folder_id(),
+                fastq_name=ubiome_state.get_current_fastq_name(),
+                analysis_name=ubiome_state.get_current_analysis_name(),
+                pipeline_id=ubiome_state.get_current_ubiome_pipeline_id(),
+                metadata_resource_id=ubiome_state.get_resource_id_metadata_table(),
+                fastq_resource_id=ubiome_state.get_resource_id_fastq(),
+                sequencing_type=ubiome_state.get_sequencing_type(),
+            )
             scenario.add_to_queue()
-
             ubiome_state.reset_tree_analysis()
             ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
 
-    else :
+    else:
         # Visualize QC results
         st.markdown(f"##### {translate_service.translate('quality_control_results')}")
         if selected_scenario.status != ScenarioStatus.SUCCESS:
@@ -70,7 +59,9 @@ def render_qc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
 
         # Retrieve the resource set and save in a variable each visualization
         # Retrieve outputs
-        resource_set_output : ResourceSet = protocol_proxy.get_process('qc_process').get_output('quality_table')
+        resource_set_output: ResourceSet = protocol_proxy.get_process("qc_process").get_output(
+            "quality_table"
+        )
         resource_set_result_dict = resource_set_output.get_resources()
 
         # Create tabs for each result

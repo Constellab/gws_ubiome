@@ -11,9 +11,9 @@ from streamlit_slickgrid import (
 
 from ..functions_steps import (
     build_scenarios_by_step_dict,
-    get_status_emoji,
 )
 from ..state import State
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 def render_first_page(ubiome_state: State):
@@ -53,8 +53,12 @@ def render_first_page(ubiome_state: State):
 
         search_scenario_builder = (
             ScenarioSearchBuilder()
-            .add_tag_filter(Tag(key=ubiome_state.TAG_BRICK, value=ubiome_state.TAG_UBIOME))
-            .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME, value=ubiome_state.TAG_METADATA))
+            .add_tag_filter(
+                Tag(key=UbiomeScenarioService.TAG_BRICK, value=UbiomeScenarioService.TAG_UBIOME)
+            )
+            .add_tag_filter(
+                Tag(key=UbiomeScenarioService.TAG_UBIOME, value=UbiomeScenarioService.TAG_METADATA)
+            )
             .add_is_archived_filter(False)
         )
 
@@ -62,96 +66,9 @@ def render_first_page(ubiome_state: State):
         list_scenario_user: list[Scenario] = search_scenario_builder.search_all()
 
         # Create data for SlickGrid table
-        table_data = []
-        for scenario in list_scenario_user:
-            entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, scenario.id)
-            tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[
-                0
-            ].to_simple_tag()
-
-            # Initialize row data with basic info
-            row_data = {
-                "id": scenario.id,
-                "Name given": tag_analysis_name.value,
-                "Folder": scenario.folder.name if scenario.folder else "",
-                "metadata": get_status_emoji(scenario.status),
-            }
-
-            # Get pipeline ID to find all related scenarios
-            pipeline_id_tags = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME_PIPELINE_ID)
-            if pipeline_id_tags:
-                pipeline_id = pipeline_id_tags[0].to_simple_tag().value
-
-                # Search for all scenarios with this pipeline ID
-                pipeline_search_builder = (
-                    ScenarioSearchBuilder()
-                    .add_tag_filter(Tag(key=ubiome_state.TAG_UBIOME_PIPELINE_ID, value=pipeline_id))
-                    .add_is_archived_filter(False)
-                )
-
-                pipeline_scenarios = pipeline_search_builder.search_all()
-
-                # Check each step type and add status to row data
-                step_types = [
-                    (ubiome_state.TAG_QC, "quality_control"),
-                    (ubiome_state.TAG_MULTIQC, "multiqc"),
-                    (ubiome_state.TAG_FEATURE_INFERENCE, "feature_inference"),
-                    (ubiome_state.TAG_RAREFACTION, "rarefaction"),
-                    (ubiome_state.TAG_TAXONOMY, "taxonomy"),
-                    (ubiome_state.TAG_PCOA_DIVERSITY, "pcoa_diversity"),
-                    (ubiome_state.TAG_ANCOM, "ancom"),
-                    (ubiome_state.TAG_DB_ANNOTATOR, "db_annotator"),
-                ]
-
-                # Add ratio step if enabled (before 16S steps)
-                if ubiome_state.get_has_ratio_step():
-                    step_types.append((ubiome_state.TAG_RATIO, "ratio"))
-
-                # Add 16S steps at the end
-                step_types.extend(
-                    [
-                        (ubiome_state.TAG_16S, "16s"),
-                        (ubiome_state.TAG_16S_VISU, "16s_visualization"),
-                    ]
-                )
-
-                for tag_value, field_name in step_types:
-                    step_scenarios = [
-                        s
-                        for s in pipeline_scenarios
-                        if any(
-                            tag.tag_key == ubiome_state.TAG_UBIOME and tag.tag_value == tag_value
-                            for tag in EntityTagList.find_by_entity(
-                                TagEntityType.SCENARIO, s.id
-                            ).get_tags()
-                        )
-                    ]
-
-                    if step_scenarios:
-                        # Get the most recent scenario for this step
-                        latest_scenario = max(step_scenarios, key=lambda x: x.created_at)
-                        row_data[field_name] = get_status_emoji(latest_scenario.status)
-                    else:
-                        row_data[field_name] = ""
-            else:
-                # Initialize empty status for other steps when no pipeline ID
-                step_fields = [
-                    "quality_control",
-                    "multiqc",
-                    "feature_inference",
-                    "rarefaction",
-                    "taxonomy",
-                    "pcoa_diversity",
-                    "ancom",
-                    "db_annotator",
-                ]
-                if ubiome_state.get_has_ratio_step():
-                    step_fields.append("ratio")
-                step_fields.extend(["16s", "16s_visualization"])
-                for field in step_fields:
-                    row_data[field] = ""
-
-            table_data.append(row_data)
+        table_data = UbiomeScenarioService.build_analysis_overview_table_data(
+            list_scenario_user, ubiome_state.get_has_ratio_step()
+        )
 
         if table_data:
             columns = [
@@ -334,7 +251,7 @@ def render_first_page(ubiome_state: State):
 
                                 # Get ubiome pipeline id from scenario tag
                                 tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(
-                                    ubiome_state.TAG_UBIOME_PIPELINE_ID
+                                    UbiomeScenarioService.TAG_UBIOME_PIPELINE_ID
                                 )[0].to_simple_tag()
                                 ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
