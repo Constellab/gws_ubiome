@@ -7,10 +7,7 @@ from gws_core import (
     ScenarioStatus,
 )
 
-from ..functions_steps import (
-    create_base_scenario_with_tags,
-    search_updated_metadata_table,
-)
+from ..functions_steps import search_updated_metadata_table
 from ..state import State
 from ..ubiome_scenario_service import UbiomeScenarioService
 
