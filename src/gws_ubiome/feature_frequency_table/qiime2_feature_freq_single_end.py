@@ -40,13 +40,13 @@ class Qiime2FeatureTableExtractorSE(Task):
 
     ```truncated_reads_size``` refer to the position at which read sequences should be *truncated* due to decrease in quality. This truncates the 3' end of sequences (i.e. the right side).
 
-    ```5_prime_hard_trimming_reads_size``` refers to the position at which read sequences should be *trimmed* due to low quality. This trims the 5' end of the input sequences (i.e. the left side).
+    ```five_prime_hard_trimming_reads_size``` refers to the position at which read sequences should be *trimmed* due to low quality. This trims the 5' end of the input sequences (i.e. the left side).
 
-    If both ```truncated_reads_size``` and ```5_prime_hard_trimming_reads_size``` are provided, filtered reads will have length ```truncated_reads_size```-```5_prime_hard_trimming_reads_size```.
+    If both ```truncated_reads_size``` and ```five_prime_hard_trimming_reads_size``` are provided, filtered reads will have length ```truncated_reads_size```-```five_prime_hard_trimming_reads_size```.
 
     *Example*
 
-    With the following sequence of 10 nucleotides **ATCATCATCG**, using ```truncated_reads_size``` at 8 and ```5_prime_hard_trimming_reads_size``` at 2 will result in a sequence of 6 nucleotide **CATCAT**.
+    With the following sequence of 10 nucleotides **ATCATCATCG**, using ```truncated_reads_size``` at 8 and ```five_prime_hard_trimming_reads_size``` at 2 will result in a sequence of 6 nucleotide **CATCAT**.
 
     **About Dada2:**
 
@@ -68,7 +68,7 @@ class Qiime2FeatureTableExtractorSE(Task):
     config_specs: ConfigSpecs = ConfigSpecs({
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads"),
         "truncated_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
-        "5_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime"),
+        "five_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime"),
         "p-min-fold-parent-over-abundance": IntParam(optional=True, default_value=1, min_value=1, short_description="The minimum abundance of potential parents of a sequence being tested as chimeric")
 
     })
@@ -78,7 +78,7 @@ class Qiime2FeatureTableExtractorSE(Task):
         qiime2_folder_path=qiime2_folder.path
         thrd=params["threads"]
         trct_forward=params["truncated_reads_size"]
-        hard_trim=params["5_prime_hard_trimming_reads_size"]
+        hard_trim=params["five_prime_hard_trimming_reads_size"]
         min_fold=params["p-min-fold-parent-over-abundance"]
         script_file_dir=os.path.dirname(os.path.realpath(__file__))
 
