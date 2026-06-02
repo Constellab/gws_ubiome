@@ -69,7 +69,7 @@ class Qiime2FeatureTableExtractorPE(Task):
         "truncated_forward_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "truncated_reverse_reads_size": IntParam(min_value=20, short_description="Read size to conserve after quality PHRED check in the previous step"),
         "five_prime_hard_trimming_reads_size": IntParam(optional=True, default_value=0, min_value=0, short_description="Read size to trim in 5prime"),
-        "p-min-fold-parent-over-abundance": IntParam(optional=True, default_value=1, min_value=1, short_description="The minimum abundance of potential parents of a sequence being tested as chimeric")
+        "p_min_fold_parent_over_abundance": IntParam(optional=True, default_value=1, min_value=1, short_description="The minimum abundance of potential parents of a sequence being tested as chimeric")
 
     })
 
@@ -80,7 +80,7 @@ class Qiime2FeatureTableExtractorPE(Task):
         trct_forward=params["truncated_forward_reads_size"]
         trct_reverse=params["truncated_reverse_reads_size"]
         hard_trim=params["five_prime_hard_trimming_reads_size"]
-        min_fold=params["p-min-fold-parent-over-abundance"]
+        min_fold=params["p_min_fold_parent_over_abundance"]
         script_file_dir=os.path.dirname(os.path.realpath(__file__))
 
         shell_proxy=Qiime2ShellProxyHelper.create_proxy(
