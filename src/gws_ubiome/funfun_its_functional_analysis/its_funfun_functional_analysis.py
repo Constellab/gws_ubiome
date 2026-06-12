@@ -1,4 +1,5 @@
 
+from gws_core.config.param.select_param import SelectParam
 import os
 
 from gws_core import (
@@ -48,7 +49,7 @@ class FunfunFunctionalAnalysis(Task):
     })
 
     config_specs: ConfigSpecs = ConfigSpecs({
-        "its_type": StrParam(allowed_values=["its1", "its2"], short_description="ITS type")
+        "its_type": SelectParam(options=["its1", "its2"], short_description="ITS type")
     })
 
     python_file_path = os.path.join(

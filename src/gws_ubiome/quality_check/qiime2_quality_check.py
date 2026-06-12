@@ -1,4 +1,5 @@
 
+from gws_core.config.param.select_param import SelectParam
 import os
 
 import plotly.graph_objects as go
@@ -80,8 +81,8 @@ class Qiime2QualityCheck(Task):
     })
     config_specs: ConfigSpecs = ConfigSpecs({
         "sequencing_type":
-        StrParam(
-            default_value="paired-end", allowed_values=["paired-end", "single-end"],
+        SelectParam(
+            default_value="paired-end", options=["paired-end", "single-end"],
             short_description="Type of sequencing. Defaults to paired-end")
     })
 

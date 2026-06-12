@@ -1,4 +1,5 @@
 
+from gws_core.config.param.select_param import SelectParam
 import os
 
 import plotly.graph_objects as go
@@ -107,7 +108,7 @@ class Qiime2TaxonomyDiversity(Task):
             min_value=20,
             short_description="Depth of coverage when reaching the plateau of the curve on the previous step"),
         "taxonomic_affiliation_database":
-        StrParam(allowed_values=["RDP-v18.202208", "Silva-v13.8", "NCBI-16S_rRNA.20220712", "GreenGenes-v13.8"], default_value="RDP-v18.202208",
+        SelectParam(options=["RDP-v18.202208", "Silva-v13.8", "NCBI-16S_rRNA.20220712", "GreenGenes-v13.8"], default_value="RDP-v18.202208",
                  short_description="Database for taxonomic affiliation"),  # TO DO: add ram related options for "RDP", "Silva", , "NCBI-16S"
         "threads": IntParam(default_value=2, min_value=2, short_description="Number of threads")
     })

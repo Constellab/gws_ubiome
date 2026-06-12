@@ -1,3 +1,4 @@
+from gws_core.config.param.select_param import SelectParam
 import os
 import shlex  # FIX: robust quoting
 
@@ -76,8 +77,8 @@ class Ggpicrust2FunctionalAnalysis(Task):
 
     config_specs: ConfigSpecs = ConfigSpecs(
         {
-            "DA_method": StrParam(
-                allowed_values=["LinDA", "DESeq2"],
+            "DA_method": SelectParam(
+                options=["LinDA", "DESeq2"],
                 short_description="Differential abundance (DA) method",
             ),
             "Samples_column_name": StrParam(

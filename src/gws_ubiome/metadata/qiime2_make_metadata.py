@@ -1,4 +1,5 @@
 
+from gws_core.config.param.select_param import SelectParam
 import os
 
 from gws_core import (
@@ -60,8 +61,8 @@ class Qiime2MetadataTableMaker(Task):
         File, short_description="Metadata file", human_name="Metadata_file")})
     config_specs: ConfigSpecs = ConfigSpecs({
         "sequencing_type":
-        StrParam(
-            default_value="paired-end", allowed_values=["paired-end", "single-end"],
+        SelectParam(
+            default_value="paired-end", options=["paired-end", "single-end"],
             short_description="Type of sequencing strategy [Respectively, options : paired-end, single-end]. Default = paired-end"),
         "forward_file_differentiator":
         StrParam(
