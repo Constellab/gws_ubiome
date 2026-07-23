@@ -4,7 +4,7 @@
 
 <br/>
 
-# 👋 Welcome to GWS Ubiome 
+# 👋 Welcome to GWS Ubiome
 
 ```gws_ubiome``` is a [Constellab](https://constellab.io) library (called bricks) developped by [Gencovery](https://gencovery.com/). GWS stands for Gencovery Web Services.
 
@@ -18,14 +18,12 @@
 
 ## ✅ Features
 
-The uBiome Brick is a compact, user-friendly device designed for efficient microbiome and metagenomic data analysis. It streamlines the collection process, providing high-quality data acquisition and rapid insights into microbial communities. Ideal for research and clinical applications, the uBiome Brick offers a robust, scalable solution for advancing microbiome science.
-
-- **Efficient Sampling**: Simplifies microbiome sample collection for accurate and reliable data.
-- **High-Quality Analysis**: Enables detailed metagenomic analysis for comprehensive microbial insights.
-- **User-Friendly**: Easy to use, making it accessible for both researchers and clinicians.
-- **Scalable Solution**: Suitable for small-scale studies and large-scale research projects.
-
-Explore how the uBiome Brick can enhance your microbiome research and clinical applications.
+Gencovery brick for 16S/ITS amplicon microbiome analysis, built around [QIIME2](https://qiime2.org):
+- Prepare QIIME2 metadata from a FASTQ folder, and run sequencing quality checks
+- Extract feature/ASV frequency tables from single-end or paired-end reads, with rarefaction analysis
+- Compute taxonomy and diversity metrics, annotate taxa composition, and run ANCOM differential analysis
+- Predict functional profiles from 16S (PICRUSt2) or ITS (FunFun, PICRUSt2) data, with visualization (ggpicrust2)
+- Guided end-to-end analysis through a Streamlit dashboard app (Ubiome Dashboard / standalone app)
 
 
 ## 📄 Documentation
@@ -36,7 +34,7 @@ Explore how the uBiome Brick can enhance your microbiome research and clinical a
 
 ## 🛠️ Installation
 
-The `gws_ubiome` brick requires the `gws_core` and `gws_omix` bricks.
+The `gws_ubiome` brick requires the `gws_core`, `gws_omix` and `gws_gaia` bricks.
 
 ### 🔥 Recommended Method
 
@@ -87,7 +85,7 @@ gws server test all
 
 ## 🌎 License
 
-```gws_ubiome``` is completely free and open-source and licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
+```gws_ubiome``` is completely free and open-source and licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.en.html).
 
 <br/>
 
