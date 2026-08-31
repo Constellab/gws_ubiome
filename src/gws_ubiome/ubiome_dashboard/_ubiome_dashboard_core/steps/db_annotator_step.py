@@ -1,16 +1,16 @@
 import streamlit as st
-from gws_core import InputTask, Scenario, ScenarioProxy, ScenarioStatus, Tag
+from gws_core import Scenario, ScenarioProxy, ScenarioStatus
 from gws_streamlit_main import StreamlitResourceSelect
 from gws_ubiome import Qiime2TableDbAnnotator
 
 from ..functions_steps import (
-    create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
     render_scenario_table,
 )
 from ..state import State
 from ..ubiome_config import UbiomeConfig
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 @st.dialog("DB annotator parameters")
@@ -20,7 +20,7 @@ def dialog_db_annotator_params(ubiome_state: State):
         translate_service.translate("taxa_composition_scenario_name"),
         placeholder=translate_service.translate("enter_taxa_composition_name"),
         value=f"{ubiome_state.get_current_analysis_name()} - Taxa Composition",
-        key=ubiome_state.DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY,
+        key=UbiomeScenarioService.DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY,
     )
 
     # Display available annotation tables for user selection
@@ -34,7 +34,7 @@ def dialog_db_annotator_params(ubiome_state: State):
     default_annotation_table = ubiome_config.get_default_annotation_table_resource(resource_select)
     annotation_table_selected = resource_select.select_resource(
         placeholder=translate_service.translate("select_annotation_table_placeholder"),
-        key=ubiome_state.SELECTED_ANNOTATION_TABLE_KEY,
+        key=UbiomeScenarioService.SELECTED_ANNOTATION_TABLE_KEY,
         default_resource=default_annotation_table,
     )
     # Use first_resource as fallback if no selection is made
@@ -66,86 +66,18 @@ def dialog_db_annotator_params(ubiome_state: State):
             return
         selected_annotation_table_id = annotation_table_selected.get_resource().get_model_id()
 
-        scenario = create_base_scenario_with_tags(
-            ubiome_state,
-            ubiome_state.TAG_DB_ANNOTATOR,
-            ubiome_state.get_scenario_user_name(ubiome_state.DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY),
+        scenario = UbiomeScenarioService.create_db_annotator_scenario(
+            folder_id=ubiome_state.get_selected_folder_id(),
+            fastq_name=ubiome_state.get_current_fastq_name(),
+            analysis_name=ubiome_state.get_current_analysis_name(),
+            pipeline_id=ubiome_state.get_current_ubiome_pipeline_id(),
+            title=ubiome_state.get_scenario_user_name(
+                UbiomeScenarioService.DB_ANNOTATOR_SCENARIO_NAME_INPUT_KEY
+            ),
+            taxonomy_scenario_id=ubiome_state.get_current_taxonomy_scenario_id_parent(),
+            feature_scenario_id=ubiome_state.get_current_feature_scenario_id_parent(),
+            annotation_table_model_id=selected_annotation_table_id,
         )
-        taxonomy_scenario_id = ubiome_state.get_current_taxonomy_scenario_id_parent()
-        feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
-        scenario.add_tag(
-            Tag(
-                ubiome_state.TAG_FEATURE_INFERENCE_ID,
-                feature_scenario_id,
-                is_propagable=False,
-                auto_parse=True,
-            )
-        )
-        scenario.add_tag(
-            Tag(
-                ubiome_state.TAG_TAXONOMY_ID,
-                taxonomy_scenario_id,
-                is_propagable=False,
-                auto_parse=True,
-            )
-        )
-        protocol = scenario.get_protocol()
-
-        # Add DB annotator process
-        db_annotator_process = protocol.add_process(Qiime2TableDbAnnotator, "db_annotator_process")
-
-        # Get the taxonomy diversity folder
-        scenario_proxy_tax = ScenarioProxy.from_existing_scenario(taxonomy_scenario_id)
-        protocol_proxy_tax = scenario_proxy_tax.get_protocol()
-        taxonomy_folder_output = protocol_proxy_tax.get_process("taxonomy_process").get_output(
-            "result_folder"
-        )
-
-        # Add input resources
-        taxonomy_folder_resource = protocol.add_process(
-            InputTask,
-            "taxonomy_folder_resource",
-            {InputTask.config_name: taxonomy_folder_output.get_model_id()},
-        )
-
-        annotation_table_resource = protocol.add_process(
-            InputTask,
-            "annotation_table_resource",
-            {InputTask.config_name: selected_annotation_table_id},
-        )
-
-        # Connect inputs to DB annotator process
-        protocol.add_connector(
-            out_port=taxonomy_folder_resource >> "resource",
-            in_port=db_annotator_process << "diversity_folder",
-        )
-        protocol.add_connector(
-            out_port=annotation_table_resource >> "resource",
-            in_port=db_annotator_process << "annotation_table",
-        )
-
-        # Add outputs
-        protocol.add_output(
-            "relative_abundance_table_output",
-            db_annotator_process >> "relative_abundance_table",
-            flag_resource=False,
-        )
-        protocol.add_output(
-            "relative_abundance_plotly_output",
-            db_annotator_process >> "relative_abundance_plotly_resource",
-            flag_resource=False,
-        )
-        protocol.add_output(
-            "absolute_abundance_table_output",
-            db_annotator_process >> "absolute_abundance_table",
-            flag_resource=False,
-        )
-        protocol.add_output(
-            "absolute_abundance_plotly_output",
-            db_annotator_process >> "absolute_abundance_plotly_resource",
-            flag_resource=False,
-        )
-
         # Only add to queue if Run was clicked
         if run_clicked:
             scenario.add_to_queue()
@@ -160,7 +92,7 @@ def render_db_annotator_step(selected_scenario: Scenario, ubiome_state: State) -
     # Get the selected tree menu item to determine which taxonomy scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
-    if selected_item.key.startswith(ubiome_state.TAG_DB_ANNOTATOR):
+    if selected_item.key.startswith(UbiomeScenarioService.TAG_DB_ANNOTATOR):
         taxonomy_scenario_parent_id = ubiome_state.get_parent_taxonomy_scenario_from_step()
         ubiome_state.set_current_taxonomy_scenario_id_parent(taxonomy_scenario_parent_id.id)
         # Retrieve the feature inference scenario ID using the utility function

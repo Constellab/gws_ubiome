@@ -8,6 +8,7 @@ from ..functions_steps import (
     search_updated_metadata_table,
 )
 from ..state import State
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -61,7 +62,7 @@ def render_metadata_step(selected_scenario: Scenario, ubiome_state: State) -> No
                 )
 
             # Use data editor for editing capabilities
-            st.session_state[ubiome_state.EDITED_DF_METADATA] = st.data_editor(
+            st.session_state[UbiomeScenarioService.EDITED_DF_METADATA] = st.data_editor(
                 df_metadata,
                 hide_index=True,
                 width="stretch",

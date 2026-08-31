@@ -1,9 +1,6 @@
 import streamlit as st
 from gws_core import (
-    FsNodeExtractor,
     GenerateShareLinkDTO,
-    InputTask,
-    ProcessProxy,
     ProtocolProxy,
     Scenario,
     ScenarioProxy,
@@ -12,12 +9,9 @@ from gws_core import (
     ShareLinkService,
 )
 from gws_streamlit_main import StreamlitContainers
-from gws_omix.rna_seq.multiqc.multiqc import MultiQc
-from gws_omix.rna_seq.quality_check.fastq_init import FastqcInit
-from ..functions_steps import (
-    create_base_scenario_with_tags,
-)
+
 from ..state import State
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> None:
@@ -33,38 +27,20 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
             st.info(translate_service.translate("multiqc_not_run"))
             return
 
-        if st.button(translate_service.translate("run_multiqc"), icon=":material/play_arrow:", width="content"):
-            # Create a new scenario for MultiQC
-            scenario = create_base_scenario_with_tags(ubiome_state, ubiome_state.TAG_MULTIQC, f"{ubiome_state.get_current_analysis_name()} - MultiQC")
-            protocol: ProtocolProxy = scenario.get_protocol()
-
-            # Get input resources from the current MultiQC scenario or create new ones
-            fastq_resource = protocol.add_process(
-                InputTask, 'fastq_resource',
-                {InputTask.config_name: ubiome_state.get_resource_id_fastq()})
-
-            metadata_resource = protocol.add_process(
-                InputTask, 'metadata_resource',
-                {InputTask.config_name: ubiome_state.get_resource_id_metadata_table()})
-
-            # FastQC and MultiQC tasks
-            fastqc_process : ProcessProxy = protocol.add_process(FastqcInit, 'fastqc_process')
-            protocol.add_connector(out_port=fastq_resource >> 'resource',
-                                    in_port=fastqc_process << 'fastq_folder')
-            protocol.add_connector(out_port=metadata_resource >> 'resource',
-                                in_port=fastqc_process << 'metadata')
-
-            multiqc_process : ProcessProxy = protocol.add_process(MultiQc, 'multiqc_process')
-            protocol.add_connector(out_port=fastqc_process >> 'output',
-                                    in_port=multiqc_process << 'fastqc_reports_folder')
-
-            # Extract the html ressource
-            fs_node_extractor_html = protocol.add_process(FsNodeExtractor, 'fs_node_extractor_html', {"fs_node_path": "multiqc_combined.html"})
-            # Add connectors
-            protocol.add_connector(out_port=multiqc_process >> 'output', in_port=fs_node_extractor_html << "source")
-            protocol.add_output('multiqc_process_output_html', fs_node_extractor_html >> "target", flag_resource=False)
+        if st.button(
+            translate_service.translate("run_multiqc"),
+            icon=":material/play_arrow:",
+            width="content",
+        ):
+            scenario = UbiomeScenarioService.create_multiqc_scenario(
+                folder_id=ubiome_state.get_selected_folder_id(),
+                fastq_name=ubiome_state.get_current_fastq_name(),
+                analysis_name=ubiome_state.get_current_analysis_name(),
+                pipeline_id=ubiome_state.get_current_ubiome_pipeline_id(),
+                fastq_resource_id=ubiome_state.get_resource_id_fastq(),
+                metadata_resource_id=ubiome_state.get_resource_id_metadata_table(),
+            )
             scenario.add_to_queue()
-
             ubiome_state.reset_tree_analysis()
             ubiome_state.set_tree_default_item(scenario.get_model_id())
             st.rerun()
@@ -72,8 +48,8 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
     else:
         # Visualize MultiQC results
         col_title, col_button_html = StreamlitContainers.columns_with_fit_content(
-                        key="container_html_header",
-                        cols=[1, 'fit-content'], vertical_align_items='center')
+            key="container_html_header", cols=[1, "fit-content"], vertical_align_items="center"
+        )
         with col_title:
             st.markdown(f"##### {translate_service.translate('multiqc_results')}")
         if selected_scenario.status != ScenarioStatus.SUCCESS:
@@ -83,16 +59,17 @@ def render_multiqc_step(selected_scenario: Scenario, ubiome_state: State) -> Non
         protocol_proxy: ProtocolProxy = scenario_proxy.get_protocol()
 
         # Retrieve html output
-        multiqc_output = protocol_proxy.get_process('fs_node_extractor_html').get_output('target')
+        multiqc_output = protocol_proxy.get_process("fs_node_extractor_html").get_output("target")
 
         # Generate a public share link for the html
         generate_link_dto = GenerateShareLinkDTO.get_1_hour_validity(
-            entity_id=multiqc_output.get_model_id(),
-            entity_type=ShareLinkEntityType.RESOURCE
+            entity_id=multiqc_output.get_model_id(), entity_type=ShareLinkEntityType.RESOURCE
         )
 
         share_link = ShareLinkService.get_or_create_valid_public_share_link(generate_link_dto)
         with col_button_html:
-            st.markdown(f"[{translate_service.translate('view_multiqc_report')}]({share_link.get_public_link()})")
+            st.markdown(
+                f"[{translate_service.translate('view_multiqc_report')}]({share_link.get_public_link()})"
+            )
         # Display html
         st.components.v1.iframe(share_link.get_public_link(), scrolling=True, height=500)

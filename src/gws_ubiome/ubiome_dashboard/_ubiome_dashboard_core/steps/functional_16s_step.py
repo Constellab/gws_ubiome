@@ -1,23 +1,20 @@
 import streamlit as st
 from gws_core import (
-    FsNodeExtractor,
-    InputTask,
     Scenario,
     ScenarioProxy,
     ScenarioStatus,
-    Tag,
 )
 from gws_streamlit_main import StreamlitTaskRunner
 from gws_ubiome import Picrust2FunctionalAnalysis
 
 from ..functions_steps import (
-    create_base_scenario_with_tags,
     display_saved_scenario_actions,
     display_scenario_parameters,
     export_scenario_to_lab_large,
     render_scenario_table,
 )
 from ..state import State
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 @st.dialog("16S parameters")
@@ -27,11 +24,11 @@ def dialog_16s_params(ubiome_state: State):
         translate_service.translate("16s_functional_analysis_scenario_name"),
         placeholder=translate_service.translate("enter_16s_functional_analysis_name"),
         value=f"{ubiome_state.get_current_analysis_name()} - 16S Functional Analysis",
-        key=ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY,
+        key=UbiomeScenarioService.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY,
     )
     form_config = StreamlitTaskRunner(Picrust2FunctionalAnalysis)
     form_config.generate_config_form_without_run(
-        session_state_key=ubiome_state.FUNCTIONAL_ANALYSIS_CONFIG_KEY,
+        session_state_key=UbiomeScenarioService.FUNCTIONAL_ANALYSIS_CONFIG_KEY,
         default_config_values=Picrust2FunctionalAnalysis.config_specs.get_default_values(),
         is_default_config_valid=Picrust2FunctionalAnalysis.config_specs.mandatory_values_are_set(
             Picrust2FunctionalAnalysis.config_specs.get_default_values()
@@ -67,15 +64,15 @@ def dialog_16s_params(ubiome_state: State):
 
         scenario = create_base_scenario_with_tags(
             ubiome_state,
-            ubiome_state.TAG_16S,
+            UbiomeScenarioService.TAG_16S,
             ubiome_state.get_scenario_user_name(
-                ubiome_state.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY
+                UbiomeScenarioService.FUNCTIONAL_ANALYSIS_SCENARIO_NAME_INPUT_KEY
             ),
         )
         feature_scenario_id = ubiome_state.get_current_feature_scenario_id_parent()
         scenario.add_tag(
             Tag(
-                ubiome_state.TAG_FEATURE_INFERENCE_ID,
+                UbiomeScenarioService.TAG_FEATURE_INFERENCE_ID,
                 feature_scenario_id,
                 is_propagable=False,
                 auto_parse=True,
@@ -83,7 +80,7 @@ def dialog_16s_params(ubiome_state: State):
         )
         scenario.add_tag(
             Tag(
-                ubiome_state.TAG_16S_ID,
+                UbiomeScenarioService.TAG_16S_ID,
                 scenario.get_model_id(),
                 is_propagable=False,
                 auto_parse=True,
@@ -163,7 +160,7 @@ def render_16s_step(selected_scenario: Scenario, ubiome_state: State) -> None:
     # Get the selected tree menu item to determine which feature inference scenario is selected
     tree_menu = ubiome_state.get_tree_menu_object()
     selected_item = tree_menu.get_selected_item()
-    if selected_item.key.startswith(ubiome_state.TAG_16S):
+    if selected_item.key.startswith(UbiomeScenarioService.TAG_16S):
         feature_scenario_parent_id = ubiome_state.get_parent_feature_inference_scenario_from_step()
         # save in session state
         ubiome_state.set_current_feature_scenario_id_parent(feature_scenario_parent_id.id)

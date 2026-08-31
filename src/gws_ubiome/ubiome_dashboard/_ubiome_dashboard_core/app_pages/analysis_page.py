@@ -46,13 +46,12 @@ from ..steps.taxonomy_step import (
     render_taxonomy_step,
 )
 from ..ubiome_config import UbiomeConfig
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 # Check if steps are completed (have successful scenarios)
-def has_successful_scenario(step_name: str, scenarios_by_step: dict):
-    if step_name not in scenarios_by_step:
-        return False
-    return any(s.status == ScenarioStatus.SUCCESS for s in scenarios_by_step[step_name])
+def has_successful_scenario(step_name: str, scenarios_by_step: dict) -> bool:
+    return UbiomeScenarioService.has_successful_scenario(step_name, scenarios_by_step)
 
 
 # Helper function to get icon - check_check if step has been run for specific parent, otherwise original icon
@@ -70,29 +69,26 @@ def get_step_icon(
 def build_analysis_tree_menu(ubiome_state: State):
     """Build the tree menu for analysis workflow steps"""
     translate_service = ubiome_state.get_translate_service()
-    button_menu = StreamlitTreeMenu(key=ubiome_state.TREE_ANALYSIS_KEY)
+    button_menu = StreamlitTreeMenu(key=UbiomeScenarioService.TREE_ANALYSIS_KEY)
 
     # Build scenarios_by_step dictionary using helper function
     scenarios_by_step = ubiome_state.get_scenarios_by_step_dict()
 
     # Set in the state if data is single-end or paired-end
     metadata_scenario = ubiome_state.get_scenario_step_metadata()[0]
-    scenario_metadata_proxy = ScenarioProxy.from_existing_scenario(metadata_scenario.id)
-    config_sequencing_type = (
-        scenario_metadata_proxy.get_protocol()
-        .get_process("metadata_process")
-        .get_param("sequencing_type")
+    config_sequencing_type = UbiomeScenarioService.get_scenario_sequencing_type(
+        metadata_scenario.id
     )
     ubiome_state.set_sequencing_type(config_sequencing_type)
 
     # 1) Metadata table
     scenario_metadata = None
-    if ubiome_state.TAG_METADATA in scenarios_by_step:
+    if UbiomeScenarioService.TAG_METADATA in scenarios_by_step:
         # If a scenario exists, use the first scenario's ID
         scenario_metadata = ubiome_state.get_scenario_step_metadata()
         key_metadata = scenario_metadata[0].id
     else:
-        key_metadata = ubiome_state.TAG_METADATA
+        key_metadata = UbiomeScenarioService.TAG_METADATA
 
     # Show the default selected item if exist either show first step
     if ubiome_state.get_tree_default_item():
@@ -104,7 +100,7 @@ def build_analysis_tree_menu(ubiome_state: State):
         label=translate_service.translate("metadata_table"),
         key=key_metadata,
         material_icon=get_step_icon(
-            ubiome_state.TAG_METADATA, scenarios_by_step, scenario_metadata
+            UbiomeScenarioService.TAG_METADATA, scenarios_by_step, scenario_metadata
         ),
     )
 
@@ -112,41 +108,43 @@ def build_analysis_tree_menu(ubiome_state: State):
 
     # 2) QC - only if metadata is successful
     if (
-        has_successful_scenario(ubiome_state.TAG_METADATA, scenarios_by_step)
-        or ubiome_state.TAG_QC in scenarios_by_step
+        has_successful_scenario(UbiomeScenarioService.TAG_METADATA, scenarios_by_step)
+        or UbiomeScenarioService.TAG_QC in scenarios_by_step
     ):
         scenario_qc = None
-        if ubiome_state.TAG_QC in scenarios_by_step:
+        if UbiomeScenarioService.TAG_QC in scenarios_by_step:
             scenario_qc = ubiome_state.get_scenario_step_qc()
             # Use the first QC scenario's ID
             key_qc = scenario_qc[0].id
         else:
-            key_qc = ubiome_state.TAG_QC
+            key_qc = UbiomeScenarioService.TAG_QC
         qc_item = StreamlitTreeMenuItem(
             label=translate_service.translate("quality_control"),
             key=key_qc,
-            material_icon=get_step_icon(ubiome_state.TAG_QC, scenarios_by_step, scenario_qc),
+            material_icon=get_step_icon(
+                UbiomeScenarioService.TAG_QC, scenarios_by_step, scenario_qc
+            ),
         )
 
         button_menu.add_item(qc_item)
 
     # MultiQC - only if QC is successful
     if (
-        has_successful_scenario(ubiome_state.TAG_QC, scenarios_by_step)
-        or ubiome_state.TAG_MULTIQC in scenarios_by_step
+        has_successful_scenario(UbiomeScenarioService.TAG_QC, scenarios_by_step)
+        or UbiomeScenarioService.TAG_MULTIQC in scenarios_by_step
     ):
         scenario_multiqc = None
-        if ubiome_state.TAG_MULTIQC in scenarios_by_step:
+        if UbiomeScenarioService.TAG_MULTIQC in scenarios_by_step:
             scenario_multiqc = ubiome_state.get_scenario_step_multiqc()
             # Use the first MultiQC scenario's ID
             key_multiqc = scenario_multiqc[0].id
         else:
-            key_multiqc = ubiome_state.TAG_MULTIQC
+            key_multiqc = UbiomeScenarioService.TAG_MULTIQC
         multiqc_item = StreamlitTreeMenuItem(
             label="MultiQC",
             key=key_multiqc,
             material_icon=get_step_icon(
-                ubiome_state.TAG_MULTIQC, scenarios_by_step, scenario_multiqc
+                UbiomeScenarioService.TAG_MULTIQC, scenarios_by_step, scenario_multiqc
             ),
         )
 
@@ -154,20 +152,22 @@ def build_analysis_tree_menu(ubiome_state: State):
 
     # 3) Feature inference - only if QC is successful
     if (
-        has_successful_scenario(ubiome_state.TAG_QC, scenarios_by_step)
-        or ubiome_state.TAG_FEATURE_INFERENCE in scenarios_by_step
+        has_successful_scenario(UbiomeScenarioService.TAG_QC, scenarios_by_step)
+        or UbiomeScenarioService.TAG_FEATURE_INFERENCE in scenarios_by_step
     ):
         scenario_feature_inference = ubiome_state.get_scenario_step_feature_inference()
         feature_item = StreamlitTreeMenuItem(
             label="Feature inference",
-            key=ubiome_state.TAG_FEATURE_INFERENCE,
+            key=UbiomeScenarioService.TAG_FEATURE_INFERENCE,
             material_icon=get_step_icon(
-                ubiome_state.TAG_FEATURE_INFERENCE, scenarios_by_step, scenario_feature_inference
+                UbiomeScenarioService.TAG_FEATURE_INFERENCE,
+                scenarios_by_step,
+                scenario_feature_inference,
             ),
         )
 
-        if ubiome_state.TAG_FEATURE_INFERENCE in scenarios_by_step:
-            for scenario in scenarios_by_step[ubiome_state.TAG_FEATURE_INFERENCE]:
+        if UbiomeScenarioService.TAG_FEATURE_INFERENCE in scenarios_by_step:
+            for scenario in scenarios_by_step[UbiomeScenarioService.TAG_FEATURE_INFERENCE]:
                 scenario_item = StreamlitTreeMenuItem(
                     label=scenario.get_short_name(), key=scenario.id, material_icon="description"
                 )
@@ -175,7 +175,7 @@ def build_analysis_tree_menu(ubiome_state: State):
                     # Get parent scenario ID for filtering sub-steps
                     scenario_feature_id_tags = EntityTagList.find_by_entity(
                         TagEntityType.SCENARIO, scenario.id
-                    ).get_tags_by_key(ubiome_state.TAG_FEATURE_INFERENCE_ID)
+                    ).get_tags_by_key(UbiomeScenarioService.TAG_FEATURE_INFERENCE_ID)
                     parent_feature_id = (
                         scenario_feature_id_tags[0].to_simple_tag().value
                         if scenario_feature_id_tags
@@ -184,13 +184,15 @@ def build_analysis_tree_menu(ubiome_state: State):
 
                     # 4) Rarefaction sub-step
                     rarefaction_scenarios = scenarios_by_step.get(
-                        ubiome_state.TAG_RAREFACTION, {}
+                        UbiomeScenarioService.TAG_RAREFACTION, {}
                     ).get(parent_feature_id, [])
                     rarefaction_item = StreamlitTreeMenuItem(
                         label="Rarefaction",
-                        key=f"{ubiome_state.TAG_RAREFACTION}_{scenario.id}",
+                        key=f"{UbiomeScenarioService.TAG_RAREFACTION}_{scenario.id}",
                         material_icon=get_step_icon(
-                            ubiome_state.TAG_RAREFACTION, scenarios_by_step, rarefaction_scenarios
+                            UbiomeScenarioService.TAG_RAREFACTION,
+                            scenarios_by_step,
+                            rarefaction_scenarios,
                         ),
                     )
                     for rare_scenario in rarefaction_scenarios:
@@ -202,14 +204,16 @@ def build_analysis_tree_menu(ubiome_state: State):
                         rarefaction_item.add_children([rare_item])
 
                     # 4) Taxonomy sub-step
-                    taxonomy_scenarios = scenarios_by_step.get(ubiome_state.TAG_TAXONOMY, {}).get(
-                        parent_feature_id, []
-                    )
+                    taxonomy_scenarios = scenarios_by_step.get(
+                        UbiomeScenarioService.TAG_TAXONOMY, {}
+                    ).get(parent_feature_id, [])
                     taxonomy_item = StreamlitTreeMenuItem(
                         label="Taxonomy",
-                        key=f"{ubiome_state.TAG_TAXONOMY}_{scenario.id}",
+                        key=f"{UbiomeScenarioService.TAG_TAXONOMY}_{scenario.id}",
                         material_icon=get_step_icon(
-                            ubiome_state.TAG_TAXONOMY, scenarios_by_step, taxonomy_scenarios
+                            UbiomeScenarioService.TAG_TAXONOMY,
+                            scenarios_by_step,
+                            taxonomy_scenarios,
                         ),
                     )
                     for tax_scenario in taxonomy_scenarios:
@@ -222,7 +226,7 @@ def build_analysis_tree_menu(ubiome_state: State):
                             # Get taxonomy scenario ID for sub-analysis filtering
                             scenario_taxonomy_id_tags = EntityTagList.find_by_entity(
                                 TagEntityType.SCENARIO, tax_scenario.id
-                            ).get_tags_by_key(ubiome_state.TAG_TAXONOMY_ID)
+                            ).get_tags_by_key(UbiomeScenarioService.TAG_TAXONOMY_ID)
                             parent_taxonomy_id = (
                                 scenario_taxonomy_id_tags[0].to_simple_tag().value
                                 if scenario_taxonomy_id_tags
@@ -231,13 +235,13 @@ def build_analysis_tree_menu(ubiome_state: State):
 
                             # Sub-analysis items under taxonomy
                             pcoa_scenarios = scenarios_by_step.get(
-                                ubiome_state.TAG_PCOA_DIVERSITY, {}
+                                UbiomeScenarioService.TAG_PCOA_DIVERSITY, {}
                             ).get(parent_taxonomy_id, [])
                             pcoa_diversity_item = StreamlitTreeMenuItem(
                                 label="PCOA diversity",
-                                key=f"{ubiome_state.TAG_PCOA_DIVERSITY}_{tax_scenario.id}",
+                                key=f"{UbiomeScenarioService.TAG_PCOA_DIVERSITY}_{tax_scenario.id}",
                                 material_icon=get_step_icon(
-                                    ubiome_state.TAG_PCOA_DIVERSITY,
+                                    UbiomeScenarioService.TAG_PCOA_DIVERSITY,
                                     scenarios_by_step,
                                     pcoa_scenarios,
                                 ),
@@ -250,14 +254,16 @@ def build_analysis_tree_menu(ubiome_state: State):
                                 )
                                 pcoa_diversity_item.add_children([pcoa_item])
 
-                            ancom_scenarios = scenarios_by_step.get(ubiome_state.TAG_ANCOM, {}).get(
-                                parent_taxonomy_id, []
-                            )
+                            ancom_scenarios = scenarios_by_step.get(
+                                UbiomeScenarioService.TAG_ANCOM, {}
+                            ).get(parent_taxonomy_id, [])
                             ancom_item = StreamlitTreeMenuItem(
                                 label="ANCOM",
-                                key=f"{ubiome_state.TAG_ANCOM}_{tax_scenario.id}",
+                                key=f"{UbiomeScenarioService.TAG_ANCOM}_{tax_scenario.id}",
                                 material_icon=get_step_icon(
-                                    ubiome_state.TAG_ANCOM, scenarios_by_step, ancom_scenarios
+                                    UbiomeScenarioService.TAG_ANCOM,
+                                    scenarios_by_step,
+                                    ancom_scenarios,
                                 ),
                             )
                             for ancom_scenario in ancom_scenarios:
@@ -269,13 +275,15 @@ def build_analysis_tree_menu(ubiome_state: State):
                                 ancom_item.add_children([ancom_item_child])
 
                             db_scenarios = scenarios_by_step.get(
-                                ubiome_state.TAG_DB_ANNOTATOR, {}
+                                UbiomeScenarioService.TAG_DB_ANNOTATOR, {}
                             ).get(parent_taxonomy_id, [])
                             taxa_comp_item = StreamlitTreeMenuItem(
                                 label="Taxa Composition",
-                                key=f"{ubiome_state.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
+                                key=f"{UbiomeScenarioService.TAG_DB_ANNOTATOR}_{tax_scenario.id}",
                                 material_icon=get_step_icon(
-                                    ubiome_state.TAG_DB_ANNOTATOR, scenarios_by_step, db_scenarios
+                                    UbiomeScenarioService.TAG_DB_ANNOTATOR,
+                                    scenarios_by_step,
+                                    db_scenarios,
                                 ),
                             )
                             for db_scenario in db_scenarios:
@@ -293,7 +301,7 @@ def build_analysis_tree_menu(ubiome_state: State):
                                     # Get db scenario ID for ratio filtering
                                     scenario_db_id_tags = EntityTagList.find_by_entity(
                                         TagEntityType.SCENARIO, db_scenario.id
-                                    ).get_tags_by_key(ubiome_state.TAG_DB_ANNOTATOR_ID)
+                                    ).get_tags_by_key(UbiomeScenarioService.TAG_DB_ANNOTATOR_ID)
                                     parent_db_id = (
                                         scenario_db_id_tags[0].to_simple_tag().value
                                         if scenario_db_id_tags
@@ -301,13 +309,13 @@ def build_analysis_tree_menu(ubiome_state: State):
                                     )
 
                                     ratio_scenarios = scenarios_by_step.get(
-                                        ubiome_state.TAG_RATIO, {}
+                                        UbiomeScenarioService.TAG_RATIO, {}
                                     ).get(parent_db_id, [])
                                     ratio_item = StreamlitTreeMenuItem(
                                         label="Ratio",
-                                        key=f"{ubiome_state.TAG_RATIO}_{db_scenario.id}",
+                                        key=f"{UbiomeScenarioService.TAG_RATIO}_{db_scenario.id}",
                                         material_icon=get_step_icon(
-                                            ubiome_state.TAG_RATIO,
+                                            UbiomeScenarioService.TAG_RATIO,
                                             scenarios_by_step,
                                             ratio_scenarios,
                                         ),
@@ -328,14 +336,14 @@ def build_analysis_tree_menu(ubiome_state: State):
                         taxonomy_item.add_children([tax_item])
 
                     # 8) 16S sub-step
-                    s16_scenarios = scenarios_by_step.get(ubiome_state.TAG_16S, {}).get(
+                    s16_scenarios = scenarios_by_step.get(UbiomeScenarioService.TAG_16S, {}).get(
                         parent_feature_id, []
                     )
                     s16_item = StreamlitTreeMenuItem(
                         label="16s Functional abundances prediction",
-                        key=f"{ubiome_state.TAG_16S}_{scenario.id}",
+                        key=f"{UbiomeScenarioService.TAG_16S}_{scenario.id}",
                         material_icon=get_step_icon(
-                            ubiome_state.TAG_16S, scenarios_by_step, s16_scenarios
+                            UbiomeScenarioService.TAG_16S, scenarios_by_step, s16_scenarios
                         ),
                     )
                     for functional_16s_scenario in s16_scenarios:
@@ -348,7 +356,7 @@ def build_analysis_tree_menu(ubiome_state: State):
                             # Get 16S scenario ID for visu filtering (consistent with taxonomy pattern)
                             scenario_16s_id_tags = EntityTagList.find_by_entity(
                                 TagEntityType.SCENARIO, functional_16s_scenario.id
-                            ).get_tags_by_key(ubiome_state.TAG_16S_ID)
+                            ).get_tags_by_key(UbiomeScenarioService.TAG_16S_ID)
                             parent_16s_id = (
                                 scenario_16s_id_tags[0].to_simple_tag().value
                                 if scenario_16s_id_tags
@@ -356,13 +364,15 @@ def build_analysis_tree_menu(ubiome_state: State):
                             )
                             # Sub-analysis items under 16S
                             s16_visu_scenarios = scenarios_by_step.get(
-                                ubiome_state.TAG_16S_VISU, {}
+                                UbiomeScenarioService.TAG_16S_VISU, {}
                             ).get(parent_16s_id, [])
                             ggpicrust_item = StreamlitTreeMenuItem(
                                 label="16s Functional abundances visualisation",
-                                key=f"{ubiome_state.TAG_16S_VISU}_{functional_16s_scenario.id}",
+                                key=f"{UbiomeScenarioService.TAG_16S_VISU}_{functional_16s_scenario.id}",
                                 material_icon=get_step_icon(
-                                    ubiome_state.TAG_16S_VISU, scenarios_by_step, s16_visu_scenarios
+                                    UbiomeScenarioService.TAG_16S_VISU,
+                                    scenarios_by_step,
+                                    s16_visu_scenarios,
                                 ),
                             )
                             for ggpicrust_scenario in s16_visu_scenarios:
@@ -418,14 +428,14 @@ def render_analysis_page(ubiome_state: State):
 
         # Get analysis name from scenario tag
         entity_tag_list = EntityTagList.find_by_entity(TagEntityType.SCENARIO, selected_analysis.id)
-        tag_analysis_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_ANALYSIS_NAME)[
-            0
-        ].to_simple_tag()
+        tag_analysis_name = entity_tag_list.get_tags_by_key(
+            UbiomeScenarioService.TAG_ANALYSIS_NAME
+        )[0].to_simple_tag()
         analysis_name = tag_analysis_name.value
 
         # Get ubiome pipeline id from scenario tag
         tag_ubiome_pipeline_id = entity_tag_list.get_tags_by_key(
-            ubiome_state.TAG_UBIOME_PIPELINE_ID
+            UbiomeScenarioService.TAG_UBIOME_PIPELINE_ID
         )[0].to_simple_tag()
         ubiome_pipeline_id = tag_ubiome_pipeline_id.value
 
@@ -504,9 +514,9 @@ def render_analysis_page(ubiome_state: State):
                     entity_tag_list = EntityTagList.find_by_entity(
                         TagEntityType.SCENARIO, selected_scenario_new.id
                     )
-                    tag_step_name = entity_tag_list.get_tags_by_key(ubiome_state.TAG_UBIOME)[
-                        0
-                    ].to_simple_tag()
+                    tag_step_name = entity_tag_list.get_tags_by_key(
+                        UbiomeScenarioService.TAG_UBIOME
+                    )[0].to_simple_tag()
                     ubiome_state.set_step_pipeline(tag_step_name.value)
 
                 else:
@@ -573,32 +583,44 @@ def render_analysis_page(ubiome_state: State):
                 else:
                     selected_scenario = None
 
-                if ubiome_state.get_step_pipeline() == ubiome_state.TAG_METADATA:
+                if ubiome_state.get_step_pipeline() == UbiomeScenarioService.TAG_METADATA:
                     # Render metadata table
                     render_metadata_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_QC:
+                elif ubiome_state.get_step_pipeline() == UbiomeScenarioService.TAG_QC:
                     render_qc_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_MULTIQC:
+                elif ubiome_state.get_step_pipeline() == UbiomeScenarioService.TAG_MULTIQC:
                     render_multiqc_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline() == ubiome_state.TAG_FEATURE_INFERENCE:
+                elif (
+                    ubiome_state.get_step_pipeline() == UbiomeScenarioService.TAG_FEATURE_INFERENCE
+                ):
                     render_feature_inference_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RAREFACTION):
+                elif ubiome_state.get_step_pipeline().startswith(
+                    UbiomeScenarioService.TAG_RAREFACTION
+                ):
                     render_rarefaction_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_TAXONOMY):
+                elif ubiome_state.get_step_pipeline().startswith(
+                    UbiomeScenarioService.TAG_TAXONOMY
+                ):
                     render_taxonomy_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_PCOA_DIVERSITY):
+                elif ubiome_state.get_step_pipeline().startswith(
+                    UbiomeScenarioService.TAG_PCOA_DIVERSITY
+                ):
                     render_pcoa_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_ANCOM):
+                elif ubiome_state.get_step_pipeline().startswith(UbiomeScenarioService.TAG_ANCOM):
                     render_ancom_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_DB_ANNOTATOR):
+                elif ubiome_state.get_step_pipeline().startswith(
+                    UbiomeScenarioService.TAG_DB_ANNOTATOR
+                ):
                     render_db_annotator_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S_VISU):
+                elif ubiome_state.get_step_pipeline().startswith(
+                    UbiomeScenarioService.TAG_16S_VISU
+                ):
                     render_16s_visu_step(selected_scenario, ubiome_state)
-                elif ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_16S):
+                elif ubiome_state.get_step_pipeline().startswith(UbiomeScenarioService.TAG_16S):
                     render_16s_step(selected_scenario, ubiome_state)
                 elif (
                     ubiome_state.get_has_ratio_step()
-                    and ubiome_state.get_step_pipeline().startswith(ubiome_state.TAG_RATIO)
+                    and ubiome_state.get_step_pipeline().startswith(UbiomeScenarioService.TAG_RATIO)
                 ):
                     ubiome_config = UbiomeConfig.get_instance()
                     ubiome_config.render_ratio_step(selected_scenario, ubiome_state)

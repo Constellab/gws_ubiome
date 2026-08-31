@@ -1,6 +1,7 @@
 import streamlit as st
 from gws_streamlit_main import StreamlitContainers, StreamlitTranslateLang
 from ..state import State
+from ..ubiome_scenario_service import UbiomeScenarioService
 
 
 def render_settings_page(ubiome_state : State):
@@ -37,7 +38,7 @@ def render_settings_page(ubiome_state : State):
             translate_service.translate("select_language"),
             options=lang_options,
             index=current_index,
-            key=ubiome_state.LANG_KEY
+            key=UbiomeScenarioService.LANG_KEY
         )
 
         # Convert selected string back to enum
